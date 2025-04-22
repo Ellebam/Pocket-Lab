@@ -1,0 +1,29 @@
+# Taskfile.yaml
+version: "3"
+
+vars:
+  COMPOSE: docker compose -f stack.yml
+
+tasks:
+
+  up:
+    desc: "Start whole stack (all profiles)"
+    cmds: ["{{.COMPOSE}} pull", "{{.COMPOSE}} up -d"]
+
+  down:
+    desc: "Stop & remove containers"
+    cmds: ["{{.COMPOSE}} down -v --remove-orphans"]
+
+  logs:
+    desc: "Tail logs (follow)"
+    cmds: ["{{.COMPOSE}} logs -f --tail=100"]
+
+  restart:
+    desc: "Restart one service, e.g. task restart -- n8n"
+    cmds: ["{{.COMPOSE}} restart {{.CLI_ARGS}}"]
+
+  prune:
+    desc: "Remove dangling resources"
+    cmds: ["docker system prune -f"]
+
+

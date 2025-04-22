@@ -1,0 +1,6 @@
+# Docker volumes & secrets
+*/*-data/
+*.env
+acme.json
+ragflow/logs/
+gen-ai-stack.tar.gz
