@@ -1,0 +1,28 @@
+- name: Harden SSH (disable password login)
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+  notify: Restart ssh
+
+- name: Configure firewall
+  when: ansible_os_family == 'Debian'
+  block:
+  - ufw:
+      rule: allow
+      port: "{{ item }}"
+      proto: tcp
+    loop: "{{ firewall_open_tcp }}"
+  - ufw:
+      state: enabled
+      policy: deny
+      logging: on
+
+- name: Fail2ban & auto‑updates
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+  - fail2ban
+  - unattended-upgrades
+  when: ansible_os_family == 'Debian'

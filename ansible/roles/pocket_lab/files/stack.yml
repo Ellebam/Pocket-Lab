@@ -5,9 +5,9 @@ x-common: &common
   restart: unless-stopped
   env_file: .env
   environment:
-    - TZ=${TIMEZONE}
+  - TZ=${TIMEZONE}
   networks:
-    - backend
+  - backend
 
 ############################
 #        OBSERVABILITY     #
@@ -18,27 +18,27 @@ services:
     <<: *common
     image: prom/prometheus:latest
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
+    - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+    - "9090:9090"
 
   loki:
     <<: *common
     image: grafana/loki:latest
     volumes:
-      - loki-data:/loki
+    - loki-data:/loki
     command: -config.file=/etc/loki/local-config.yaml
 
   grafana:
     <<: *common
     image: grafana/grafana:latest
     volumes:
-      - grafana-data:/var/lib/grafana
+    - grafana-data:/var/lib/grafana
     ports:
-      - "3001:3000"
+    - "3001:3000"
     environment:
-      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    - GF_INSTALL_PLUGINS=grafana-clock-panel
 
   node-exporter:
     restart: unless-stopped
@@ -47,33 +47,33 @@ services:
     network_mode: host
     pid: host
     command:
-      - '--path.rootfs=/host'
+    - '--path.rootfs=/host'
     volumes:
-      - /:/host:ro,rslave
+    - /:/host:ro,rslave
     environment:
-      - TZ=${TIMEZONE}
+    - TZ=${TIMEZONE}
 
-############################
-#   NETWORK / PLATFORM     #
-############################
+  ############################
+  #   NETWORK / PLATFORM     #
+  ############################
   traefik:
     <<: *common
     image: traefik:latest
     ports:
-      - "80:80"
-      - "443:443"
+    - "80:80"
+    - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik/acme.json:/acme.json
-      - ./traefik/traefik_dynamic.yml:/traefik_dynamic.yml:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ./traefik/acme.json:/acme.json
+    - ./traefik/traefik_dynamic.yml:/traefik_dynamic.yml:ro
     command:
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.file.filename=/traefik_dynamic.yml"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.le.acme.storage=/acme.json"
-      - "--certificatesresolvers.le.acme.email=${EMAIL}"
-      - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
+    - "--providers.docker.exposedbydefault=false"
+    - "--providers.file.filename=/traefik_dynamic.yml"
+    - "--entrypoints.web.address=:80"
+    - "--entrypoints.websecure.address=:443"
+    - "--certificatesresolvers.le.acme.storage=/acme.json"
+    - "--certificatesresolvers.le.acme.email=${EMAIL}"
+    - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
 
   twingate-1:
     restart: unless-stopped
@@ -82,7 +82,7 @@ services:
     network_mode: host
     container_name: ${CONTAINER_NAME1}
     environment:
-      - TZ=${TIMEZONE}
+    - TZ=${TIMEZONE}
 
   twingate-2:
     restart: unless-stopped
@@ -91,85 +91,85 @@ services:
     network_mode: host
     container_name: ${CONTAINER_NAME2}
     environment:
-      - TZ=${TIMEZONE}
+    - TZ=${TIMEZONE}
 
   portainer:
     <<: *common
     image: portainer/portainer-ce:latest
     ports:
-      - "9443:9443"
+    - "9443:9443"
     volumes:
-      - portainer-data:/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+    - portainer-data:/data
+    - /var/run/docker.sock:/var/run/docker.sock:ro
 
-############################
-#           APPS           #
-############################
+  ############################
+  #           APPS           #
+  ############################
   n8n:
     <<: *common
     image: n8nio/n8n:latest
     ports:
-      - "5678:5678"
+    - "5678:5678"
     volumes:
-      - n8n-data:/home/node/.n8n
+    - n8n-data:/home/node/.n8n
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.n8n.rule=Host(`n8n.${DOMAIN}`)"
-      - "traefik.http.routers.n8n.entrypoints=websecure"
-      - "traefik.http.routers.n8n.tls.certresolver=le"
-      - "traefik.http.routers.n8n.middlewares=auth@file"
+    - "traefik.enable=true"
+    - "traefik.http.routers.n8n.rule=Host(`n8n.${DOMAIN}`)"
+    - "traefik.http.routers.n8n.entrypoints=websecure"
+    - "traefik.http.routers.n8n.tls.certresolver=le"
+    - "traefik.http.routers.n8n.middlewares=auth@file"
 
   ollama:
     <<: *common
     image: ollama/ollama:latest
     ports:
-      - "11434:11434"
+    - "11434:11434"
     volumes:
-      - ollama-data:/root/.ollama
+    - ollama-data:/root/.ollama
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.ollama.rule=Host(`ollama.${DOMAIN}`)"
-      - "traefik.http.routers.ollama.entrypoints=websecure"
-      - "traefik.http.routers.ollama.tls.certresolver=le"
-      - "traefik.http.routers.ollama.middlewares=auth@file"
+    - "traefik.enable=true"
+    - "traefik.http.routers.ollama.rule=Host(`ollama.${DOMAIN}`)"
+    - "traefik.http.routers.ollama.entrypoints=websecure"
+    - "traefik.http.routers.ollama.tls.certresolver=le"
+    - "traefik.http.routers.ollama.middlewares=auth@file"
 
   openwebui:
     <<: *common
     image: ghcr.io/open-webui/open-webui:latest
     ports:
-      - "8080:8080"
+    - "8080:8080"
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.webui.rule=Host(`chat.${DOMAIN}`)"
-      - "traefik.http.routers.webui.entrypoints=websecure"
-      - "traefik.http.routers.webui.tls.certresolver=le"
-      - "traefik.http.routers.webui.middlewares=auth@file"
+    - "traefik.enable=true"
+    - "traefik.http.routers.webui.rule=Host(`chat.${DOMAIN}`)"
+    - "traefik.http.routers.webui.entrypoints=websecure"
+    - "traefik.http.routers.webui.tls.certresolver=le"
+    - "traefik.http.routers.webui.middlewares=auth@file"
 
-######### Ragflow & deps #########
+  ######### Ragflow & deps #########
   rag-es:
     <<: *common
     image: elasticsearch:${STACK_VERSION}
     container_name: ragflow-es-01
     volumes:
-      - esdata01:/usr/share/elasticsearch/data
+    - esdata01:/usr/share/elasticsearch/data
     ports:
-      - "${ES_PORT}:9200"
+    - "${ES_PORT}:9200"
     environment:
-      - node.name=es01
-      - discovery.type=single-node
-      - xpack.security.enabled=true
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - bootstrap.memory_lock=false
-      - cluster.routing.allocation.disk.watermark.low=5gb
-      - cluster.routing.allocation.disk.watermark.high=3gb
-      - cluster.routing.allocation.disk.watermark.flood_stage=2gb
+    - node.name=es01
+    - discovery.type=single-node
+    - xpack.security.enabled=true
+    - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    - bootstrap.memory_lock=false
+    - cluster.routing.allocation.disk.watermark.low=5gb
+    - cluster.routing.allocation.disk.watermark.high=3gb
+    - cluster.routing.allocation.disk.watermark.flood_stage=2gb
     mem_limit: ${MEM_LIMIT}
     ulimits:
       memlock:
         soft: -1
         hard: -1
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
       interval: 10s
       timeout: 10s
       retries: 120
@@ -178,20 +178,20 @@ services:
     <<: *common
     image: infiniflow/infinity:v0.6.0-dev3
     volumes:
-      - infinity_data:/var/infinity
-      - ./ragflow/infinity_conf.toml:/infinity_conf.toml:ro
-    command: ["-f", "/infinity_conf.toml"]
+    - infinity_data:/var/infinity
+    - ./ragflow/infinity_conf.toml:/infinity_conf.toml:ro
+    command: [ "-f", "/infinity_conf.toml" ]
     ports:
-      - "${INFINITY_THRIFT_PORT}:23817"
-      - "${INFINITY_HTTP_PORT}:23820"
-      - "${INFINITY_PSQL_PORT}:5432"
+    - "${INFINITY_THRIFT_PORT}:23817"
+    - "${INFINITY_HTTP_PORT}:23820"
+    - "${INFINITY_PSQL_PORT}:5432"
     mem_limit: ${MEM_LIMIT}
     ulimits:
       nofile:
         soft: 500000
         hard: 500000
     healthcheck:
-      test: ["CMD", "curl", "-s", "http://localhost:23820/admin/node/current"]
+      test: [ "CMD", "curl", "-s", "http://localhost:23820/admin/node/current" ]
       interval: 10s
       timeout: 10s
       retries: 120
@@ -200,22 +200,22 @@ services:
     <<: *common
     image: mysql:8.0.39
     command:
-      - --max_connections=1000
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --default-authentication-plugin=mysql_native_password
-      - --tls_version="TLSv1.2,TLSv1.3"
-      - --init-file /data/application/init.sql
-      - --binlog_expire_logs_seconds=604800
+    - --max_connections=1000
+    - --character-set-server=utf8mb4
+    - --collation-server=utf8mb4_unicode_ci
+    - --default-authentication-plugin=mysql_native_password
+    - --tls_version="TLSv1.2,TLSv1.3"
+    - --init-file /data/application/init.sql
+    - --binlog_expire_logs_seconds=604800
     ports:
-      - "${MYSQL_PORT}:3306"
+    - "${MYSQL_PORT}:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./ragflow/init.sql:/data/application/init.sql:ro
+    - mysql_data:/var/lib/mysql
+    - ./ragflow/init.sql:/data/application/init.sql:ro
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+    - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-uroot", "-p${MYSQL_PASSWORD}"]
+      test: [ "CMD", "mysqladmin", "ping", "-uroot", "-p${MYSQL_PASSWORD}" ]
       interval: 10s
       timeout: 10s
       retries: 3
@@ -225,22 +225,22 @@ services:
     image: quay.io/minio/minio:RELEASE.2023-12-20T01-00-02Z
     command: server --console-address ":9001" /data
     ports:
-      - "${MINIO_PORT}:9000"
-      - "${MINIO_CONSOLE_PORT}:9001"
+    - "${MINIO_PORT}:9000"
+    - "${MINIO_CONSOLE_PORT}:9001"
     volumes:
-      - minio_data:/data
+    - minio_data:/data
     environment:
-      - MINIO_ROOT_USER=${MINIO_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
+    - MINIO_ROOT_USER=${MINIO_USER}
+    - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
 
   rag-redis:
     <<: *common
     image: valkey/valkey:8
     command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
-      - "${REDIS_PORT}:6379"
+    - "${REDIS_PORT}:6379"
     volumes:
-      - redis_data:/data
+    - redis_data:/data
 
   ragflow:
     <<: *common
@@ -253,20 +253,20 @@ services:
       rag-mysql:
         condition: service_healthy
     ports:
-      - "${SVR_HTTP_PORT}:9380"
+    - "${SVR_HTTP_PORT}:9380"
     volumes:
-      - ./ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
-      - ragflow-logs:/ragflow/logs
-      - ragflow-history:/ragflow/history_data_agent
+    - ./ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
+    - ragflow-logs:/ragflow/logs
+    - ragflow-history:/ragflow/history_data_agent
     environment:
-      - HF_ENDPOINT=${HF_ENDPOINT}
-      - MACOS=${MACOS}
+    - HF_ENDPOINT=${HF_ENDPOINT}
+    - MACOS=${MACOS}
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.ragflow.rule=Host(`ragflow.${DOMAIN}`)"
-      - "traefik.http.routers.ragflow.entrypoints=websecure"
-      - "traefik.http.routers.ragflow.tls.certresolver=le"
-      - "traefik.http.routers.ragflow.middlewares=auth@file"
+    - "traefik.enable=true"
+    - "traefik.http.routers.ragflow.rule=Host(`ragflow.${DOMAIN}`)"
+    - "traefik.http.routers.ragflow.entrypoints=websecure"
+    - "traefik.http.routers.ragflow.tls.certresolver=le"
+    - "traefik.http.routers.ragflow.middlewares=auth@file"
 
 ############################
 #         VOLUMES          #
@@ -286,9 +286,9 @@ volumes:
   ragflow-logs:
   ragflow-history:
 
-############################
-#        NETWORKS          #
-############################
+    ############################
+    #        NETWORKS          #
+    ############################
 networks:
   backend:
     driver: bridge
