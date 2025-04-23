@@ -1,0 +1,24 @@
+- name: Create compose directory
+  file:
+    path: "{{ compose_repo }}"
+    state: directory
+
+- name: Copy stack files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ compose_repo }}/{{ item }}"
+    mode: "0644"
+  with_fileglob:
+  - "{{ playbook_dir }}/files/*"
+
+- name: Render .env file
+  template:
+    src: .env.j2
+    dest: "{{ compose_repo }}/.env"
+    mode: "0640"
+
+- name: Launch stack
+  community.docker.docker_compose:
+    project_src: "{{ compose_repo }}"
+    build: false
+    state: present

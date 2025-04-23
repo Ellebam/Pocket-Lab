@@ -2,28 +2,38 @@
 version: "3"
 
 vars:
-  COMPOSE: docker compose -f stack.yml
+  COMPOSE: docker compose -f ansible/roles/pocket_lab/files/stack.yml
+  PLAYBOOK: ansible/site.yml
+  INVENTORY: ansible/inventory
 
 tasks:
 
   up:
-    desc: "Start whole stack (all profiles)"
-    cmds: ["{{.COMPOSE}} pull", "{{.COMPOSE}} up -d"]
+    desc: "Start whole stack locally (Docker Compose)"
+    cmds: [ "{{.COMPOSE}} pull", "{{.COMPOSE}} up -d" ]
 
   down:
-    desc: "Stop & remove containers"
-    cmds: ["{{.COMPOSE}} down -v --remove-orphans"]
+    desc: "Stop & remove containers locally"
+    cmds: [ "{{.COMPOSE}} down -v --remove-orphans" ]
 
   logs:
     desc: "Tail logs (follow)"
-    cmds: ["{{.COMPOSE}} logs -f --tail=100"]
+    cmds: [ "{{.COMPOSE}} logs -f --tail=100" ]
 
   restart:
     desc: "Restart one service, e.g. task restart -- n8n"
-    cmds: ["{{.COMPOSE}} restart {{.CLI_ARGS}}"]
+    cmds: [ "{{.COMPOSE}} restart {{.CLI_ARGS}}" ]
 
   prune:
     desc: "Remove dangling resources"
-    cmds: ["docker system prune -f"]
+    cmds: [ "docker system prune -f" ]
 
+  ansible-deploy:
+    desc: "Run Ansible playbook (pass extra args via -- --limit host)"
+    cmds:
+    - ansible-playbook -i {{.INVENTORY}} {{.PLAYBOOK}} {{.CLI_ARGS}}
 
+  ansible-check:
+    desc: "Dry-run (Ansible check mode)"
+    cmds:
+    - ansible-playbook -i {{.INVENTORY}} {{.PLAYBOOK}} --check {{.CLI_ARGS}}

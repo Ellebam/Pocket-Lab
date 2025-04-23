@@ -1,0 +1,6 @@
+---
+- name: Deploy Gen-AI stack
+  hosts: genai_servers
+  become: true
+  roles:
+    - pocket_lab

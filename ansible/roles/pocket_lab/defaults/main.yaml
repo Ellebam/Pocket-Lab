@@ -1,0 +1,13 @@
+# Docker
+docker_version: "latest"
+docker_compose_version: "v2.27.1"
+compose_repo: "/opt/pocket_lab"
+
+stack_domain: "ai.lab.example.com"
+stack_email: "admin@example.com"
+stack_timezone: "Europe/Berlin"
+
+# Security
+ssh_harden: true
+firewall_open_tcp: [80, 443, 22]
+auto_updates: true

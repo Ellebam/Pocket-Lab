@@ -1,0 +1,9 @@
+- name: Install base packages
+  package:
+    name: "{{ _base_pkgs }}"
+    state: present
+  vars:
+    _base_pkgs:
+      Debian: [ curl, gnupg, ca-certificates, ufw ]
+      RedHat: [ curl, yum-utils, firewalld ]
+  when: ansible_os_family in ['Debian', 'RedHat']
