@@ -2,38 +2,47 @@
 version: "3"
 
 vars:
-  COMPOSE: docker compose -f ansible/roles/pocket_lab/files/stack.yml
+  ROOT_COMPOSE: docker compose -f stack.yml # root-level compose
+  ROLE_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/stack.yml
   PLAYBOOK: ansible/site.yml
-  INVENTORY: ansible/inventory
+  INVENTORY: ansible/inventory/hosts.yml
 
 tasks:
 
+  init-env:
+    desc: "Create .env from template (for manual compose)"
+    cmds:
+    - test -f .env || cp .env.template .env
+
   up:
-    desc: "Start whole stack locally (Docker Compose)"
-    cmds: [ "{{.COMPOSE}} pull", "{{.COMPOSE}} up -d" ]
+    desc: "Start stack (root-level compose + .env)"
+    cmds:
+    - task:init-env
+    - "{{.ROOT_COMPOSE}} pull"
+    - "{{.ROOT_COMPOSE}} up -d"
 
   down:
-    desc: "Stop & remove containers locally"
-    cmds: [ "{{.COMPOSE}} down -v --remove-orphans" ]
+    desc: "Stop & remove containers (root compose)"
+    cmds: [ "{{.ROOT_COMPOSE}} down -v --remove-orphans" ]
 
   logs:
-    desc: "Tail logs (follow)"
-    cmds: [ "{{.COMPOSE}} logs -f --tail=100" ]
+    desc: "Tail logs (root compose)"
+    cmds: [ "{{.ROOT_COMPOSE}} logs -f --tail=100" ]
 
   restart:
-    desc: "Restart one service, e.g. task restart -- n8n"
-    cmds: [ "{{.COMPOSE}} restart {{.CLI_ARGS}}" ]
+    desc: "Restart one service – usage: task restart -- n8n"
+    cmds: [ "{{.ROOT_COMPOSE}} restart {{.CLI_ARGS}}" ]
 
   prune:
-    desc: "Remove dangling resources"
+    desc: "Docker system prune"
     cmds: [ "docker system prune -f" ]
 
   ansible-deploy:
-    desc: "Run Ansible playbook (pass extra args via -- --limit host)"
+    desc: "Run Ansible playbook (pass extra args via -- …)"
     cmds:
     - ansible-playbook -i {{.INVENTORY}} {{.PLAYBOOK}} {{.CLI_ARGS}}
 
   ansible-check:
-    desc: "Dry-run (Ansible check mode)"
+    desc: "Dry-run Ansible"
     cmds:
     - ansible-playbook -i {{.INVENTORY}} {{.PLAYBOOK}} --check {{.CLI_ARGS}}

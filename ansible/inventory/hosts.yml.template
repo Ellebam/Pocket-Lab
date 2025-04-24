@@ -1,0 +1,5 @@
+genai_servers:
+  hosts:
+    genai-vm:
+      ansible_host: <IP_OR_FQDN>
+      ansible_user: root

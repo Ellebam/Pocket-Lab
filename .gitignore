@@ -1,6 +1,15 @@
-# Docker volumes & secrets
+# ---------- Docker Volumes & misc ----------------------------
+
 */*-data/
-*.env
 acme.json
 ragflow/logs/
-gen-ai-stack.tar.gz
+
+# ---------- Ansible inventory & vars ----------------------------
+ansible/inventory/*.yml
+!ansible/inventory/hosts_example.yml     # ship the example
+ansible/inventory/group_vars/
+ansible/inventory/host_vars/
+
+# ---------- Environment / secrets -------------------------------
+.env
+*.env                                   # but keep the templates

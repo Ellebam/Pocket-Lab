@@ -1,9 +1,11 @@
 - name: Install base packages
   package:
-    name: "{{ _base_pkgs }}"
+    name: "{{ _base_pkgs[ansible_os_family] | default(_base_pkgs['Fallback']) }}"
     state: present
   vars:
     _base_pkgs:
       Debian: [ curl, gnupg, ca-certificates, ufw ]
       RedHat: [ curl, yum-utils, firewalld ]
-  when: ansible_os_family in ['Debian', 'RedHat']
+      Suse: [ curl, firewalld ]
+      Archlinux: [ curl, ufw ]
+      Fallback: [ curl ]

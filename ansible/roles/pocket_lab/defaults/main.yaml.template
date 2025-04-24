@@ -1,0 +1,57 @@
+# ---------- Paths / versions ----------
+docker_version: "latest"
+docker_compose_version: "v2.27.1"
+compose_repo: "/opt/pocket_lab"
+
+# ---------- Stack-wide ----------
+stack_domain: "ai.lab.example.com"
+stack_email: "admin@example.com"
+stack_timezone: "Europe/Berlin"
+mem_limit: "4g"
+
+# ---------- Auth ----------
+basic_auth: "user:$$2y$$exampleHash"
+
+# ---------- Twingate ----------
+tenant_name: "your-tenant"
+container_name1: "tg-connector-1"
+container_name2: "tg-connector-2"
+access_token1: ""
+refresh_token1: ""
+access_token2: ""
+refresh_token2: ""
+
+# ---------- n8n ----------
+n8n_user: "admin"
+n8n_password: "changeme"
+
+# ---------- RAG / ES ----------
+stack_version: "8.12.2"
+es_port: 19200
+elastic_password: "changeme"
+
+infinity_thrift_port: 23817
+infinity_http_port: 23820
+infinity_psql_port: 15432
+
+mysql_password: "changeme"
+mysql_port: 3306
+
+minio_port: 9000
+minio_console_port: 9001
+minio_user: "minioadmin"
+minio_password: "minioadmin"
+
+redis_password: "changeme"
+redis_port: 6379
+
+svr_http_port: 9380
+ragflow_image: "infiniflow/ragflow:latest"
+
+hf_endpoint: "https://huggingface.co"
+macos: false
+
+# ---------- Security ----------
+ssh_harden: true
+firewall_open_tcp: [80, 443, 22]
+auto_updates: true
