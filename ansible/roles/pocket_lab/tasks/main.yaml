@@ -1,5 +1,7 @@
 ---
-- import_tasks: prereqs.yml
-- import_tasks: docker.yml
-- import_tasks: security.yml
-- import_tasks: deploy.yml
+- import_tasks: prereqs.yaml
+- import_tasks: docker.yaml
+- import_tasks: security.yaml
+- import_tasks: deploy.yaml
+- import_tasks: "{{ stack_state | default('present') == 'present' | ternary('deploy.yml', 'cleanup.yml') }}"
+

@@ -1,5 +1,5 @@
 genai_servers:
   hosts:
     genai-vm:
-      ansible_host: 203.0.113.10
+      ansible_host: 135.181.207.3
       ansible_user: root

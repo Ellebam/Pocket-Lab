@@ -1,0 +1,9 @@
+- name: Stop & remove compose stack
+  community.docker.docker_compose:
+    project_src: "{{ compose_repo }}"
+    state: absent
+
+- name: Remove compose directory entirely
+  file:
+    path: "{{ compose_repo }}"
+    state: absent

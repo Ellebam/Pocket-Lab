@@ -6,10 +6,14 @@ ragflow/logs/
 
 # ---------- Ansible inventory & vars ----------------------------
 ansible/inventory/*.yml
-!ansible/inventory/hosts_example.yml     # ship the example
+ansible/inventory/*.yaml
+!ansible/inventory/hosts_example.yaml
 ansible/inventory/group_vars/
 ansible/inventory/host_vars/
 
+ansible/roles/pocket_lab/defaults/main.yaml
+!ansible/roles/pocket_lab/defaults/main.yaml.template
+
 # ---------- Environment / secrets -------------------------------
 .env
-*.env                                   # but keep the templates
+*.env                                  
