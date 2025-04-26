@@ -2,12 +2,23 @@
 version: "3"
 
 vars:
-  ROOT_COMPOSE: docker compose -f stack.yml # root-level compose
-  ROLE_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/stack.yml
-  PLAYBOOK: ansible/site.yml
-  INVENTORY: ansible/inventory/hosts.yml
+  ROOT_COMPOSE: docker compose -f stack.yaml
+  ROLE_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/stack.yaml
+  VENV_DIR: .venv
+  VENV_BIN: "{{ .VENV_DIR }}/bin"
+  PYTHON: "{{ .VENV_BIN }}/python"
+  PLAYBOOK_CMD: "{{ .VENV_BIN}}/ansible-playbook"
+  PLAYBOOK: ansible/site.yaml
+  INVENTORY: ansible/inventory/hosts.yaml
 
 tasks:
+  venv:init:
+    desc: "Create venv & install Ansible + collections"
+    cmds:
+    - test -d {{.VENV_DIR}} || python3 -m venv {{.VENV_DIR}}
+    - "{{.PYTHON}} -m pip install --upgrade pip wheel"
+    - "{{.PYTHON}} -m pip install ansible-core==2.16.* ruamel.yaml"
+    - "{{.VENV_BIN}}/ansible-galaxy collection install -r ansible/requirements.yaml --force -p {{.VENV_DIR}}/ansible/collections"
 
   init-env:
     desc: "Create .env from template (for manual compose)"
@@ -40,9 +51,9 @@ tasks:
   ansible-deploy:
     desc: "Run Ansible playbook (pass extra args via -- …)"
     cmds:
-    - ansible-playbook -i {{.INVENTORY}} {{.PLAYBOOK}} {{.CLI_ARGS}}
+    - "{{.PLAYBOOK_CMD}} -i {{.INVENTORY}} {{.PLAYBOOK}} {{.CLI_ARGS}}"
 
   ansible-check:
     desc: "Dry-run Ansible"
     cmds:
-    - ansible-playbook -i {{.INVENTORY}} {{.PLAYBOOK}} --check {{.CLI_ARGS}}
+    - "{{.PLAYBOOK_CMD}} -i {{.INVENTORY}} {{.PLAYBOOK}} --check {{.CLI_ARGS}}"

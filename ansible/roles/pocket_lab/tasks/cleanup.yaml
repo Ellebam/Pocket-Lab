@@ -1,5 +1,5 @@
 - name: Stop & remove compose stack
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: "{{ compose_repo }}"
     state: absent
 

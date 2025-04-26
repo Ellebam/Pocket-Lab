@@ -1,4 +1,4 @@
-# stack.yml
+# stack.yaml
 version: "3.9"
 
 x-common: &common
@@ -18,7 +18,7 @@ services:
     <<: *common
     image: prom/prometheus:latest
     volumes:
-    - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
     - prometheus-data:/prometheus
     ports:
     - "9090:9090"
@@ -65,10 +65,10 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
     - ./traefik/acme.json:/acme.json
-    - ./traefik/traefik_dynamic.yml:/traefik_dynamic.yml:ro
+    - ./traefik/traefik_dynamic.yaml:/traefik_dynamic.yaml:ro
     command:
     - "--providers.docker.exposedbydefault=false"
-    - "--providers.file.filename=/traefik_dynamic.yml"
+    - "--providers.file.filename=/traefik_dynamic.yaml"
     - "--entrypoints.web.address=:80"
     - "--entrypoints.websecure.address=:443"
     - "--certificatesresolvers.le.acme.storage=/acme.json"

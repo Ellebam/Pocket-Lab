@@ -5,7 +5,7 @@ acme.json
 ragflow/logs/
 
 # ---------- Ansible inventory & vars ----------------------------
-ansible/inventory/*.yml
+ansible/inventory/*.yaml
 ansible/inventory/*.yaml
 !ansible/inventory/hosts_example.yaml
 ansible/inventory/group_vars/
@@ -17,3 +17,6 @@ ansible/roles/pocket_lab/defaults/main.yaml
 # ---------- Environment / secrets -------------------------------
 .env
 *.env                                  
+
+# ---------- Misc -------------------------------
+.vscode

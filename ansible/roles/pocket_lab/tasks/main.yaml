@@ -2,6 +2,11 @@
 - import_tasks: prereqs.yaml
 - import_tasks: docker.yaml
 - import_tasks: security.yaml
-- import_tasks: deploy.yaml
-- import_tasks: "{{ stack_state | default('present') == 'present' | ternary('deploy.yml', 'cleanup.yml') }}"
 
+- name: include deploy tasks
+  include_tasks: deploy.yaml
+  when: stack_state | default('present') == 'present'
+
+- name: include cleanup tasks
+  include_tasks: cleanup.yaml
+  when: stack_state | default('present') != 'present'
