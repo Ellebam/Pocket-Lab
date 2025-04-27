@@ -50,10 +50,14 @@ tasks:
 
   ansible-deploy:
     desc: "Run Ansible playbook (pass extra args via -- …)"
+    deps:
+    - venv:init
     cmds:
     - "{{.PLAYBOOK_CMD}} -i {{.INVENTORY}} {{.PLAYBOOK}} {{.CLI_ARGS}}"
 
   ansible-check:
     desc: "Dry-run Ansible"
+    deps:
+    - venv:init
     cmds:
     - "{{.PLAYBOOK_CMD}} -i {{.INVENTORY}} {{.PLAYBOOK}} --check {{.CLI_ARGS}}"

@@ -9,3 +9,10 @@
       Suse: [ curl, firewalld ]
       Archlinux: [ curl, ufw ]
       Fallback: [ curl ]
+
+- name: Ensure vm.max_map_count is 262144 (persistent)
+  ansible.posix.sysctl:
+    name: vm.max_map_count
+    value: 262144
+    state: present
+    reload: true
