@@ -3,4 +3,7 @@
   hosts: genai_servers
   become: true
   roles:
+    - role: geerlingguy.docker
+      vars:
+        docker_install_compose: true
     - pocket_lab
