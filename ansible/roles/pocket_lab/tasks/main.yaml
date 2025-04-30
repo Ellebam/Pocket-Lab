@@ -1,6 +1,5 @@
 ---
 - import_tasks: prereqs.yaml
-- import_tasks: security.yaml
 
 - name: include deploy tasks
   include_tasks: deploy.yaml

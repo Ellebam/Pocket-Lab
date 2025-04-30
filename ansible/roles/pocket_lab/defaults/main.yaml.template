@@ -55,3 +55,7 @@ macos: false
 ssh_harden: true
 firewall_open_tcp: [80, 443, 22]
 auto_updates: true
+users_user_list: []
+
+# ---------- Users ----------
+l3d_users__local_users: []
