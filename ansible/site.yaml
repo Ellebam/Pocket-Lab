@@ -1,8 +1,41 @@
 ---
+- name: Probe default ssh users
+  hosts: genai_servers
+  gather_facts: false
+  any_errors_fatal: false
+  vars:
+    probe_list:
+      - "{{ ansible_user | default('') }}"
+      - root
+      - "{{ l3d_users__local_users[0].name }}"
+  tasks:
+    - name: Find a working connection user
+      vars:
+        conn_user: ""
+      block:
+        - set_fact: { conn_user: "" }
+
+        - name: loop over candidate users
+          include_tasks: probe_user.yaml
+          loop: "{{ probe_list | unique | difference(['']) }}"
+          loop_control:
+            loop_var: candidate
+
+        - assert:
+            that: conn_user != ""
+            fail_msg: "No SSH user worked on {{ inventory_hostname }}"
+      run_once: true           # per host (serial defaults to all)
+
+    - add_host:                # store per-host result
+        name: "{{ inventory_hostname }}"
+        conn_user: "{{ conn_user }}"
+
 - name: Bootstrap users
   hosts: genai_servers
   become: true
-  gather_facts: false
+  gather_facts: true
+  gather_subset: min
+  remote_user: "{{ conn_user }}"
   roles:
     - l3d.users.user
     - l3d.users.admin
@@ -10,6 +43,15 @@
 - name: Harden & prepare the server
   hosts: genai_servers
   become: true
+  remote_user: "{{ l3d_users__local_users[0].name }}"
+  pre_tasks:
+    - name: Ensure private separation directory exists
+      file:
+        path: "{{ sshd_priv_separation_path | default('/run/sshd') }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
   roles:
     - devsec.hardening.os_hardening
     - role: devsec.hardening.ssh_hardening
@@ -19,9 +61,13 @@
     - role: geerlingguy.docker
       vars:
         docker_install_compose: true
+
 - name: Deploy the poket lab stack
   gather_facts: false
   hosts: genai_servers
   become: true
+  remote_user: "{{ l3d_users__local_users[0].name }}"
   roles:
     - pocket_lab
+
+

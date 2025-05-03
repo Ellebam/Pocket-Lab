@@ -1,0 +1,15 @@
+- name: Try login with {{ candidate }}
+  ansible.builtin.ping:
+  register: ping_r
+  ignore_errors: true
+  ignore_unreachable: true
+  vars:
+    ansible_user: "{{ candidate }}"
+  when: conn_user == "" # skip once we found one
+
+- set_fact:
+    conn_user: "{{ candidate }}"
+  when: conn_user == "" and ping_r is succeeded
+
+- meta: clear_host_errors
+  when: conn_user == "{{ candidate }}"
