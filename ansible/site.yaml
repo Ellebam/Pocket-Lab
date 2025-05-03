@@ -6,8 +6,8 @@
   vars:
     probe_list:
       - "{{ ansible_user | default('') }}"
-      - root
       - "{{ l3d_users__local_users[0].name }}"
+      - root
   tasks:
     - name: Find a working connection user
       vars:
@@ -26,8 +26,7 @@
             fail_msg: "No SSH user worked on {{ inventory_hostname }}"
       run_once: true           # per host (serial defaults to all)
 
-    - add_host:                # store per-host result
-        name: "{{ inventory_hostname }}"
+    - set_fact:
         conn_user: "{{ conn_user }}"
 
 - name: Bootstrap users
@@ -35,7 +34,7 @@
   become: true
   gather_facts: true
   gather_subset: min
-  remote_user: "{{ conn_user }}"
+  remote_user: "{{ hostvars[inventory_hostname].conn_user | default(ansible_user) }}"  
   roles:
     - l3d.users.user
     - l3d.users.admin

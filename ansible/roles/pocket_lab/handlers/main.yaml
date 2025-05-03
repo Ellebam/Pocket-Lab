@@ -1,0 +1,11 @@
+# This overrides Dev‑Sec's handler so sshd 
+# only restarts with a working config
+- name: Restart sshd
+  block:
+    - name: Validate new sshd_config
+      command: /usr/sbin/sshd -t -f /etc/ssh/sshd_config
+      changed_when: false
+    - name: Restart sshd service
+      service:
+        name: ssh
+        state: restarted

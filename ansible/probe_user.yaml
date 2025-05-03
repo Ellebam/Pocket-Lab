@@ -1,15 +1,20 @@
-- name: Try login with {{ candidate }}
-  ansible.builtin.ping:
-  register: ping_r
-  ignore_errors: true
-  ignore_unreachable: true
+- name: Test {{ candidate }}@{{ inventory_hostname }}
+  delegate_to: localhost
+  become: false
   vars:
-    ansible_user: "{{ candidate }}"
-  when: conn_user == "" # skip once we found one
+    probe_addr: "{{ hostvars[inventory_hostname].ansible_host | default(inventory_hostname) }}"
+  shell: |
+    ssh -o BatchMode=yes                        \
+        -o ConnectTimeout=5                     \
+        -o PreferredAuthentications=publickey   \
+        -o IdentitiesOnly=yes                   \
+        -o StrictHostKeyChecking=no             \
+        {{ candidate }}@{{ probe_addr }} "exit 0"
+  register: ssh_test
+  failed_when: false
+  changed_when: false
+  when: conn_user == "" # stop probing once found
 
 - set_fact:
     conn_user: "{{ candidate }}"
-  when: conn_user == "" and ping_r is succeeded
-
-- meta: clear_host_errors
-  when: conn_user == "{{ candidate }}"
+  when: conn_user == "" and ssh_test.rc == 0 # succeed only on rc=0
