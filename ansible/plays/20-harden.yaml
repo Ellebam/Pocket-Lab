@@ -1,7 +1,8 @@
+# ansible/plays/20-harden.yaml
 - name: Harden & prepare the server
   hosts: genai_servers
   become: true
-  remote_user: "{{ l3d_users__local_users[0].name }}"
+  remote_user: "{{ hostvars[inventory_hostname].conn_user }}"
 
   pre_tasks:
   - name: Ensure privilege‑separation dir exists
@@ -13,6 +14,7 @@
       mode: "0755"
 
   roles:
+  - ensure_conn_user
   - devsec.hardening.os_hardening
   - role: devsec.hardening.ssh_hardening
     vars:

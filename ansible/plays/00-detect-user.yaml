@@ -1,31 +1,7 @@
+# ansible/plays/00-detect-user.yaml
 - name: Detect a working SSH user
   hosts: genai_servers
   gather_facts: false
+  roles:
+    - ensure_conn_user
 
-  vars:
-    probe_list:
-    - "{{ ansible_user | default('') }}"
-    - "{{ l3d_users__local_users | default([]) | map(attribute='name') | first | default('') }}"
-    - root
-    conn_user: "{{ hostvars[inventory_hostname].conn_user | default('') }}"
-
-  tasks:
-  - name: Skip when user already cached
-    meta: end_play
-    when: conn_user | length > 0
-
-  - set_fact: { conn_user: "" }
-
-  - name: Probe each candidate
-    include_tasks: ../probe_user.yaml
-    loop: "{{ probe_list | unique | difference(['']) }}"
-    loop_control: { loop_var: candidate }
-
-  - assert:
-      that: conn_user | length > 0
-      fail_msg: "No SSH login worked for {{ inventory_hostname }}"
-
-  - name: Persist winner
-    set_fact:
-      conn_user: "{{ conn_user }}"
-    cacheable: true

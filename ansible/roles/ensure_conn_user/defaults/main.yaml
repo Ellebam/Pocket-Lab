@@ -1,0 +1,4 @@
+probe_list:
+  - "{{ ansible_user | default('') }}"
+  - "{{ l3d_users__local_users | default([]) | map(attribute='name') | first | default('') }}"
+  - root

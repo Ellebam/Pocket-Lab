@@ -1,7 +1,9 @@
+# ansible/plays/30-deploy.yaml
 - name: Deploy the Pocket‑Lab stack
   hosts: genai_servers
   become: true
   gather_facts: false
-  remote_user: "{{ l3d_users__local_users[0].name }}"
+  remote_user: "{{ hostvars[inventory_hostname].conn_user }}"
   roles:
+  - ensure_conn_user
   - pocket_lab

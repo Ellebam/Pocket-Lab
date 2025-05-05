@@ -1,3 +1,5 @@
+# ansible/roles/ensure_conn_user/tasks/probe_user.yaml
+
 - name: Test {{ candidate }}@{{ inventory_hostname }}
   delegate_to: localhost
   become: false

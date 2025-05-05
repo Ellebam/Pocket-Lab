@@ -30,62 +30,49 @@ tasks:
     cmds:
     - test -f .env || cp .env.template .env
 
-  up:
+  docker-compose-up:
     desc: "Start stack (root-level compose + .env)"
     cmds:
     - task:init-env
     - "{{.ROOT_COMPOSE}} pull"
     - "{{.ROOT_COMPOSE}} up -d"
 
-  down:
+  docker-compose-down:
     desc: "Stop & remove containers (root compose)"
     cmds: [ "{{.ROOT_COMPOSE}} down -v --remove-orphans" ]
 
-  logs:
+  docker-compose-logs:
     desc: "Tail logs (root compose)"
     cmds: [ "{{.ROOT_COMPOSE}} logs -f --tail=100" ]
 
-  restart:
+  docker-restart:
     desc: "Restart one service – usage: task restart -- n8n"
     cmds: [ "{{.ROOT_COMPOSE}} restart {{.CLI_ARGS}}" ]
 
-  prune:
+  docker-prune:
     desc: "Docker system prune"
     cmds: [ "docker system prune -f" ]
 
-  detect:
-    desc: "Only detect & cache working SSH user"
+  ansible_detect:
     deps: [ venv:init ]
-    cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DETECT_PLAY}} {{.CLI_ARGS}}"
+    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DETECT_PLAY}} {{.CLI_ARGS}}" ]
 
-  bootstrap:
-    desc: "Run user‑bootstrap (needs cached conn_user)"
-    deps: [ detect ]
-    cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_BOOTSTRAP_PLAY}} {{.CLI_ARGS}}"
+  ansible_bootstrap:
+    deps: [ ansible_detect ]
+    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_BOOTSTRAP_PLAY}} {{.CLI_ARGS}}" ]
 
-  harden:
-    desc: "Run hardening & docker roles"
-    deps: [ detect ]
-    cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_HARDEN_PLAY}} {{.CLI_ARGS}}"
+  ansible_harden:
+    deps: [ ansible_detect ]
+    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_HARDEN_PLAY}} {{.CLI_ARGS}}" ]
 
-  deploy:
-    desc: "Run only the compose deploy / cleanup"
-    deps: [ detect ]
-    cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DEPLOY_PLAY}} {{.CLI_ARGS}}"
+  ansible_deploy:
+    deps: [ ansible_detect ]
+    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DEPLOY_PLAY}} {{.CLI_ARGS}}" ]
 
   ansible_full:
-    desc: "End‑to‑end: detect → bootstrap → harden → deploy"
     deps: [ venv:init ]
-    cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} ansible/site.yaml {{.CLI_ARGS}}"
+    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} ansible/site.yaml {{.CLI_ARGS}}" ]
 
-  ansible-check:
-    desc: "Dry-run Ansible"
-    deps:
-    - venv:init
-    cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_PLAYBOOK}} --check {{.CLI_ARGS}}"
+  ansible_check:
+    deps: [ venv:init ]
+    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_PLAYBOOK}} --check {{.CLI_ARGS}}" ]
