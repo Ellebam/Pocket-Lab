@@ -7,9 +7,13 @@ vars:
   VENV_DIR: .venv
   VENV_BIN: "{{ .VENV_DIR }}/bin"
   PYTHON: "{{ .VENV_BIN }}/python"
-  PLAYBOOK_CMD: "{{ .VENV_BIN}}/ansible-playbook"
-  PLAYBOOK: ansible/site.yaml
-  INVENTORY: ansible/inventory/hosts.yaml
+  ANSIBLE_PLAYBOOK_CMD: "{{ .VENV_BIN}}/ansible-playbook"
+  ANSIBLE_PLAYBOOK: ansible/site.yaml
+  ANSIBLE_INVENTORY: ansible/inventory/hosts.yaml
+  ANSIBLE_DETECT_PLAY: ansible/plays/00-detect-user.yaml
+  ANSIBLE_BOOTSTRAP_PLAY: ansible/plays/10-bootstrap.yaml
+  ANSIBLE_HARDEN_PLAY: ansible/plays/20-harden.yaml
+  ANSIBLE_DEPLOY_PLAY: ansible/plays/30-deploy.yaml
 
 tasks:
   venv:init:
@@ -49,16 +53,39 @@ tasks:
     desc: "Docker system prune"
     cmds: [ "docker system prune -f" ]
 
-  ansible-deploy:
-    desc: "Run Ansible playbook (pass extra args via -- …)"
-    deps:
-    - venv:init
+  detect:
+    desc: "Only detect & cache working SSH user"
+    deps: [ venv:init ]
     cmds:
-    - "{{.PLAYBOOK_CMD}} -i {{.INVENTORY}} {{.PLAYBOOK}} {{.CLI_ARGS}}"
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DETECT_PLAY}} {{.CLI_ARGS}}"
+
+  bootstrap:
+    desc: "Run user‑bootstrap (needs cached conn_user)"
+    deps: [ detect ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_BOOTSTRAP_PLAY}} {{.CLI_ARGS}}"
+
+  harden:
+    desc: "Run hardening & docker roles"
+    deps: [ detect ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_HARDEN_PLAY}} {{.CLI_ARGS}}"
+
+  deploy:
+    desc: "Run only the compose deploy / cleanup"
+    deps: [ detect ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DEPLOY_PLAY}} {{.CLI_ARGS}}"
+
+  ansible_full:
+    desc: "End‑to‑end: detect → bootstrap → harden → deploy"
+    deps: [ venv:init ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} ansible/site.yaml {{.CLI_ARGS}}"
 
   ansible-check:
     desc: "Dry-run Ansible"
     deps:
     - venv:init
     cmds:
-    - "{{.PLAYBOOK_CMD}} -i {{.INVENTORY}} {{.PLAYBOOK}} --check {{.CLI_ARGS}}"
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_PLAYBOOK}} --check {{.CLI_ARGS}}"

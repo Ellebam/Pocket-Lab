@@ -1,0 +1,7 @@
+- name: Deploy the Pocket‑Lab stack
+  hosts: genai_servers
+  become: true
+  gather_facts: false
+  remote_user: "{{ l3d_users__local_users[0].name }}"
+  roles:
+  - pocket_lab
