@@ -6,8 +6,8 @@ ragflow/logs/
 
 # ---------- Ansible inventory & vars ----------------------------
 ansible/inventory/*.yaml
-ansible/inventory/*.yaml
-!ansible/inventory/hosts_example.yaml
+ansible/inventory/hosts.yaml
+!ansible/inventory/hosts.yaml.template
 ansible/inventory/group_vars/
 ansible/inventory/host_vars/
 
