@@ -20,5 +20,8 @@
 - name: Launch stack
   community.docker.docker_compose_v2:
     project_src: "{{ compose_repo }}"
+    check_files_existing: false
     pull: missing
     state: present
+    files:
+    - stack.yaml

@@ -2,7 +2,7 @@
 - name: Deploy the Pocket‑Lab stack
   hosts: genai_servers
   become: true
-  gather_facts: false
+  gather_facts: true
   remote_user: "{{ hostvars[inventory_hostname].conn_user }}"
   roles:
   - ensure_conn_user
