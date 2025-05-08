@@ -1,9 +1,21 @@
-# ansible/plays/30-deploy.yaml
 - name: Deploy the Pocket‑Lab stack
   hosts: genai_servers
   become: true
-  gather_facts: true
-  remote_user: "{{ hostvars[inventory_hostname].conn_user }}"
+  gather_facts: false          # we’ll gather after user is fixed
+  pre_tasks:
+    - name: Ensure connection user is known (probe if cache expired)
+      include_role:
+        name: ensure_conn_user
+        apply:
+          delegate_to: localhost
+
+    - name: Use that user for the rest of the play
+      set_fact:
+        ansible_user: "{{ conn_user }}"
+    - meta: reset_connection
+
+    - name: Gather facts as {{ ansible_user }}
+      setup:
+
   roles:
-  - ensure_conn_user
-  - pocket_lab
+    - pocket_lab

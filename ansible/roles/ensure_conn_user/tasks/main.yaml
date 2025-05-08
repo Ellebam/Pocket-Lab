@@ -17,4 +17,4 @@
     set_fact:
       conn_user: "{{ conn_user }}"
       cacheable: yes
-  when: hostvars[inventory_hostname].conn_user is not defined
+  when: "'conn_user' not in hostvars[inventory_hostname] or not hostvars[inventory_hostname].conn_user"
