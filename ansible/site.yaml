@@ -1,5 +1,5 @@
-# site.yml
-- import_playbook: plays/00-detect-user.yml
-- import_playbook: plays/10-bootstrap.yml
-- import_playbook: plays/20-harden.yml
-- import_playbook: plays/30-deploy.yml
+# site.yaml
+- import_playbook: plays/00-detect-user.yaml
+- import_playbook: plays/10-bootstrap.yaml
+- import_playbook: plays/20-harden.yaml
+- import_playbook: plays/30-deploy.yaml

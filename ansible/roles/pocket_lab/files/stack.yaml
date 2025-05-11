@@ -247,7 +247,7 @@ services:
 
   ragflow:
     <<: *common
-    image: ${RAGFLOW_IMAGE}
+    image: infiniflow/ragflow:${RAGFLOW_VERSION}
     depends_on:
       elasticsearch:
         condition: service_started

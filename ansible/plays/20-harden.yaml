@@ -20,6 +20,3 @@
     vars:
       ssh_permit_root_login: "no"
       ssh_allow_users: "{{ users_user_list | map(attribute='name') | join(' ') }}"
-  - role: geerlingguy.docker
-    vars:
-      docker_install_compose: true
