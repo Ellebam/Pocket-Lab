@@ -2,6 +2,8 @@
   community.docker.docker_compose_v2:
     project_src: "{{ compose_repo }}"
     state: absent
+    files:
+    - stack.yaml
 
 - name: Remove compose directory entirely
   file:
