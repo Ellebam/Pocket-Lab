@@ -1,6 +1,7 @@
+stack_state: present
 # ---------- Paths / versions ----------
 docker_version: "latest"
-docker_compose_version: "v2.27.1"
+docker_compose_version: "v2.36.0"
 compose_repo: "/opt/pocket_lab"
 
 # ---------- Stack-wide ----------
@@ -8,56 +9,84 @@ stack_domain: "ai.lab.example.com"
 stack_email: "admin@example.com"
 stack_timezone: "Europe/Berlin"
 mem_limit: "4g"
+traefik_version: "2.11.3"
 
 # ---------- Auth ----------
 basic_auth: "user:$$2y$$exampleHash"
 
-# ---------- Twingate ----------
-tenant_name: "your-tenant"
-container_name1: "tg-connector-1"
-container_name2: "tg-connector-2"
-access_token1: ""
-refresh_token1: ""
-access_token2: ""
-refresh_token2: ""
+
+# ───── Observability  ────
+prometheus_version: "v3.3.1"
+loki_version: "3.0.0"
+grafana_version: "10.4.3"
+node_exporter_version: "v1.9.1"
+portainer_version: "2.20.3"
 
 # ---------- n8n ----------
+n8n_version: "1.50.0"
 n8n_user: "admin"
 n8n_password: "changeme"
 
-# ----------  ES ----------
-stack_version: "8.12.2"
+# ---------- ollama ----------
+ollama_version: "0.1.30"
+
+# ---------- openwebui ----------
+openwebui_version: "v0.6.9"
+
+# ----------  Elasticsearch ----------
+es_version: "8.13.4"
 es_port: 19200
-elastic_password: "changeme"
+es_password: "changeme"
+es_host: "es01"
 
 # -------- infinity -----------
-
+infinity_version: "v0.6.0-dev3"
 infinity_thrift_port: 23817
 infinity_http_port: 23820
 infinity_psql_port: 15432
+infinity_host: "infinity"
+
 # ----------- mysql -----------
-mysql_password: "changeme"
+mysql_version: "8.0.39"
+mysql_root_password: "changeme"
 mysql_port: 3306
+mysql_host: "mysql"
+mysql_dbname: "pocket_lab"
 
 # --------- minio -------------
+minio_version: "RELEASE.2023-12-20T01-00-02Z"
 minio_port: 9000
 minio_console_port: 9001
-minio_user: "minioadmin"
-minio_password: "minioadmin"
+minio_root_user: "minioadmin"
+minio_root_password: "minioadmin"
+
 
 # ---------- valkye/redis ----------
+redis_version: "8.1.0"
 redis_password: "changeme"
 redis_port: 6379
 
+
 # -------------- ragflow ------------
 svr_http_port: 9380
-ragflow_image: "infiniflow/ragflow:latest"
-ragflow_extra_ports: "80,443,5678,5679,9382"
-ragflow_nginx_conf_dir: "./nginx"
-ragflow_history_dir: "./history_data_agent"
-ragflow_log_dir: "./ragflow-logs"
+
 hf_endpoint: "https://huggingface.co"
 macos: false
+ragflow_doc_engine: "elasticsearch"
+ragflow_version: "v0.18.0"
+ragflow_extra_ports: "80,443,5678,5679,9382"
+ragflow_nginx_conf_dir: "./ragflow/nginx"
+ragflow_history_dir: "./ragflow/history_data_agent"
+ragflow_log_dir: "./ragflow/ragflow-logs"
+
+# ---------- Twingate ----------
+tg_tenant_name: "your-tenant"
+tg_container_name1: "tg-connector-1"
+tg_container_name2: "tg-connector-2"
+tg_access_token1: ""
+tg_refresh_token1: ""
+tg_access_token2: ""
+tg_refresh_token2: ""
 
 # ---------- Security ----------
 ssh_harden: true
@@ -65,9 +94,9 @@ sshd_max_auth_tries: 10
 sshd_max_startups: "10:30:100"
 firewall_open_tcp: [80, 443, 22]
 auto_updates: true
-users_user_list: []
 sshd_priv_separation_path: >-
   {{ (ansible_service_mgr == 'systemd')
        | ternary('/run/sshd', '/var/empty/sshd') }}
+
 # ---------- Users ----------
 l3d_users__local_users: []
