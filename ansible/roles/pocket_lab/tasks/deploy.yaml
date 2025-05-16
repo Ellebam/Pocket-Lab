@@ -2,14 +2,13 @@
   file:
     path: "{{ compose_repo }}"
     state: directory
+    mode: '0755'
 
-- name: Copy stack files
+- name: Copy entire stack asset tree (preserve perms)
   copy:
-    src: "{{ item }}"
-    dest: "{{ compose_repo }}/{{ item | basename }}"
-    mode: "0644"
-  with_fileglob:
-  - "{{ role_path }}/files/*"
+    src: "{{ role_path }}/files/"
+    dest: "{{ compose_repo }}/"
+    mode: preserve
 
 - name: Render .env file
   template:
