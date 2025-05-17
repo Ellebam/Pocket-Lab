@@ -10,7 +10,7 @@ x-common: &common
 
 ############################
 #        OBSERVABILITY     #
-############################
+############################5678
 services:
 
   prometheus:
@@ -21,6 +21,12 @@ services:
     - prometheus-data:/prometheus
     ports:
     - "9090:9090"
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.prometheus.rule=Host(`prometheus.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.prometheus.entrypoints=websecure
+    - traefik.http.routers.prometheus.tls.certresolver=le
+    - traefik.http.routers.prometheus.middlewares=auth@file
 
   loki:
     <<: *common
@@ -39,6 +45,12 @@ services:
     - "3001:3000"
     environment:
     - GF_INSTALL_PLUGINS=grafana-clock-panel
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.grafana.rule=Host(`grafana.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.grafana.entrypoints=websecure
+    - traefik.http.routers.grafana.tls.certresolver=le
+    - traefik.http.routers.grafana.middlewares=auth@file
 
   node-exporter:
     restart: unless-stopped
@@ -101,6 +113,12 @@ services:
     volumes:
     - portainer-data:/data
     - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.portainer.rule=Host(`portainer.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.portainer.entrypoints=websecure
+    - traefik.http.routers.portainer.tls.certresolver=le
+    - traefik.http.routers.portainer.middlewares=auth@file
 
   ############################
   #            APPS          #
@@ -234,6 +252,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.mysql.rule=Host(`mysql.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.mysql.entrypoints=websecure
+    - traefik.http.routers.mysql.tls.certresolver=le
+    - traefik.http.routers.mysql.middlewares=auth@file
 
   minio:
     <<: *common
@@ -252,6 +276,12 @@ services:
     environment:
     - MINIO_ROOT_USER=${MINIO_ROOT_USER}
     - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.minio.entrypoints=websecure
+    - traefik.http.routers.minio.tls.certresolver=le
+    - traefik.http.routers.minio.middlewares=auth@file
 
   valkey:
     <<: *common
@@ -270,6 +300,12 @@ services:
     - "${REDIS_PORT}:6379"
     volumes:
     - redis_data:/data
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.redis.rule=Host(`redis.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.redis.entrypoints=websecure
+    - traefik.http.routers.redis.tls.certresolver=le
+    - traefik.http.routers.redis.middlewares=auth@file
 
   ragflow:
     <<: *common
@@ -281,16 +317,9 @@ services:
       mysql: { condition: service_healthy }
     ports:
     - "${SVR_HTTP_PORT}:9380"
-    - 80:80
-    - 443:443
-    - 5678:5678
-    - 5679:5679
-    - 9382:9382 # MCP port (disabled unless you add cmd)
+    - 9382:9382 # MCP port 
     volumes:
     - ${RAGFLOW_LOG_DIR}:/ragflow/logs
-    - ${RAGFLOW_NGINX_CONF_DIR}/ragflow.conf:/etc/nginx/conf.d/ragflow.conf
-    - ${RAGFLOW_NGINX_CONF_DIR}/proxy.conf:/etc/nginx/proxy.conf
-    - ${RAGFLOW_NGINX_CONF_DIR}/nginx.conf:/etc/nginx/nginx.conf
     - ${RAGFLOW_HISTORY_DIR}:/ragflow/history_data_agent
     - ./ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
     - ./ragflow/entrypoint.sh:/ragflow/entrypoint.sh:ro

@@ -16,6 +16,12 @@
     dest: "{{ compose_repo }}/.env"
     mode: "0640"
 
+- name: Ensure acme.json exists with 0600
+  copy:
+    content: "" # create empty file if absent
+    dest: "{{ compose_repo }}/traefik/acme.json"
+    mode: "0600"
+
 - name: Launch stack
   community.docker.docker_compose_v2:
     project_src: "{{ compose_repo }}"
