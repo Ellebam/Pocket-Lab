@@ -16,6 +16,12 @@
     dest: "{{ compose_repo }}/.env"
     mode: "0640"
 
+- name: Render traefik_dynamic.yaml file
+  template:
+    src: traefik_dynamic.yaml.j2
+    dest: "{{ compose_repo }}/traefik/traefik_dynamic.yaml"
+    mode: "0640"
+
 - name: Ensure acme.json exists with 0600
   copy:
     content: "" # create empty file if absent

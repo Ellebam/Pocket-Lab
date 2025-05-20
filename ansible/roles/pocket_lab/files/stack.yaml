@@ -10,7 +10,7 @@ x-common: &common
 
 ############################
 #        OBSERVABILITY     #
-############################5678
+############################
 services:
 
   prometheus:
@@ -19,8 +19,8 @@ services:
     volumes:
     - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
     - prometheus-data:/prometheus
-    ports:
-    - "9090:9090"
+    expose:
+    - "9090"
     labels:
     - traefik.enable=true
     - traefik.http.routers.prometheus.rule=Host(`prometheus.${TRAEFIK_DOMAIN}`)
@@ -41,8 +41,8 @@ services:
     image: grafana/grafana:${GRAFANA_VERSION}
     volumes:
     - grafana-data:/var/lib/grafana
-    ports:
-    - "3001:3000"
+    expose:
+    - "3000"
     environment:
     - GF_INSTALL_PLUGINS=grafana-clock-panel
     labels:
@@ -56,6 +56,8 @@ services:
     restart: unless-stopped
     env_file: .env
     image: prom/node-exporter:${NODE_EXPORTER_VERSION}
+    expose:
+    - "9100"
     network_mode: host
     pid: host
     command:
@@ -108,8 +110,8 @@ services:
   portainer:
     <<: *common
     image: portainer/portainer-ce:${PORTAINER_VERSION}
-    ports:
-    - "9443:9443"
+    expose:
+    - "9443"
     volumes:
     - portainer-data:/data
     - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -127,8 +129,8 @@ services:
     <<: *common
     image: n8nio/n8n:${N8N_VERSION}
     restart: on-failure
-    ports:
-    - "5678:5678"
+    expose:
+    - "5678"
     volumes:
     - n8n-data:/home/node/.n8n
     labels:
@@ -150,8 +152,8 @@ services:
   ollama:
     <<: *common
     image: ollama/ollama:${OLLAMA_VERSION}
-    ports:
-    - "11434:11434"
+    expose:
+    - "11434"
     volumes:
     - ollama-data:/root/.ollama
     labels:
@@ -164,8 +166,8 @@ services:
   openwebui:
     <<: *common
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
-    ports:
-    - "8080:8080"
+    expose:
+    - "8080"
     labels:
     - traefik.enable=true
     - traefik.http.routers.webui.rule=Host(`chat.${TRAEFIK_DOMAIN}`)
@@ -182,8 +184,8 @@ services:
     container_name: es-01
     volumes:
     - esdata01:/usr/share/elasticsearch/data
-    ports:
-    - "${ES_PORT}:9200"
+    expose:
+    - "${ES_PORT}"
     environment:
     - node.name=es01
     - discovery.type=single-node
@@ -217,10 +219,10 @@ services:
     command:
     - -f
     - /infinity_conf.toml
-    ports:
-    - "${INFINITY_THRIFT_PORT}:23817"
-    - "${INFINITY_HTTP_PORT}:23820"
-    - "${INFINITY_PSQL_PORT}:5432"
+    expose:
+    - "${INFINITY_THRIFT_PORT}"
+    - "${INFINITY_HTTP_PORT}"
+    - "${INFINITY_PSQL_PORT}"
     ulimits:
       nofile: { soft: 500000, hard: 500000 }
     healthcheck:
@@ -240,8 +242,8 @@ services:
     - --tls_version=TLSv1.2,TLSv1.3
     - --init-file=/data/application/init.sql
     - --binlog_expire_logs_seconds=604800
-    ports:
-    - "${MYSQL_PORT}:3306"
+    expose:
+    - "${MYSQL_PORT}"
     volumes:
     - mysql_data:/var/lib/mysql
     - ./ragflow/init.sql:/data/application/init.sql:ro
@@ -268,9 +270,9 @@ services:
     - --console-address
     - ":9001"
     - /data
-    ports:
-    - "${MINIO_PORT}:9000"
-    - "${MINIO_CONSOLE_PORT}:9001"
+    expose:
+    - "${MINIO_PORT}"
+    - "${MINIO_CONSOLE_PORT}"
     volumes:
     - minio_data:/data
     environment:
@@ -296,8 +298,8 @@ services:
     - 128mb
     - --maxmemory-policy
     - allkeys-lru
-    ports:
-    - "${REDIS_PORT}:6379"
+    expose:
+    - "${REDIS_PORT}"
     volumes:
     - redis_data:/data
     labels:
@@ -315,9 +317,9 @@ services:
       elasticsearch: { condition: service_started }
       infinity: { condition: service_started }
       mysql: { condition: service_healthy }
-    ports:
-    - "${SVR_HTTP_PORT}:9380"
-    - 9382:9382 # MCP port 
+    expose:
+    - "${SVR_HTTP_PORT}"
+    - "9382" # MCP port 
     volumes:
     - ${RAGFLOW_LOG_DIR}:/ragflow/logs
     - ${RAGFLOW_HISTORY_DIR}:/ragflow/history_data_agent
