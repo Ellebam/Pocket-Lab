@@ -82,7 +82,7 @@ services:
     labels:
     - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.dashboard.entrypoints=websecure
-    - traefik.http.routers.dashboard.tls.certresolver=le
+    - traefik.http.routers.dashboard.tls.certresolver=le-dns
     - traefik.http.routers.dashboard.middlewares=auth@file
     command:
     - --providers.docker.exposedbydefault=false
@@ -90,10 +90,7 @@ services:
     - --api.dashboard=true
     - --entrypoints.web.address=:80
     - --entrypoints.websecure.address=:443
-    - --certificatesresolvers.le.acme.storage=/acme.json
     - --certificatesresolvers.le-dns.acme.storage=/acme.json
-    - --certificatesresolvers.le.acme.email=${TRAEFIK_LE_EMAIL}
-    - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
     - --certificatesresolvers.le-dns.acme.email=${TRAEFIK_LE_EMAIL}
     - --certificatesresolvers.le-dns.acme.dnschallenge.provider=cloudflare
 

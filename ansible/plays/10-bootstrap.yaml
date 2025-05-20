@@ -10,4 +10,7 @@
   - ensure_conn_user
   - l3d.users.user
   - l3d.users.admin
+  - role: geerlingguy.docker
+    vars:
+      docker_install_compose: true
 
