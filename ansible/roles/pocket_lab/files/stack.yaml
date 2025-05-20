@@ -80,9 +80,15 @@ services:
     - /var/run/docker.sock:/var/run/docker.sock:ro
     - ./traefik/acme.json:/acme.json
     - ./traefik/traefik_dynamic.yaml:/traefik_dynamic.yaml:ro
+    labels:
+    - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.dashboard.entrypoints=websecure
+    - traefik.http.routers.dashboard.tls.certresolver=le
+    - traefik.http.routers.dashboard.middlewares=auth@file
     command:
     - --providers.docker.exposedbydefault=false
     - --providers.file.filename=/traefik_dynamic.yaml
+    - --api.dashboard=true
     - --entrypoints.web.address=:80
     - --entrypoints.websecure.address=:443
     - --certificatesresolvers.le.acme.storage=/acme.json
