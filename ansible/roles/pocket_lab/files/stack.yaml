@@ -77,12 +77,12 @@ services:
     - "443:443"
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
-    - ./traefik/acme.json:/acme.json
     - ./traefik/traefik_dynamic.yaml:/traefik_dynamic.yaml:ro
     labels:
-    - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/dashboard`) || PathPrefix(`api`))
     - traefik.http.routers.dashboard.entrypoints=websecure
     - traefik.http.routers.dashboard.tls.certresolver=le-dns
+    - traefik.http.routers.dashboard.service=api@internal
     - traefik.http.routers.dashboard.middlewares=auth@file
     command:
     - --providers.docker.exposedbydefault=false
@@ -144,16 +144,15 @@ services:
     - traefik.http.routers.n8n.rule=Host(`n8n.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.n8n.entrypoints=websecure
     - traefik.http.routers.n8n.tls.certresolver=le-dns
-    - traefik.http.routers.n8n.middlewares=auth@file
-    - traefik.http.middlewares.n8n.headers.SSLRedirect=true
-    - traefik.http.middlewares.n8n.headers.STSSeconds=315360000
+    - traefik.http.routers.n8n.middlewares=auth@file,n8n-headers@docker
+    - traefik.http.middlewares.n8n-headers.SSLRedirect=true
+    - traefik.http.middlewares.n8n-headers.STSSeconds=315360000
     - traefik.http.middlewares.n8n.headers.browserXSSFilter=true
     - traefik.http.middlewares.n8n.headers.contentTypeNosniff=true
     - traefik.http.middlewares.n8n.headers.forceSTSHeader=true
     - traefik.http.middlewares.n8n.headers.SSLHost=${TRAEFIK_DOMAIN}
     - traefik.http.middlewares.n8n.headers.STSIncludeSubdomains=true
     - traefik.http.middlewares.n8n.headers.STSPreload=true
-    - traefik.http.routers.n8n.middlewares=n8n@docker
 
   ollama:
     <<: *common
