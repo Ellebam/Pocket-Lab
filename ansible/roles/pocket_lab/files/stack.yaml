@@ -25,7 +25,7 @@ services:
     - traefik.enable=true
     - traefik.http.routers.prometheus.rule=Host(`prometheus.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.prometheus.entrypoints=websecure
-    - traefik.http.routers.prometheus.tls.certresolver=le
+    - traefik.http.routers.prometheus.tls.certresolver=le-dns
     - traefik.http.routers.prometheus.middlewares=auth@file
     - traefik.http.services.prometheus.loadbalancer.server.port=9090
 
@@ -50,7 +50,7 @@ services:
     - traefik.enable=true
     - traefik.http.routers.grafana.rule=Host(`grafana.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.grafana.entrypoints=websecure
-    - traefik.http.routers.grafana.tls.certresolver=le
+    - traefik.http.routers.grafana.tls.certresolver=le-dns
     - traefik.http.routers.grafana.middlewares=auth@file
 
   node-exporter:
@@ -91,8 +91,11 @@ services:
     - --entrypoints.web.address=:80
     - --entrypoints.websecure.address=:443
     - --certificatesresolvers.le.acme.storage=/acme.json
+    - --certificatesresolvers.le-dns.acme.storage=/acme.json
     - --certificatesresolvers.le.acme.email=${TRAEFIK_LE_EMAIL}
     - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    - --certificatesresolvers.le-dns.acme.email=${TRAEFIK_LE_EMAIL}
+    - --certificatesresolvers.le-dns.acme.dnschallenge.provider=cloudflare
 
   twingate-1:
     restart: unless-stopped
@@ -124,7 +127,7 @@ services:
     - traefik.enable=true
     - traefik.http.routers.portainer.rule=Host(`portainer.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.portainer.entrypoints=websecure
-    - traefik.http.routers.portainer.tls.certresolver=le
+    - traefik.http.routers.portainer.tls.certresolver=le-dns
     - traefik.http.routers.portainer.middlewares=auth@file
     - traefik.http.services.portainer.loadbalancer.server.port=9443
 
@@ -143,7 +146,7 @@ services:
     - traefik.enable=true
     - traefik.http.routers.n8n.rule=Host(`n8n.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.n8n.entrypoints=websecure
-    - traefik.http.routers.n8n.tls.certresolver=le
+    - traefik.http.routers.n8n.tls.certresolver=le-dns
     - traefik.http.routers.n8n.middlewares=auth@file
     - traefik.http.middlewares.n8n.headers.SSLRedirect=true
     - traefik.http.middlewares.n8n.headers.STSSeconds=315360000
@@ -166,7 +169,7 @@ services:
     - traefik.enable=true
     - traefik.http.routers.ollama.rule=Host(`ollama.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.ollama.entrypoints=websecure
-    - traefik.http.routers.ollama.tls.certresolver=le
+    - traefik.http.routers.ollama.tls.certresolver=le-dns
     - traefik.http.routers.ollama.middlewares=auth@file
 
   openwebui:
@@ -178,7 +181,7 @@ services:
     - traefik.enable=true
     - traefik.http.routers.webui.rule=Host(`chat.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.webui.entrypoints=websecure
-    - traefik.http.routers.webui.tls.certresolver=le
+    - traefik.http.routers.webui.tls.certresolver=le-dns
     - traefik.http.routers.webui.middlewares=auth@file
     - traefik.http.services.openwebui.loadbalancer.server.port=3000
 
@@ -283,7 +286,7 @@ services:
     - traefik.enable=true
     - traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.minio.entrypoints=websecure
-    - traefik.http.routers.minio.tls.certresolver=le
+    - traefik.http.routers.minio.tls.certresolver=le-dns
     - traefik.http.routers.minio.middlewares=auth@file
     - traefik.http.services.portainer.loadbalancer.server.port=9001
 
@@ -328,7 +331,7 @@ services:
     - traefik.enable=true
     - traefik.http.routers.ragflow.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.ragflow.entrypoints=websecure
-    - traefik.http.routers.ragflow.tls.certresolver=le
+    - traefik.http.routers.ragflow.tls.certresolver=le-dns
     - traefik.http.routers.ragflow.middlewares=auth@file
     - traefik.http.services.ragflow.loadbalancer.server.port=80
 
