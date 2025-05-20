@@ -1,8 +1,11 @@
-stack_state: present
+stack_state: absent
 # ---------- Paths / versions ----------
 docker_version: "latest"
 docker_compose_version: "v2.36.0"
 compose_repo: "/opt/pocket_lab"
+
+# ---------- DNS ----------
+cloudflare_api_token: ""
 
 # ---------- Stack-wide ----------
 stack_domain: "ai.lab.example.com"
@@ -74,8 +77,7 @@ hf_endpoint: "https://huggingface.co"
 macos: false
 ragflow_doc_engine: "elasticsearch"
 ragflow_version: "v0.18.0"
-ragflow_extra_ports: "80,443,5678,5679,9382"
-ragflow_nginx_conf_dir: "./ragflow/nginx"
+ragflow_extra_ports: "9382"
 ragflow_history_dir: "./ragflow/history_data_agent"
 ragflow_log_dir: "./ragflow/ragflow-logs"
 

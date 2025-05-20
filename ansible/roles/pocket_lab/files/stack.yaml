@@ -27,6 +27,7 @@ services:
     - traefik.http.routers.prometheus.entrypoints=websecure
     - traefik.http.routers.prometheus.tls.certresolver=le
     - traefik.http.routers.prometheus.middlewares=auth@file
+    - traefik.http.services.prometheus.loadbalancer.server.port=9090
 
   loki:
     <<: *common
@@ -58,8 +59,6 @@ services:
     image: prom/node-exporter:${NODE_EXPORTER_VERSION}
     expose:
     - "9100"
-    network_mode: host
-    pid: host
     command:
     - --path.rootfs=/host
     volumes:
@@ -127,6 +126,7 @@ services:
     - traefik.http.routers.portainer.entrypoints=websecure
     - traefik.http.routers.portainer.tls.certresolver=le
     - traefik.http.routers.portainer.middlewares=auth@file
+    - traefik.http.services.portainer.loadbalancer.server.port=9443
 
   ############################
   #            APPS          #
@@ -180,6 +180,7 @@ services:
     - traefik.http.routers.webui.entrypoints=websecure
     - traefik.http.routers.webui.tls.certresolver=le
     - traefik.http.routers.webui.middlewares=auth@file
+    - traefik.http.services.openwebui.loadbalancer.server.port=3000
 
   ############################
   #     DATA / RAG STACK     #
@@ -260,12 +261,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    labels:
-    - traefik.enable=true
-    - traefik.http.routers.mysql.rule=Host(`mysql.${TRAEFIK_DOMAIN}`)
-    - traefik.http.routers.mysql.entrypoints=websecure
-    - traefik.http.routers.mysql.tls.certresolver=le
-    - traefik.http.routers.mysql.middlewares=auth@file
 
   minio:
     <<: *common
@@ -290,6 +285,7 @@ services:
     - traefik.http.routers.minio.entrypoints=websecure
     - traefik.http.routers.minio.tls.certresolver=le
     - traefik.http.routers.minio.middlewares=auth@file
+    - traefik.http.services.portainer.loadbalancer.server.port=9001
 
   valkey:
     <<: *common
@@ -308,12 +304,6 @@ services:
     - "${REDIS_PORT}"
     volumes:
     - redis_data:/data
-    labels:
-    - traefik.enable=true
-    - traefik.http.routers.redis.rule=Host(`redis.${TRAEFIK_DOMAIN}`)
-    - traefik.http.routers.redis.entrypoints=websecure
-    - traefik.http.routers.redis.tls.certresolver=le
-    - traefik.http.routers.redis.middlewares=auth@file
 
   ragflow:
     <<: *common
@@ -340,6 +330,7 @@ services:
     - traefik.http.routers.ragflow.entrypoints=websecure
     - traefik.http.routers.ragflow.tls.certresolver=le
     - traefik.http.routers.ragflow.middlewares=auth@file
+    - traefik.http.services.ragflow.loadbalancer.server.port=80
 
 ############################
 #         VOLUMES          #
