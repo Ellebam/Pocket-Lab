@@ -78,20 +78,29 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
     - ./traefik/traefik_dynamic.yaml:/traefik_dynamic.yaml:ro
-    - ./traefik/acme.json:/acme.json
+    - le-data:/acme
     labels:
-    - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    - traefik.enable=true
+    - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`) #&& (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
     - traefik.http.routers.dashboard.entrypoints=websecure
     - traefik.http.routers.dashboard.tls.certresolver=le-dns
     - traefik.http.routers.dashboard.service=api@internal
     - traefik.http.routers.dashboard.middlewares=auth@file
+    ## Bootstrap router – never exposed
+    - traefik.http.routers.le-bootstrap.rule=Host(`boot.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.le-bootstrap.entrypoints=websecure
+    - traefik.http.routers.le-bootstrap.tls=true
+    - traefik.http.routers.le-bootstrap.tls.certresolver=le-dns
+    - traefik.http.routers.le-bootstrap.tls.domains[0].main=${TRAEFIK_DOMAIN}
+    - traefik.http.routers.le-bootstrap.tls.domains[0].sans=*.${TRAEFIK_DOMAIN}
+
     command:
     - --providers.docker.exposedbydefault=false
     - --providers.file.filename=/traefik_dynamic.yaml
     - --api.dashboard=true
     - --entrypoints.web.address=:80
     - --entrypoints.websecure.address=:443
-    - --certificatesresolvers.le-dns.acme.storage=/acme.json
+    - --certificatesresolvers.le-dns.acme.storage=/acme/acme.json
     - --certificatesresolvers.le-dns.acme.email=${TRAEFIK_LE_EMAIL}
     - --certificatesresolvers.le-dns.acme.dnschallenge.provider=cloudflare
     - --certificatesresolvers.le-dns.acme.dnschallenge.delaybeforecheck=0
@@ -146,15 +155,13 @@ services:
     - traefik.http.routers.n8n.rule=Host(`n8n.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.n8n.entrypoints=websecure
     - traefik.http.routers.n8n.tls.certresolver=le-dns
-    - traefik.http.routers.n8n.middlewares=auth@file,n8n-headers@docker
-    - traefik.http.middlewares.n8n-headers.SSLRedirect=true
+    - traefik.http.routers.n8n.middlewares=auth@file,n8n-headers@docker,https-redirect@docker
     - traefik.http.middlewares.n8n-headers.STSSeconds=315360000
-    - traefik.http.middlewares.n8n-headers.browserXSSFilter=true
-    - traefik.http.middlewares.n8n-headers.contentTypeNosniff=true
-    - traefik.http.middlewares.n8n-headers.forceSTSHeader=true
-    - traefik.http.middlewares.n8n-headers.SSLHost=${TRAEFIK_DOMAIN}
     - traefik.http.middlewares.n8n-headers.STSIncludeSubdomains=true
     - traefik.http.middlewares.n8n-headers.STSPreload=true
+    - traefik.http.middlewares.n8n-headers.browserXSSFilter=true
+    - traefik.http.middlewares.n8n-headers.contentTypeNosniff=true
+    - traefik.http.middlewares.https-redicrect.redirectscheme.scheme=https
 
   ollama:
     <<: *common
@@ -350,6 +357,7 @@ volumes:
   redis_data:
   ragflow-logs:
   ragflow-history:
+  le-data:
 
     ############################
     #         NETWORKS         #
