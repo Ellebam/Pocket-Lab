@@ -223,7 +223,7 @@ services:
     healthcheck:
       test:
       - CMD-SHELL
-      - curl -s http://localhost:9200 >/dev/null || exit 1
+      - curl -s http://localhost:${ES_PORT}>/dev/null || exit 1
       interval: 10s
       timeout: 10s
       retries: 120
@@ -296,7 +296,7 @@ services:
     - traefik.http.routers.minio.entrypoints=websecure
     - traefik.http.routers.minio.tls.certresolver=le-dns
     - traefik.http.routers.minio.middlewares=auth@file
-    - traefik.http.services.minio.loadbalancer.server.port=${MINIO_PORT}
+    - traefik.http.services.minio.loadbalancer.server.port=${MINIO_CONSOLE_PORT}
     - traefik.http.services.minio.loadbalancer.server.scheme=https
 
   valkey:
