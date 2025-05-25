@@ -139,6 +139,7 @@ services:
     - traefik.http.routers.portainer.middlewares=auth@file
     - traefik.http.services.portainer.loadbalancer.server.port=${PORTAINER_PORT}
     - traefik.http.services.portainer.loadbalancer.server.scheme=https
+    - traefik.http.services.portainer.loadbalancer.server.insecureSkipVerify=true
 
   ############################
   #            APPS          #
@@ -191,7 +192,7 @@ services:
     - traefik.http.routers.webui.tls.certresolver=le-dns
     - traefik.http.routers.webui.middlewares=auth@file
     - traefik.http.services.openwebui.loadbalancer.server.port=${OPENWEBUI_PORT}
-    - traefik.http.services.openwebui.loadbalancer.server.scheme=https
+    - traefik.http.services.openwebui.loadbalancer.server.scheme=http
 
   ############################
   #     DATA / RAG STACK     #
@@ -297,7 +298,7 @@ services:
     - traefik.http.routers.minio.tls.certresolver=le-dns
     - traefik.http.routers.minio.middlewares=auth@file
     - traefik.http.services.minio.loadbalancer.server.port=${MINIO_CONSOLE_PORT}
-    - traefik.http.services.minio.loadbalancer.server.scheme=https
+    - traefik.http.services.minio.loadbalancer.server.scheme=http
 
   valkey:
     <<: *common
