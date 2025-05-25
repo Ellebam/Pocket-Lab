@@ -2,8 +2,8 @@
 version: "3"
 
 vars:
-  ROOT_COMPOSE: docker compose -f stack.yaml
-  ROLE_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/stack.yaml
+  ROOT_COMPOSE: docker compose -f compose.yaml
+  ROLE_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/compose.yaml
   VENV_DIR: .venv
   VENV_BIN: "{{ .VENV_DIR }}/bin"
   PYTHON: "{{ .VENV_BIN }}/python"

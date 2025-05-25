@@ -1,4 +1,4 @@
-# stack.yaml
+# compose.yaml
 
 x-common: &common
   restart: unless-stopped
@@ -81,7 +81,7 @@ services:
     - le-data:/acme
     labels:
     - traefik.enable=true
-    - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`) #&& (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+    - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
     - traefik.http.routers.dashboard.entrypoints=websecure
     - traefik.http.routers.dashboard.tls.certresolver=le-dns
     - traefik.http.routers.dashboard.service=api@internal
@@ -137,7 +137,8 @@ services:
     - traefik.http.routers.portainer.entrypoints=websecure
     - traefik.http.routers.portainer.tls.certresolver=le-dns
     - traefik.http.routers.portainer.middlewares=auth@file
-    - traefik.http.services.portainer.loadbalancer.server.port=9443
+    - traefik.http.services.portainer.loadbalancer.server.port=${PORTAINER_PORT}
+    - traefik.http.services.portainer.loadbalancer.server.scheme=https
 
   ############################
   #            APPS          #
@@ -189,7 +190,8 @@ services:
     - traefik.http.routers.webui.entrypoints=websecure
     - traefik.http.routers.webui.tls.certresolver=le-dns
     - traefik.http.routers.webui.middlewares=auth@file
-    - traefik.http.services.openwebui.loadbalancer.server.port=3000
+    - traefik.http.services.openwebui.loadbalancer.server.port=${OPENWEBUI_PORT}
+    - traefik.http.services.openwebui.loadbalancer.server.scheme=https
 
   ############################
   #     DATA / RAG STACK     #
@@ -197,7 +199,7 @@ services:
   elasticsearch:
     <<: *common
     image: elasticsearch:${ES_VERSION}
-    container_name: es-01
+    container_name: es01
     volumes:
     - esdata01:/usr/share/elasticsearch/data
     expose:
@@ -294,7 +296,8 @@ services:
     - traefik.http.routers.minio.entrypoints=websecure
     - traefik.http.routers.minio.tls.certresolver=le-dns
     - traefik.http.routers.minio.middlewares=auth@file
-    - traefik.http.services.portainer.loadbalancer.server.port=9001
+    - traefik.http.services.minio.loadbalancer.server.port=${MINIO_PORT}
+    - traefik.http.services.minio.loadbalancer.server.scheme=https
 
   valkey:
     <<: *common

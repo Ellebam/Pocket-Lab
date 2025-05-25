@@ -10,7 +10,7 @@
 | `ansible/plays/00‑30‑*.yaml`         | Four atomic playbooks (detect → bootstrap → harden → deploy).                                                                                   |
 | `ansible/roles/ensure_conn_user`     | Detects **root**, inventory‑defined user, or first user in `l3d_users__local_users`, caches the winner for 24 h (Ansible jsonfile fact cache).  |
 | `ansible/roles/pocket_lab`           | All Docker‑stack logic (pre‑reqs + deploy + cleanup). Uses `community.docker.docker_compose_v2`.                                                |
-| `stack.yaml` & subordinate `files/*` | The actual compose spec (Traefik label routing, ES, RAGFlow, etc.).                                                                             |
+| `compose.yaml` & subordinate `files/*` | The actual compose spec (Traefik label routing, ES, RAGFlow, etc.).                                                                             |
 
 ## Getting started
 
@@ -49,7 +49,7 @@ For quick local experiments:
 ```
 
 
-These tasks invoke `docker compose` directly with the top‑level `stack.yaml` and your `.env`. No hardening or user management is touched.
+These tasks invoke `docker compose` directly with the top‑level `compose.yaml` and your `.env`. No hardening or user management is touched.
 
 ---
 

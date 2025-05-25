@@ -3,7 +3,7 @@
     project_src: "{{ compose_repo }}"
     state: absent
     files:
-    - stack.yaml
+    - compose.yaml
 
 - name: Remove compose directory entirely
   file:
