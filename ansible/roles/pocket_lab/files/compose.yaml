@@ -253,6 +253,7 @@ services:
   mysql:
     <<: *common
     image: mysql:${MYSQL_VERSION}
+    container_name: ${MYSQL_HOST}
     command:
     - --max_connections=1000
     - --character-set-server=utf8mb4
