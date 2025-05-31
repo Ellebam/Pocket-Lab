@@ -16,6 +16,7 @@ services:
   prometheus:
     <<: *common
     image: prom/prometheus:${PROMETHEUS_VERSION}
+    container_name: prometheus
     volumes:
     - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
     - prometheus-data:/prometheus
@@ -32,6 +33,7 @@ services:
   loki:
     <<: *common
     image: grafana/loki:${LOKI_VERSION}
+    container_name: loki
     volumes:
     - loki-data:/loki
     command:
@@ -40,6 +42,7 @@ services:
   grafana:
     <<: *common
     image: grafana/grafana:${GRAFANA_VERSION}
+    container_name: grafana
     volumes:
     - grafana-data:/var/lib/grafana
     expose:
@@ -54,6 +57,7 @@ services:
     - traefik.http.routers.grafana.middlewares=auth@file
 
   node-exporter:
+    container_name: node-exporter
     restart: unless-stopped
     env_file: .env
     image: prom/node-exporter:${NODE_EXPORTER_VERSION}
@@ -72,6 +76,7 @@ services:
   traefik:
     <<: *common
     image: traefik:${TRAEFIK_VERSION}
+    container_name: traefik
     ports:
     - "80:80"
     - "443:443"
@@ -86,6 +91,7 @@ services:
     - traefik.http.routers.dashboard.tls.certresolver=le-dns
     - traefik.http.routers.dashboard.service=api@internal
     - traefik.http.routers.dashboard.middlewares=auth@file
+    - traefik.http.middlewares.strip-auth-header.headers.customRequestHeaders.Authorization=""
     ## Bootstrap router – never exposed
     - traefik.http.routers.le-bootstrap.rule=Host(`boot.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.le-bootstrap.entrypoints=websecure
@@ -104,6 +110,8 @@ services:
     - --certificatesresolvers.le-dns.acme.email=${TRAEFIK_LE_EMAIL}
     - --certificatesresolvers.le-dns.acme.dnschallenge.provider=cloudflare
     - --certificatesresolvers.le-dns.acme.dnschallenge.delaybeforecheck=0
+    - --log.level=DEBUG
+    - --accesslog=true
 
   twingate-1:
     restart: unless-stopped
@@ -126,6 +134,7 @@ services:
   portainer:
     <<: *common
     image: portainer/portainer-ce:${PORTAINER_VERSION}
+    container_name: portainer
     expose:
     - ${PORTAINER_PORT}
     volumes:
@@ -147,6 +156,7 @@ services:
   n8n:
     <<: *common
     image: n8nio/n8n:${N8N_VERSION}
+    container_name: n8n
     restart: on-failure
     expose:
     - "5678"
@@ -169,6 +179,7 @@ services:
   ollama:
     <<: *common
     image: ollama/ollama:${OLLAMA_VERSION}
+    container_name: ollama
     expose:
     - "11434"
     volumes:
@@ -183,6 +194,7 @@ services:
   openwebui:
     <<: *common
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
+    container_name: openwebui
     expose:
     - "8080"
     labels:
@@ -232,6 +244,7 @@ services:
   infinity:
     <<: *common
     image: infiniflow/infinity:${INFINITY_VERSION}
+    container_name: infinity
     volumes:
     - infinity_data:/var/infinity
     - ./ragflow/infinity_conf.toml:/infinity_conf.toml:ro
@@ -279,6 +292,7 @@ services:
     <<: *common
     restart: on-failure
     image: quay.io/minio/minio:${MINIO_VERSION}
+    container_name: minio
     command:
     - server
     - --console-address
@@ -292,15 +306,18 @@ services:
     environment:
     - MINIO_ROOT_USER=${MINIO_ROOT_USER}
     - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    - MINIO_BROWSER_REDIRECT_URL=https://minio.${TRAEFIK_DOMAIN}
+    - MINIO_SERVER_URL=http://minio:${MINIO_PORT}
+
     labels:
     - traefik.enable=true
     - traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.minio.entrypoints=websecure
     - traefik.http.routers.minio.tls.certresolver=le-dns
-    - traefik.http.routers.minio.middlewares=auth@file
+    - traefik.http.routers.minio.middlewares=auth@file,strip-auth-header@docker
     - traefik.http.services.minio.loadbalancer.server.port=${MINIO_CONSOLE_PORT}
-    - traefik.http.services.minio.loadbalancer.server.scheme=https
-    - traefik.http.services.minio.loadbalancer.server.tls.insecureSkipVerify=true
+    - traefik.http.services.minio.loadbalancer.server.scheme=http
+ 
 
   valkey:
     <<: *common
@@ -344,11 +361,17 @@ services:
     restart: on-failure
     labels:
     - traefik.enable=true
-    - traefik.http.routers.ragflow.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
-    - traefik.http.routers.ragflow.entrypoints=websecure
-    - traefik.http.routers.ragflow.tls.certresolver=le-dns
-    - traefik.http.routers.ragflow.middlewares=auth@file
-    - traefik.http.services.ragflow.loadbalancer.server.port=80
+    - traefik.http.routers.ragflow-ui.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.ragflow-ui.entrypoints=websecure
+    - traefik.http.routers.ragflow-ui.tls.certresolver=le-dns
+    - traefik.http.routers.ragflow-ui.middlewares=auth@file,strip-auth-header@docker
+    - traefik.http.routers.ragflow-ui.service=ragflow-service
+    - traefik.http.routers.ragflow-api.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/v1`) || PathPrefix(`/api`))
+    - traefik.http.routers.ragflow-api.entrypoints=websecure
+    - traefik.http.routers.ragflow-api.tls.certresolver=le-dns
+    - traefik.http.routers.ragflow-api.middlewares=strip-auth-header@docker
+    - traefik.http.routers.ragflow-api.service=ragflow-service
+    - traefik.http.services.ragflow-service.loadbalancer.server.port=80
 
 ############################
 #         VOLUMES          #
