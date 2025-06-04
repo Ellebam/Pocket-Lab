@@ -296,7 +296,7 @@ services:
     command:
     - server
     - --console-address
-    - ":9001"
+    - ":${MINIO_CONSOLE_PORT}"
     - /data
     expose:
     - "${MINIO_PORT}"
@@ -307,18 +307,24 @@ services:
     - MINIO_ROOT_USER=${MINIO_ROOT_USER}
     - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     - MINIO_BROWSER_REDIRECT_URL=https://minio.${TRAEFIK_DOMAIN}
-    - MINIO_SERVER_URL=http://minio:${MINIO_PORT}
 
     labels:
-    - traefik.enable=true
-    - traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
-    - traefik.http.routers.minio.entrypoints=websecure
-    - traefik.http.routers.minio.tls.certresolver=le-dns
-    - traefik.http.routers.minio.middlewares=auth@file,strip-auth-header@docker
-    - traefik.http.services.minio.loadbalancer.server.port=${MINIO_CONSOLE_PORT}
-    - traefik.http.services.minio.loadbalancer.server.scheme=http
- 
+    - "traefik.enable=true"
 
+    - "traefik.http.routers.minio-api-ws.rule=Host(`minio.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/ws`)"
+    - "traefik.http.routers.minio-api-ws.entrypoints=websecure"
+    - "traefik.http.routers.minio-api-ws.tls.certresolver=le-dns"
+    - "traefik.http.routers.minio-api-ws.service=minio-api"
+    - "traefik.http.services.minio-api.loadbalancer.server.port=${MINIO_PORT}"
+    - "traefik.http.services.minio-api.loadbalancer.server.scheme=http"
+
+    # Router for just/ UI
+    - "traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`) && PathPrefix(`/`)"
+    - "traefik.http.routers.minio.entrypoints=websecure"
+    - "traefik.http.routers.minio.tls.certresolver=le-dns"
+    - "traefik.http.routers.minio.service=minio-console"
+    - "traefik.http.services.minio-console.loadbalancer.server.port=${MINIO_CONSOLE_PORT}"
+    - "traefik.http.services.minio-console.loadbalancer.server.scheme=http"
   valkey:
     <<: *common
     image: valkey/valkey:${REDIS_VERSION}
@@ -334,6 +340,11 @@ services:
     - allkeys-lru
     expose:
     - "${REDIS_PORT}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
     - redis_data:/data
 
@@ -345,6 +356,7 @@ services:
       elasticsearch: { condition: service_started }
       infinity: { condition: service_started }
       mysql: { condition: service_healthy }
+      valkey: { condition: service_healthy}
     expose:
     - "${SVR_HTTP_PORT}"
     - "9382" # MCP port 
