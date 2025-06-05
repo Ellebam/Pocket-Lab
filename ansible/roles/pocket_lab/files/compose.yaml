@@ -306,25 +306,26 @@ services:
     environment:
     - MINIO_ROOT_USER=${MINIO_ROOT_USER}
     - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    - MINIO_SERVER_URL=http://minio:${MINIO_PORT}
     - MINIO_BROWSER_REDIRECT_URL=https://minio.${TRAEFIK_DOMAIN}
+
 
     labels:
     - "traefik.enable=true"
 
-    - "traefik.http.routers.minio-api-ws.rule=Host(`minio.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/ws`)"
-    - "traefik.http.routers.minio-api-ws.entrypoints=websecure"
-    - "traefik.http.routers.minio-api-ws.tls.certresolver=le-dns"
-    - "traefik.http.routers.minio-api-ws.service=minio-api"
-    - "traefik.http.services.minio-api.loadbalancer.server.port=${MINIO_PORT}"
-    - "traefik.http.services.minio-api.loadbalancer.server.scheme=http"
+    - traefik.http.routers.minio-api.rule=Host(`minio.${TRAEFIK_DOMAIN})
+    - traefik.http.routers.minio-api.entrypoints=websecure
+    - traefik.http.routers.minio-api.tls.certresolver=le-dns
+    - traefik.http.routers.minio-api.service=minio-api
+    - traefik.http.services.minio-api.loadbalancer.server.port=${MINIO_PORT}
+    - traefik.http.services.minio-api.loadbalancer.server.scheme=http
 
-    # Router for just/ UI
-    - "traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`) && PathPrefix(`/`)"
-    - "traefik.http.routers.minio.entrypoints=websecure"
-    - "traefik.http.routers.minio.tls.certresolver=le-dns"
-    - "traefik.http.routers.minio.service=minio-console"
-    - "traefik.http.services.minio-console.loadbalancer.server.port=${MINIO_CONSOLE_PORT}"
-    - "traefik.http.services.minio-console.loadbalancer.server.scheme=http"
+    - traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.minio.entrypoints=websecure
+    - traefik.http.routers.minio.tls.certresolver=le-dns
+    - traefik.http.routers.minio.service=minio-console
+    - traefik.http.services.minio-console.loadbalancer.server.port=${MINIO_CONSOLE_PORT}
+    - traefik.http.services.minio-console.loadbalancer.server.scheme=http
   valkey:
     <<: *common
     image: valkey/valkey:${REDIS_VERSION}
