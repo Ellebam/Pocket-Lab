@@ -4,14 +4,14 @@ ragflow:
 mysql:
   name: '${MYSQL_DATABASE:-pocket_lab}'
   user: '${MYSQL_USER:-root}'
-  password: '${MYSQL_PASSWORD:-infini_rag_flow}'
+  password: '${MYSQL_ROOT_PASSWORD:-infini_rag_flow}'
   host: '${MYSQL_HOST:-mysql}'
   port: ${MYSQL_PORT:-3306}
   max_connections: 900
   stale_timeout: 300
 minio:
-  user: '${MINIO_USER:-rag_flow}'
-  password: '${MINIO_PASSWORD:-infini_rag_flow}'
+  user: '${MINIO_ROOT_USER:-rag_flow}'
+  password: '${MINIO_ROOT_PASSWORD:-infini_rag_flow}'
   host: ${MINIO_HOST:-minio}:${MINIO_PORT}
 es:
   hosts: http://${ES_HOST:-es01}:${ES_PORT:-9200}
