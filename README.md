@@ -83,6 +83,22 @@ These tasks invoke `docker compose` directly with the top‑level `compose.yaml`
 |`l3d_users__local_users`|`[]`|The authoritative user list (managed & sudo‑enabled).|
 |_Everything in `.env.template`_|–|Mirrors compose‑time environment.|
 
+## MinIO
+
+The lab ships with a [MinIO](https://min.io) server used as the S3 backend for
+other services. Traefik simply forwards `https://minio.${TRAEFIK_DOMAIN}` to the
+MinIO container, which serves both the API and the web console.
+
+Key variables:
+
+- `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` – console credentials.
+- `MINIO_SERVER_URL` – external URL of the API and console (defaults to the
+  Traefik hostname).
+
+If you customise `TRAEFIK_DOMAIN`, adjust `MINIO_SERVER_URL` accordingly so the
+dashboard can reach the backend.
+
+
 Full variable reference lives in:
 
 - `ansible/roles/pocket_lab/defaults/main.yaml.template`
