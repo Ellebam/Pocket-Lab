@@ -85,6 +85,10 @@ ragflow_extra_ports: "9382"
 ragflow_history_dir: "./ragflow/history_data_agent"
 ragflow_log_dir: "./ragflow/ragflow-logs"
 
+register_enabled: 0
+ragflow_admin_email: "admin@ragflow.io"
+ragflow_admin_password: "changeme"
+
 # ---------- Twingate ----------
 tg_tenant_name: "your-tenant"
 tg_container_name1: "tg-connector-1"

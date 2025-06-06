@@ -366,6 +366,7 @@ services:
     - ${RAGFLOW_HISTORY_DIR}:/ragflow/history_data_agent
     - ./ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
     - ./ragflow/entrypoint.sh:/ragflow/entrypoint.sh:ro
+    - ./ragflow/create_admin.py:/ragflow/create_admin.py:ro
     - ./ragflow/nginx/ragflow.conf:/etc/nginx/conf.d/ragflow.conf
     - ./ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf
     - ./ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf
@@ -374,16 +375,10 @@ services:
     restart: on-failure
     labels:
     - traefik.enable=true
-    - traefik.http.routers.ragflow-ui.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
-    - traefik.http.routers.ragflow-ui.entrypoints=websecure
-    - traefik.http.routers.ragflow-ui.tls.certresolver=le-dns
-    - traefik.http.routers.ragflow-ui.middlewares=auth@file,strip-auth-header@docker
-    - traefik.http.routers.ragflow-ui.service=ragflow-service
-    - traefik.http.routers.ragflow-api.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/v1`) || PathPrefix(`/api`))
-    - traefik.http.routers.ragflow-api.entrypoints=websecure
-    - traefik.http.routers.ragflow-api.tls.certresolver=le-dns
-    - traefik.http.routers.ragflow-api.middlewares=strip-auth-header@docker
-    - traefik.http.routers.ragflow-api.service=ragflow-service
+    - traefik.http.routers.ragflow.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.ragflow.entrypoints=websecure
+    - traefik.http.routers.ragflow.tls.certresolver=le-dns
+    - traefik.http.routers.ragflow.service=ragflow-service
     - traefik.http.services.ragflow-service.loadbalancer.server.port=80
 
 ############################
