@@ -375,6 +375,7 @@ services:
     restart: on-failure
     labels:
     - traefik.enable=true
+<<<<<<< HEAD
     - traefik.http.routers.ragflow-ui.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.ragflow-ui.entrypoints=websecure
     - traefik.http.routers.ragflow-ui.tls.certresolver=le-dns
@@ -385,6 +386,12 @@ services:
     - traefik.http.routers.ragflow-api.tls.certresolver=le-dns
     - traefik.http.routers.ragflow-api.middlewares=strip-auth-header@docker
     - traefik.http.routers.ragflow-api.service=ragflow-service
+=======
+    - traefik.http.routers.ragflow.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.ragflow.entrypoints=websecure
+    - traefik.http.routers.ragflow.tls.certresolver=le-dns
+    - traefik.http.routers.ragflow.service=ragflow-service
+>>>>>>> 31c69a2 (feat: admin user creation for ragflow)
     - traefik.http.services.ragflow-service.loadbalancer.server.port=80
 
 ############################

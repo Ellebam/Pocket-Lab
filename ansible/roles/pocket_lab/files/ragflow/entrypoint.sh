@@ -158,9 +158,16 @@ function start_mcp_server() {
 # -----------------------------------------------------------------------------
 
 if [[ "${ENABLE_WEBSERVER}" -eq 1 ]]; then
+<<<<<<< HEAD
     echo "Initializing admin account..."
     "$PY" /ragflow/create_admin.py || echo "Admin init failed"
 
+=======
+
+    echo "Initializing admin account..."
+    "$PY" /ragflow/create_admin.py || echo "Admin init failed"
+    
+>>>>>>> 31c69a2 (feat: admin user creation for ragflow)
     echo "Starting nginx..."
     /usr/sbin/nginx
 
