@@ -99,9 +99,17 @@ Full variable reference lives in:
 |**ensure_conn_user**|Probe `root`, inventory user, first in `l3d_users__local_users`; cache winner for 24 h so every play can rely on `hostvars[host].conn_user`.|
 |**l3d.users.user / .admin**|Create regular + sudo users with SSH keys. [Ansible Galaxy](https://galaxy.ansible.com/ui/repo/published/l3d/users/content/role/user/?utm_source=chatgpt.com)|
 |**devsec.hardening.os_hardening / ssh_hardening**|CIS‑style OS tweaks, secure `sshd_config`. [GitHub](https://github.com/dev-sec/ansible-collection-hardening?utm_source=chatgpt.com)|
-|**geerlingguy.docker**|Install Docker CE + CLI & Compose v2. [GitHub](https://github.com/geerlingguy/ansible-role-docker?utm_source=chatgpt.com)|
-|**pocket_lab**|Copy compose files, render `.env`, run `community.docker.docker_compose_v2` (pull policy `missing`). [Ansible Documentation](https://docs.ansible.com/ansible/latest/collections/community/docker/docker_compose_v2_module.html?utm_source=chatgpt.com)|
+## RAGFlow
 
+RAGFlow runs behind an internal nginx with Traefik handling the public endpoint.
+User sign‑up is disabled by default (`REGISTER_ENABLED=0`).
+On container startup `create_admin.py` ensures the admin account defined via
+`RAGFLOW_ADMIN_EMAIL` and `RAGFLOW_ADMIN_PASSWORD` exists and belongs to the
+default tenant. Visit `https://ragflow.${TRAEFIK_DOMAIN}` to access the UI.
+
+Tune registration behaviour or credentials in `.env` or the corresponding
+Ansible defaults. RAGFlow talks to MySQL, MinIO and Valkey using the variables in
+the env‑file (`MINIO_USER`, `MINIO_PASSWORD`, `REDIS_HOST`, …).
 ---
 
 ## After cloning – quick checklist
@@ -111,8 +119,10 @@ Full variable reference lives in:
 2. **Define users**: edit `l3d_users__local_users` with `pubkeys` and `admin: true`.
     
 3. **Secret variables**: set strong passwords in `.env` and defaults file.
-    
+
 4. _(Optional)_ Pin Docker/Compose versions for reproducibility.
-    
+
 5. Run `task ansible_full` – enjoy your hardened AI lab!
-****
+
+For local Ansible experiments you can use the provided `inventory/local.yaml`
+which targets `localhost` via the `local` connection plugin.
