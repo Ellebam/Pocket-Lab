@@ -1,72 +1,87 @@
- **Pocket‑Lab**  is a self‑contained infrastructure tool that lets you spin up a hardened, Docker‑based AI lab on any fresh Linux host .
+# Pocket-Lab
+
+Pocket-Lab provisions a small AI lab on any fresh Linux host. It uses
+Docker Compose to run several services and ships Ansible playbooks to
+prepare and deploy everything automatically.
+
+## Stack highlights
+
+The lab bundles the following components:
+
+- **Traefik** – reverse proxy with automatic TLS
+- **RAGFlow** – document and knowledge base management
+- **n8n** – workflow automation
+- **Ollama** and **Open WebUI** – LLM management
+- **MySQL** – relational database
+- **MinIO** – S3 compatible object store
+- **Valkey** – Redis compatible cache
+- **Twingate connectors** – secure remote access
+- **Prometheus**, **Node exporter**, **Grafana** and **Loki** – observability
 
 ## Repository map
 
-| Path                                 | What it is / why it exists                                                                                                                      |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Taskfile.yaml`                      | Developer UX wrapper around both **go‑task** and **docker compose**; exposes one‑liners like `task ansible_full` or `task docker-compose-logs`. |
-| `.env.template`                      | Minimal env‑file you copy to `.env` for _manual_ `docker compose` runs.                                                                         |
-| `ansible/`                           | Control‑plane: inventory, plays, roles, galaxy requirements & config.                                                                           |
-| `ansible/plays/00‑30‑*.yaml`         | Four atomic playbooks (detect → bootstrap → harden → deploy).                                                                                   |
-| `ansible/roles/ensure_conn_user`     | Detects **root**, inventory‑defined user, or first user in `l3d_users__local_users`, caches the winner for 24 h (Ansible jsonfile fact cache).  |
-| `ansible/roles/pocket_lab`           | All Docker‑stack logic (pre‑reqs + deploy + cleanup). Uses `community.docker.docker_compose_v2`.                                                |
-| `compose.yaml` & subordinate `files/*` | The actual compose spec (Traefik label routing, ES, RAGFlow, etc.).                                                                             |
+| Path | Purpose |
+| --- | --- |
+| `Taskfile.yaml` | Developer shortcuts for Go Task and Docker Compose |
+| `.env.template` | Copy to `.env` to provide environment variables |
+| `ansible/` | Inventory, plays, roles and Galaxy requirements |
+| `ansible/plays/00-30-*.yaml` | Four atomic plays (detect → bootstrap → harden → deploy) |
+| `ansible/roles/ensure_conn_user` | Detect a working SSH user and cache it |
+| `ansible/roles/pocket_lab` | Docker stack logic and templates |
+| `ansible/roles/pocket_lab/files/compose.yaml` | The Docker Compose specification |
 
 ## Getting started
 
-1. **Clone** the repo
-	```bash
-	git clone https://github.com/your‑org/ellebam-pocket-lab.git && cd ellebam-pocket-lab
-	```
-2. **Create an env‑file**
+1. **Clone** the repository
    ```bash
-      cp .env.template .env && edit .env   # domain, TLS e‑mail, secrets …
-	```
-3. **Configure Ansible inventory & users**
-	- `ansible/inventory/hosts.yaml.template` → `hosts.yaml`; enter the server’s IP.
-	- Open `ansible/roles/pocket_lab/defaults/main.yaml.template`; fill **at least**
-    - `l3d_users__local_users` → list of dictionaries (`name`, `pubkeys`, `admin: true`).
-    - Any stack passwords (`elastic_password`, `mysql_password`, …).
-4. **Bootstrap a local Python venv & collections**
-	   ```bash
-	   task venv:init
-		```
-5. **One‑shot full provision**
-6. 
-	```bash
-	task ansible_full  # detect → bootstrap → harden → deploy
-	```
+   git clone https://github.com/your-org/ellebam-pocket-lab.git && cd ellebam-pocket-lab
+   ```
+2. **Create an env file**
+   ```bash
+   cp .env.template .env && edit .env  # domain, TLS e-mail, secrets …
+   ```
+3. **Configure Ansible inventory and users**
+   - `ansible/inventory/hosts.yaml.template` → `hosts.yaml`; enter the server IP
+   - Open `ansible/roles/pocket_lab/defaults/main.yaml.template` and set at least:
+     - `l3d_users__local_users`
+     - any service passwords
+4. **Bootstrap the Python environment**
+   ```bash
+   task venv:init
+   ```
+5. **Provision the lab**
+   ```bash
+   task ansible_full  # detect → bootstrap → harden → deploy
+   ```
 
-### Running the stack **without** Ansible
+### Manual compose run
 
-For quick local experiments:
+For quick experiments without Ansible:
 
 ```bash
-	task docker-compose-up        # pull & start every service
-	task docker-compose-logs      # follow logs
-	task docker-compose-down      # stop & wipe volumes
-
+cp ansible/roles/pocket_lab/files/compose.yaml ./compose.yaml
+cp .env.template .env
+docker compose up -d
 ```
 
-
-These tasks invoke `docker compose` directly with the top‑level `compose.yaml` and your `.env`. No hardening or user management is touched.
-
----
-
-## Task catalogue (prefix‑based)
-
-|Command|What it does|
-|---|---|
-|`task ansible_detect`|Cache a working SSH login (uses `ensure_conn_user`).|
-|`task ansible_bootstrap`|Only create users (roles `l3d.users.*`). [Ansible Galaxy](https://galaxy.ansible.com/ui/repo/published/l3d/users/content/role/user/?utm_source=chatgpt.com)|
-|`task ansible_harden`|Apply DevSec OS/SSH hardening + Docker install. [GitHub](https://github.com/dev-sec/ansible-collection-hardening?utm_source=chatgpt.com)|
-|`task ansible_deploy`|Copy compose files, render `.env`, launch stack.|
-|`task ansible_full`|Full pipeline.|
-|`task docker-*`|Pure compose helpers (up/down/logs/restart/prune).|
+This skips OS hardening and user management.
 
 ---
 
-## Variables you’ll likely customise
+## Task catalogue
+
+| Command | What it does |
+| --- | --- |
+| `task ansible_detect` | Cache a working SSH login |
+| `task ansible_bootstrap` | Create users only |
+| `task ansible_harden` | Apply DevSec OS and SSH hardening |
+| `task ansible_deploy` | Copy compose files and launch the stack |
+| `task ansible_full` | Full pipeline |
+| `task docker-*` | Shortcuts for Compose up/down/logs |
+
+---
+
+## Variables you will likely change
 
 |Variable|Default|Notes|
 |---|---|---|
