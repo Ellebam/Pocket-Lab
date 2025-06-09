@@ -35,7 +35,10 @@ def main():
 
     # ensure tenant association exists
     if not TenantService.get_info_by(user.id):
-        init_superuser()
+        try:
+            init_superuser()
+        except LookupError as exc:
+            print(f"Tenant fix failed: {exc}")
 
 
 if __name__ == "__main__":
