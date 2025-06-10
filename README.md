@@ -110,6 +110,11 @@ default tenant. Visit `https://ragflow.${TRAEFIK_DOMAIN}` to access the UI.
 Tune registration behaviour or credentials in `.env` or the corresponding
 Ansible defaults. RAGFlow talks to MySQL, MinIO and Valkey using the variables in
 the env‑file (`MINIO_USER`, `MINIO_PASSWORD`, `REDIS_HOST`, …).
+
+The default language model backend is controlled via the `user_default_llm`
+block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
+`LLM_API_KEY` or `LLM_CHAT_MODEL` in your `.env` to point RAGFlow at a
+different provider or model.
 ---
 
 ## After cloning – quick checklist
