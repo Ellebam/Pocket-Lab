@@ -1,13 +1,14 @@
 import logging
+
+logging.basicConfig(level=logging.INFO, force=True)
+logger = logging.getLogger(__name__)
+
 import os
 from werkzeug.security import generate_password_hash
 from api.db.db_models import init_database_tables as init_web_db
 from api.db.init_data import init_superuser
 from api.db.services.user_service import UserService, TenantService
 from api import settings
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def main():
