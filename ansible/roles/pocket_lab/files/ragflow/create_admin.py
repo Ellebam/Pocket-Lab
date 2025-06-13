@@ -1,13 +1,15 @@
 import logging
 import os
 from werkzeug.security import generate_password_hash
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 from api.db.db_models import init_database_tables as init_web_db
 from api.db.init_data import init_superuser
 from api.db.services.user_service import UserService, TenantService
 from api import settings
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def main():
@@ -27,8 +29,24 @@ def main():
     # bootstrap only if no admin exists yet
     if not UserService.query(email=email) and not UserService.query(email="admin@ragflow.io"):
         logger.info("Creating initial superuser")
-        init_superuser()
-
+        try:
+            init_superuser()
+        except Exception as exc:  # pragma: no cover - startup failures
+            env_keys = [
+                "RAGFLOW_ADMIN_EMAIL",
+                "LLM_FACTORY",
+                "LLM_API_BASE",
+                "LLM_CHAT_MODEL",
+                "LLM_EMBEDDING_MODEL",
+                "LLM_RERANK_MODEL",
+                "LLM_ASR_MODEL",
+                "LLM_IMAGE2TEXT_MODEL",
+            ]
+            env_snapshot = {k: os.getenv(k) for k in env_keys}
+            logger.exception("Superuser creation failed: %s", exc)
+            logger.error("Environment: %s", env_snapshot)
+            logger.error("Check your .env and language model configuration")
+            return
     user = None
     if UserService.query(email=email):
         user = UserService.query(email=email)[0]
