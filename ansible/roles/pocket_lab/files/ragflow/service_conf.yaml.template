@@ -25,7 +25,7 @@ infinity:
   uri: ${INFINITY_HOST:-infinity}:${INFINITY_THRIFT_PORT}
   db_name: 'default_db'
 redis:
-  db: 1
+  db: db1
   password: '${REDIS_PASSWORD:-infini_rag_flow}'
   host: ${REDIS_HOST:-redis}:${REDIS_PORT}
 
@@ -65,11 +65,11 @@ redis:
 #   tenant_id: 'tenant_id'
 #   container_name: 'container_name'
 user_default_llm:
-  factory: '${LLM_FACTORY:-OpenAI}'
+  factory: '${LLM_FACTORY:-local}'
   api_key: '${LLM_API_KEY:-}'
   base_url: '${LLM_API_BASE:-}'
   default_models:
-    chat_model: '${LLM_CHAT_MODEL:-gpt-3.5-turbo}'
+    chat_model: '${LLM_CHAT_MODEL:-}'
     embedding_model: '${LLM_EMBEDDING_MODEL:-text-embedding-ada-002}'
     rerank_model: '${LLM_RERANK_MODEL:-}'
     asr_model: '${LLM_ASR_MODEL:-}'

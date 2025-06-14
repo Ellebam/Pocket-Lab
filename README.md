@@ -142,6 +142,11 @@ Tune registration behaviour or credentials in `.env` or the corresponding
 Ansible defaults. RAGFlow talks to MySQL, MinIO and Valkey using the variables in
 the env‑file (`MINIO_USER`, `MINIO_PASSWORD`, `REDIS_HOST`, …).
 
+If `LLM_CHAT_MODEL` points to a model your provider does not authorise, the
+admin bootstrap may fail. Before launching the stack set `LLM_FACTORY` and
+`LLM_CHAT_MODEL` to a locally served model (for example via Ollama) or leave
+them blank so RAGFlow uses its internal default.
+
 The default language model backend is controlled via the `user_default_llm`
 block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
 `LLM_API_KEY` or `LLM_CHAT_MODEL` in your `.env` to point RAGFlow at a
