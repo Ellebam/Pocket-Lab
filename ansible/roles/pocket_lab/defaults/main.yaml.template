@@ -93,14 +93,14 @@ register_enabled: 0
 ragflow_admin_email: "admin@ragflow.io"
 ragflow_admin_password: "changeme"
 
-llm_factory: "OpenAI"
-llm_api_key: ""
-llm_api_base: ""
-llm_chat_model: "gpt-3.5-turbo"
-llm_embedding_model: "text-embedding-ada-002"
-llm_rerank_model: ""
-llm_asr_model: ""
-llm_image2text_model: ""
+# llm_factory: "local"
+# llm_api_key: ""
+# llm_api_base: ""
+# llm_chat_model: ""
+# llm_embedding_model: "text-embedding-ada-002"
+# llm_rerank_model: ""
+# llm_asr_model: ""
+# llm_image2text_model: ""
 
 register_enabled: 0
 ragflow_admin_email: "admin@ragflow.io"

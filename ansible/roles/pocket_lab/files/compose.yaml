@@ -184,6 +184,14 @@ services:
     - "11434"
     volumes:
     - ollama-data:/root/.ollama
+    entrypoint: >
+      sh -c '
+        /bin/ollama serve &
+        until curl -s http://localhost:11434/ > /dev/null; do sleep 1; done
+        ollama pull llama3.2 &&
+        ollama pull bge-m3 &&
+        fg
+      '
     labels:
     - traefik.enable=true
     - traefik.http.routers.ollama.rule=Host(`ollama.${TRAEFIK_DOMAIN}`)

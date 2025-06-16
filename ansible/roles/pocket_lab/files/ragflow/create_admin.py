@@ -1,5 +1,6 @@
 import logging
 import os
+import base64
 from werkzeug.security import generate_password_hash
 
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +32,8 @@ def main():
         logger.info("Creating initial superuser")
         try:
             init_superuser()
+        except LookupError as e:          # model not authorised – ignore for now
+            logger.warning("Bootstrap skipped LLM: %s", e)
         except Exception as exc:  # pragma: no cover - startup failures
             env_keys = [
                 "RAGFLOW_ADMIN_EMAIL",
@@ -62,7 +65,8 @@ def main():
         updates["email"] = email
     if password:
         logger.info("Setting admin password")
-        updates["password"] = generate_password_hash(password)
+        b64_pwd = base64.b64encode(password.encode()).decode()
+        updates["password"] = generate_password_hash(b64_pwd, method="scrypt")
     if updates:
         UserService.update_user(user.id, updates)
 
