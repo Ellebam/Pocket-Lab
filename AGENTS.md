@@ -4,6 +4,8 @@ This repository contains Ansible playbooks and Docker Compose files. When
 modifying files keep the following in mind:
 
 - Use two spaces for YAML indentation and keep the existing formatting.
+- Keep variable files with their block‑comment style so sections stay
+  clearly separated.
 - Update `README.md` whenever behaviour or variables change.
 - If you change Ansible or Compose files, try to run a syntax check:
   - `ansible-playbook --syntax-check ansible/site.yaml` (requires Ansible)
