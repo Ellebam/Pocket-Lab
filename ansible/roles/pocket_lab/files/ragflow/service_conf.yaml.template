@@ -25,7 +25,7 @@ infinity:
   uri: ${INFINITY_HOST:-infinity}:${INFINITY_THRIFT_PORT}
   db_name: 'default_db'
 redis:
-  db: 1
+  db: 0
   password: '${REDIS_PASSWORD:-infini_rag_flow}'
   host: ${REDIS_HOST:-redis}:${REDIS_PORT}
 
