@@ -3,8 +3,8 @@ ragflow:
   http_port: ${SVR_HTTP_PORT}
 mysql:
   name: '${MYSQL_DATABASE:-pocket_lab}'
-  user: '${MYSQL_USER:-root}'
-  password: '${MYSQL_PASSWORD:-infini_rag_flow}'
+  user: '${MYSQL_ROOT_USER:-root}'
+  password: '${MYSQL_ROOT_PASSWORD:-infini_rag_flow}'
   host: '${MYSQL_HOST:-mysql}'
   port: ${MYSQL_PORT:-3306}
   max_connections: 900
@@ -64,16 +64,16 @@ redis:
 #   secret: 'secret'
 #   tenant_id: 'tenant_id'
 #   container_name: 'container_name'
-# user_default_llm:
-#   factory: 'Tongyi-Qianwen'
-#   api_key: 'sk-xxxxxxxxxxxxx'
-#   base_url: ''
-#   default_models:
-#     chat_model: 'qwen-plus'
-#     embedding_model: 'BAAI/bge-large-zh-v1.5@BAAI'
-#     rerank_model: ''
-#     asr_model: ''
-#     image2text_model: ''
+user_default_llm:
+  factory: '${LLM_FACTORY:-Ollama}'
+  api_key: '${LLM_API_KEY:-}'
+  base_url: '${LLM_API_BASE:-http://ollama:11434}'
+  default_models:
+    chat_model: '${LLM_CHAT_MODEL:-llama3.2}'
+    embedding_model: '${LLM_EMBEDDING_MODEL:-bge-m3}'
+    rerank_model: '${LLM_RERANK_MODEL:-}'
+    asr_model: '${LLM_ASR_MODEL:-}'
+    image2text_model: '${LLM_IMAGE2TEXT_MODEL:-}'
 # oauth:
 #   oauth2:
 #     display_name: "OAuth2"

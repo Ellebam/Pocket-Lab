@@ -94,15 +94,79 @@ This skips OS hardening and user management.
 | `mem_limit` | `4g` | Memory limit for ES and Infinity |
 | everything in `.env.template` | – | Mirrors compose environment |
 
-The full list of defaults lives in
-`ansible/roles/pocket_lab/defaults/main.yaml.template` and
-`ansible/roles/ensure_conn_user/defaults/main.yaml`.
+## MinIO
 
+The lab ships with a [MinIO](https://min.io) server used as the S3 backend for
+other services. Traefik simply forwards `https://minio.${TRAEFIK_DOMAIN}` to the
+MinIO container, which serves both the API and the web console.
+
+Key variables:
+
+- `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` – console credentials.
+- `MINIO_SERVER_URL` – external URL of the API and console (defaults to the
+  Traefik hostname).
+
+If you customise `TRAEFIK_DOMAIN`, adjust `MINIO_SERVER_URL` accordingly so the
+dashboard can reach the backend.
+
+
+Full variable reference lives in:
+
+- `ansible/roles/pocket_lab/defaults/main.yaml.template`
+    
+- `ansible/roles/ensure_conn_user/defaults/main.yaml`
+    
+
+---
+
+## Role overview
+
+|Role|Purpose|
+|---|---|
+|**ensure_conn_user**|Probe `root`, inventory user, first in `l3d_users__local_users`; cache winner for 24 h so every play can rely on `hostvars[host].conn_user`.|
+|**l3d.users.user / .admin**|Create regular + sudo users with SSH keys. [Ansible Galaxy](https://galaxy.ansible.com/ui/repo/published/l3d/users/content/role/user/?utm_source=chatgpt.com)|
+|**devsec.hardening.os_hardening / ssh_hardening**|CIS‑style OS tweaks, secure `sshd_config`. [GitHub](https://github.com/dev-sec/ansible-collection-hardening?utm_source=chatgpt.com)|
+## RAGFlow
+
+RAGFlow runs behind an internal nginx with Traefik handling the public endpoint.
+User sign‑up is disabled by default (`REGISTER_ENABLED=0`).
+On container startup `create_admin.py` ensures the admin account defined via
+`RAGFLOW_ADMIN_EMAIL` and `RAGFLOW_ADMIN_PASSWORD` exists and belongs to the
+default tenant. Visit `https://ragflow.${TRAEFIK_DOMAIN}` to access the UI.
+
+Tune registration behaviour or credentials in `.env` or the corresponding
+Ansible defaults. RAGFlow talks to MySQL, MinIO and Valkey using the variables in
+the env‑file (`MINIO_USER`, `MINIO_PASSWORD`, `REDIS_HOST`, …).
+
+If `LLM_CHAT_MODEL` points to a model your provider does not authorise, the
+admin bootstrap may fail. Before launching the stack set `LLM_FACTORY` and
+`LLM_CHAT_MODEL` to a locally served model (for example via Ollama) or leave
+them blank so RAGFlow uses its internal default.
+
+The default language model backend is controlled via the `user_default_llm`
+block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
+`LLM_API_KEY` or `LLM_CHAT_MODEL` in your `.env` to point RAGFlow at a
+different provider or model.
 ---
 
 ## After cloning – quick checklist
 
+<<<<<<< HEAD
+1. **Add hosts**: copy `ansible/inventory/hosts.yaml.template` → `hosts.yaml`, fill IP/FQDN.
+    
+2. **Define users**: edit `l3d_users__local_users` with `pubkeys` and `admin: true`.
+    
+3. **Secret variables**: set strong passwords in `.env` and defaults file.
+
+4. _(Optional)_ Pin Docker/Compose versions for reproducibility.
+
+5. Run `task ansible_full` – enjoy your hardened AI lab!
+
+For local Ansible experiments you can use the provided `inventory/local.yaml`
+which targets `localhost` via the `local` connection plugin.
+=======
 1. Add hosts to `ansible/inventory/hosts.yaml`
 2. Define `l3d_users__local_users` with SSH keys
 3. Set strong passwords in `.env` and defaults file
 4. Run `task ansible_full` and enjoy your lab
+>>>>>>> main

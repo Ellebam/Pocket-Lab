@@ -59,6 +59,8 @@ mysql_root_password: "changeme"
 mysql_port: 3306
 mysql_host: "mysql"
 mysql_dbname: "pocket_lab"
+mysql_user: "root"
+mysql_password: "{{ mysql_root_password }}"
 
 # --------- minio -------------
 minio_version: "RELEASE.2023-12-20T01-00-02Z"
@@ -66,12 +68,15 @@ minio_port: 9000
 minio_console_port: 9001
 minio_root_user: "minioadmin"
 minio_root_password: "minioadmin"
+minio_user: "{{ minio_root_user }}"
+minio_password: "{{ minio_root_password }}"
 
 
 # ---------- valkye/redis ----------
 redis_version: "8.1.0"
 redis_password: "changeme"
 redis_port: 6379
+redis_host: "redis"
 
 
 # -------------- ragflow ------------
@@ -84,6 +89,22 @@ ragflow_version: "v0.18.0"
 ragflow_extra_ports: "9382"
 ragflow_history_dir: "./ragflow/history_data_agent"
 ragflow_log_dir: "./ragflow/ragflow-logs"
+register_enabled: 0
+ragflow_admin_email: "admin@ragflow.io"
+ragflow_admin_password: "changeme"
+
+# llm_factory: "local"
+# llm_api_key: ""
+# llm_api_base: ""
+# llm_chat_model: ""
+# llm_embedding_model: "text-embedding-ada-002"
+# llm_rerank_model: ""
+# llm_asr_model: ""
+# llm_image2text_model: ""
+
+register_enabled: 0
+ragflow_admin_email: "admin@ragflow.io"
+ragflow_admin_password: "changeme"
 
 register_enabled: 0
 ragflow_admin_email: "admin@ragflow.io"
