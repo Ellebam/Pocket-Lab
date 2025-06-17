@@ -87,9 +87,9 @@ This skips OS hardening and user management.
 |---|---|---|
 |`stack_domain`, `stack_email`|`ai.lab.example.com`, `admin@example.com`|Traefik ACME & router labels.|
 |`basic_auth`|_bcrypt hash_|Re‑generate via `htpasswd -nbB`.|
-|`tenant_name`, `*_TOKEN*`|–|Twingate connector.|
-|`n8n_user`, `n8n_password`|`admin` / `changeme`|Basic auth for n8n frontend.|
-|`elastic_password`, `mysql_password`, `minio_password`, …|`changeme`|Service creds.|
+|`tg_tenant_name`, `*_TOKEN*`|–|Twingate connector.|
+|`n8n_basic_auth_user`, `n8n_basic_auth_password`|`admin` / `changeme`|Basic auth for n8n frontend.|
+|`elastic_password`, `mysql_root_password`, `minio_root_password`, …|`changeme`|Service creds.|
 |`docker_version`, `docker_compose_version`|`latest`, `v2.27.1`|Pin if you need deterministic builds.|
 |`compose_repo`|`/opt/pocket_lab`|Where compose files land on the host.|
 |`mem_limit`|`4g`|Propagated to ES & Infinity containers.|
@@ -134,13 +134,14 @@ Full variable reference lives in:
 
 RAGFlow runs behind an internal nginx with Traefik handling the public endpoint.
 User sign‑up is disabled by default (`REGISTER_ENABLED=0`).
-On container startup `create_admin.py` ensures the admin account defined via
-`RAGFLOW_ADMIN_EMAIL` and `RAGFLOW_ADMIN_PASSWORD` exists and belongs to the
-default tenant. Visit `https://ragflow.${TRAEFIK_DOMAIN}` to access the UI.
+Each time the container starts, `create_admin.py` ensures the admin account
+defined via `RAGFLOW_ADMIN_EMAIL` and `RAGFLOW_ADMIN_PASSWORD` exists and belongs
+to the default tenant. Visit `https://ragflow.${TRAEFIK_DOMAIN}` to access the
+UI.
 
 Tune registration behaviour or credentials in `.env` or the corresponding
 Ansible defaults. RAGFlow talks to MySQL, MinIO and Valkey using the variables in
-the env‑file (`MINIO_USER`, `MINIO_PASSWORD`, `REDIS_HOST`, …).
+the env‑file (`MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_SERVER_URL`, `REDIS_HOST`, …).
 
 If `LLM_CHAT_MODEL` points to a model your provider does not authorise, the
 admin bootstrap may fail. Before launching the stack set `LLM_FACTORY` and
