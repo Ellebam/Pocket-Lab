@@ -83,20 +83,16 @@ This skips OS hardening and user management.
 
 ## Variables you will likely change
 
-|Variable|Default|Notes|
-|---|---|---|
-|`stack_domain`, `stack_email`|`ai.lab.example.com`, `admin@example.com`|Traefik ACME & router labels.|
-|`basic_auth`|_bcrypt hash_|Re‑generate via `htpasswd -nbB`.|
-|`tenant_name`, `*_TOKEN*`|–|Twingate connector.|
-|`n8n_user`, `n8n_password`|`admin` / `changeme`|Basic auth for n8n frontend.|
-|`elastic_password`, `mysql_password`, `minio_password`, …|`changeme`|Service creds.|
-|`docker_version`, `docker_compose_version`|`latest`, `v2.27.1`|Pin if you need deterministic builds.|
-|`compose_repo`|`/opt/pocket_lab`|Where compose files land on the host.|
-|`mem_limit`|`4g`|Propagated to ES & Infinity containers.|
-|`ssh_harden`, `firewall_open_tcp`|`true`, `[80,443,22]`|Toggle DevSec hardening or open extra ports.|
-|`sshd_max_auth_tries`, `sshd_max_startups`|`10`, `10:30:100`|Mitigate “Too many authentication failures”. [GitHub](https://github.com/geerlingguy/ansible-role-docker?utm_source=chatgpt.com)|
-|`l3d_users__local_users`|`[]`|The authoritative user list (managed & sudo‑enabled).|
-|_Everything in `.env.template`_|–|Mirrors compose‑time environment.|
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `stack_domain`, `stack_email` | `ai.lab.example.com`, `admin@example.com` | Traefik host and ACME mail |
+| `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
+| `tenant_name`, `*_TOKEN*` | – | Twingate connector |
+| `n8n_user`, `n8n_password` | `admin` / `changeme` | Web UI credentials |
+| `elastic_password`, `mysql_password`, `minio_password`, … | `changeme` | Service credentials |
+| `compose_repo` | `/opt/pocket_lab` | Where compose files are deployed |
+| `mem_limit` | `4g` | Memory limit for ES and Infinity |
+| everything in `.env.template` | – | Mirrors compose environment |
 
 ## MinIO
 
@@ -155,6 +151,7 @@ different provider or model.
 
 ## After cloning – quick checklist
 
+<<<<<<< HEAD
 1. **Add hosts**: copy `ansible/inventory/hosts.yaml.template` → `hosts.yaml`, fill IP/FQDN.
     
 2. **Define users**: edit `l3d_users__local_users` with `pubkeys` and `admin: true`.
@@ -167,3 +164,9 @@ different provider or model.
 
 For local Ansible experiments you can use the provided `inventory/local.yaml`
 which targets `localhost` via the `local` connection plugin.
+=======
+1. Add hosts to `ansible/inventory/hosts.yaml`
+2. Define `l3d_users__local_users` with SSH keys
+3. Set strong passwords in `.env` and defaults file
+4. Run `task ansible_full` and enjoy your lab
+>>>>>>> main

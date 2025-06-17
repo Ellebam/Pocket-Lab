@@ -106,6 +106,10 @@ register_enabled: 0
 ragflow_admin_email: "admin@ragflow.io"
 ragflow_admin_password: "changeme"
 
+register_enabled: 0
+ragflow_admin_email: "admin@ragflow.io"
+ragflow_admin_password: "changeme"
+
 # ---------- Twingate ----------
 tg_tenant_name: "your-tenant"
 tg_container_name1: "tg-connector-1"
