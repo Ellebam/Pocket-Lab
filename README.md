@@ -30,6 +30,13 @@ The lab bundles the following components:
 | `ansible/roles/pocket_lab` | Docker stack logic and templates |
 | `ansible/roles/pocket_lab/files/compose.yaml` | The Docker Compose specification |
 
+## Requirements
+
+- Linux host with [Docker](https://docs.docker.com/get-docker/) and
+  [docker compose](https://docs.docker.com/compose/) installed
+- Python 3.11 or newer
+- Optional: [Go Task](https://taskfile.dev) for the helper commands
+
 ## Getting started
 
 1. **Clone** the repository
@@ -66,6 +73,20 @@ docker compose up -d
 
 This skips OS hardening and user management.
 
+### Provisioning with Ansible
+
+The repository bundles a small automation layer under `ansible/`. After
+preparing your `.env` and inventory you only need two commands:
+
+```bash
+task venv:init  # install Ansible and required collections
+task ansible_full  # detect → bootstrap → harden → deploy
+```
+
+The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
+`task ansible_detect`, `task ansible_bootstrap`, `task ansible_harden` and
+`task ansible_deploy` if you want to execute them separately.
+
 ---
 
 ## Task catalogue
@@ -87,9 +108,9 @@ This skips OS hardening and user management.
 | --- | --- | --- |
 | `stack_domain`, `stack_email` | `ai.lab.example.com`, `admin@example.com` | Traefik host and ACME mail |
 | `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
-| `tenant_name`, `*_TOKEN*` | – | Twingate connector |
+| `tg_tenant_name`, `*_TOKEN*` | – | Twingate connector |
 | `n8n_user`, `n8n_password` | `admin` / `changeme` | Web UI credentials |
-| `elastic_password`, `mysql_password`, `minio_password`, … | `changeme` | Service credentials |
+| `es_password`, `mysql_password`, `minio_root_password`, … | `changeme` | Service credentials |
 | `compose_repo` | `/opt/pocket_lab` | Where compose files are deployed |
 | `mem_limit` | `4g` | Memory limit for ES and Infinity |
 | everything in `.env.template` | – | Mirrors compose environment |
@@ -151,22 +172,12 @@ different provider or model.
 
 ## After cloning – quick checklist
 
-<<<<<<< HEAD
 1. **Add hosts**: copy `ansible/inventory/hosts.yaml.template` → `hosts.yaml`, fill IP/FQDN.
-    
+
 2. **Define users**: edit `l3d_users__local_users` with `pubkeys` and `admin: true`.
-    
+
 3. **Secret variables**: set strong passwords in `.env` and defaults file.
 
 4. _(Optional)_ Pin Docker/Compose versions for reproducibility.
 
-5. Run `task ansible_full` – enjoy your hardened AI lab!
-
-For local Ansible experiments you can use the provided `inventory/local.yaml`
-which targets `localhost` via the `local` connection plugin.
-=======
-1. Add hosts to `ansible/inventory/hosts.yaml`
-2. Define `l3d_users__local_users` with SSH keys
-3. Set strong passwords in `.env` and defaults file
-4. Run `task ansible_full` and enjoy your lab
->>>>>>> main
+5. Run `task venv:init` once, then `task ansible_full` – enjoy your hardened AI lab!
