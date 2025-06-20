@@ -12,7 +12,7 @@ stack_domain: "ai.lab.example.com"
 stack_email: "admin@example.com"
 stack_timezone: "Europe/Berlin"
 mem_limit: "4g"
-traefik_version: "2.11.3"
+traefik_version: "v3.4.1"
 
 # ---------- Auth ----------
 basic_auth: "user:$$2y$$exampleHash"
@@ -26,12 +26,14 @@ grafana_admin_user: "admin"
 grafana_admin_password: "admin"
 node_exporter_version: "v1.9.1"
 portainer_version: "2.20.3"
-portainer_port: "9443"
+portainer_port: "9000"
 
 # ---------- n8n ----------
 n8n_version: "1.50.0"
-n8n_user: "admin"
-n8n_password: "admin"
+n8n_admin_email: "admin@example.com"
+n8n_admin_password: "changeme"
+n8n_basic_auth_active: 'false'
+n8n_personalization_enabled: 'false'
 
 # ---------- ollama ----------
 ollama_version: "0.1.30"
@@ -59,18 +61,14 @@ mysql_root_password: "changeme"
 mysql_port: 3306
 mysql_host: "mysql"
 mysql_dbname: "pocket_lab"
-mysql_user: "root"
-mysql_password: "{{ mysql_root_password }}"
+
 
 # --------- minio -------------
-minio_version: "RELEASE.2023-12-20T01-00-02Z"
+minio_version: "RELEASE.2025-04-22T22-12-26Z"
 minio_port: 9000
 minio_console_port: 9001
 minio_root_user: "minioadmin"
 minio_root_password: "minioadmin"
-minio_user: "{{ minio_root_user }}"
-minio_password: "{{ minio_root_password }}"
-
 
 # ---------- valkye/redis ----------
 redis_version: "8.1.0"
@@ -89,6 +87,7 @@ ragflow_version: "v0.18.0"
 ragflow_extra_ports: "9382"
 ragflow_history_dir: "./ragflow/history_data_agent"
 ragflow_log_dir: "./ragflow/ragflow-logs"
+
 register_enabled: 0
 ragflow_admin_email: "admin@ragflow.io"
 ragflow_admin_password: "changeme"
@@ -102,7 +101,6 @@ ragflow_admin_password: "changeme"
 # llm_asr_model: ""
 # llm_image2text_model: ""
 
-
 # ---------- Twingate ----------
 tg_tenant_name: "your-tenant"
 tg_container_name1: "tg-connector-1"
@@ -111,6 +109,12 @@ tg_access_token1: ""
 tg_refresh_token1: ""
 tg_access_token2: ""
 tg_refresh_token2: ""
+
+# ---------- smtp relay ----------
+smtp_image: "boky/postfix:latest"
+smtp_host: "smtp"
+smtp_port: 25
+smtp_ssl: false
 
 # ---------- Security ----------
 ssh_harden: true
