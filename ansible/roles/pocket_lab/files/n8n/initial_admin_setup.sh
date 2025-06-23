@@ -1,55 +1,97 @@
 #!/bin/sh
-# -----------------------------------------------------------------------------
-# initial_admin_setup.sh – seed the first (owner) account for n8n
-#
-# * Idempotent: safe to run many times.
-# * Exits non‑zero if it cannot guarantee that the owner exists.
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# initial_admin_setup.sh  –  bootstrap first (owner) account for n8n
+# ---------------------------------------------------------------------------
+# * Idempotent    (safe to run multiple times)
+# * Requires env  N8N_ADMIN_EMAIL  N8N_ADMIN_PASSWORD
+# * Fails fast    (non-zero exit on any problem)
+# ---------------------------------------------------------------------------
 
-# Fail fast: -e stop on error, -u on undefined var.
-# pipefail is useful but not available in every /bin/sh; enable if supported.
 set -eu
+# enable pipefail on shells that support it
 if (set -o 2>/dev/null | grep -q pipefail); then
   set -o pipefail
 fi
 
+##############################################################################
+# helpers
+##############################################################################
+log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
+die() { log "❌ $*"; exit 1; }
 
-# ── config (all values come from docker-compose/.env) ────────────────
-DATA_DIR="${N8N_DATA_DIR:-/home/node}"
-DB="$DATA_DIR/database.sqlite"
-ADMIN_EMAIL="${N8N_ADMIN_EMAIL:?unset}"
-ADMIN_PASSWORD="${N8N_ADMIN_PASSWORD:?unset}"
-MARK="$DATA_DIR/.bootstrap_done"
+##############################################################################
+# configuration from environment / defaults
+##############################################################################
+DATA_DIR="${N8N_USER_FOLDER:-/home/node/.n8n}"
+DB_FILE="$DATA_DIR/database.sqlite"
+SQLITE_BIN="$DATA_DIR/sqlite3"
+MARK_FILE="$DATA_DIR/.bootstrap_done"
 
-# ── prepare folders & permissions ───────────────────────────────────
-install -d -m 700 "$DATA_DIR"
+ADMIN_EMAIL="${N8N_ADMIN_EMAIL:?N8N_ADMIN_EMAIL missing}"
+ADMIN_PASSWORD="${N8N_ADMIN_PASSWORD:?N8N_ADMIN_PASSWORD missing}"
 
-# ── tiny helper to ask SQLite (no jq, no list cmd) ──────────────────
-owner_exists() {
-  [ -f "$DB" ] || return 1
-  sqlite3 "$DB" "SELECT 1 FROM \"user\" \
-                 WHERE globalRoleId=1 AND email='$ADMIN_EMAIL' LIMIT 1;" \
-    | grep -q 1
-}
+# ---------------------------------------------------------------------------
+# static-sqlite3 binary (musl-linked) – see
+# https://github.com/CompuRoot/static-sqlite3/releases
+# ---------------------------------------------------------------------------
+SQLITE_TAG="3.46.1_01"
+case "$(uname -m)" in
+  x86_64)  SQLITE_ASSET="sqlite3"           ;;
+  aarch64) SQLITE_ASSET="sqlite3-aarch64"   ;;
+  *) log "unsupported architecture ‘$(uname -m)’" ;;
+esac
+SQLITE_URL="https://github.com/CompuRoot/static-sqlite3/releases/download/${SQLITE_TAG}/${SQLITE_ASSET}"
 
-# ── idempotent bootstrap logic ──────────────────────────────────────
-if [ -f "$MARK" ] || owner_exists; then
-  echo "✔ owner already present – skipping"
+##############################################################################
+# pre-flight checks
+##############################################################################
+mkdir -p "$DATA_DIR"
+[ -w "$DATA_DIR" ] || log "'$DATA_DIR' not writable – check volume permissions"
+
+##############################################################################
+# fetch sqlite3 binary once
+##############################################################################
+if [ ! -x "$SQLITE_BIN" ] || [ ! -s "$SQLITE_BIN" ]; then
+  log "📦 downloading sqlite3 from $SQLITE_URL …"
+ # --header ensures we get the asset, not the HTML page
+  wget -qO "$SQLITE_BIN" --header="Accept: application/octet-stream" "$SQLITE_URL" \
+    || log "download failed"
+  chmod +x "$SQLITE_BIN"
+fi
+
+# convenience wrapper
+sql() { "$SQLITE_BIN" "$DB_FILE" "$@" ; } 2>/dev/null
+user_count() { sql 'SELECT COUNT(*) FROM user_entity;' 2>/dev/null || echo 0; }
+
+##############################################################################
+# skip if we succeeded once already
+##############################################################################
+if [ -f "$MARK_FILE" ]; then
+  log "✔ bootstrap already completed – skipping"
   exit 0
 fi
 
-echo "⏳ seeding owner account …"
-n8n user-management:reset \
-      --email "$ADMIN_EMAIL" \
-      --password "$ADMIN_PASSWORD" \
-      --force
+##############################################################################
+# create owner only when DB is empty
+##############################################################################
+if [ "$(user_count)" -eq 0 ]; then
+  log "⏳ creating owner “$ADMIN_EMAIL”"
+  n8n user-management:reset \
+        --email "$ADMIN_EMAIL" \
+        --password "$ADMIN_PASSWORD" \
+        --force
+fi
 
-if owner_exists; then
-  touch "$MARK"
-  echo "✔ owner created successfully"
+##############################################################################
+# verify result
+##############################################################################
+OWNER_EXISTS=$(sql "SELECT COUNT(*) FROM user_entity \
+                    WHERE email = lower('$ADMIN_EMAIL');" || echo 0)
+
+if [ "$OWNER_EXISTS" = "1" ]; then
+  log "✔ owner row confirmed in DB"
+  touch "$MARK_FILE"
   exit 0
 else
-  echo "❌ owner not found after reset; aborting" >&2
-  exit 20
+  log "owner row missing – inspect $DB_FILE manually"
 fi
-

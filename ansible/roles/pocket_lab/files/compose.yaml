@@ -176,11 +176,12 @@ services:
     restart: 'no'
     depends_on:
       smtp: { condition: service_healthy }
+    user: "1000:1000"             # run as the normal node user
     volumes:
-      - n8n-data:/home/node
-      - ./n8n/initial_admin_setup.sh:/init.sh:ro
-    entrypoint: ["/bin/sh","-c"]
-    command: "init.sh"
+      - n8n-data:/home/node/.n8n
+      - ./n8n/initial_admin_setup.sh:/home/node/.n8n/init.sh:ro
+    entrypoint: []
+    command: ["/bin/sh", "/home/node/.n8n/init.sh"]
 
   n8n:
     <<: *common
@@ -189,6 +190,10 @@ services:
     depends_on:
       n8n-bootstrap:
         condition: service_completed_successfully
+    user: "1000:1000"             # run as the normal node user
+    environment:
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=${TIMEZONE}
     restart: on-failure
     expose:
     - "5678"
