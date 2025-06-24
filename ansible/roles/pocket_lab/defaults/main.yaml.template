@@ -33,6 +33,7 @@ n8n_version: "1.50.0"
 n8n_admin_email: "admin@example.com"
 n8n_admin_password: "changeme"
 n8n_basic_auth_active: 'false'
+n8n_user_management_disabled: 'true'
 n8n_personalization_enabled: 'false'
 
 # ---------- ollama ----------
