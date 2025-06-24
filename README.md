@@ -109,7 +109,7 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `stack_domain`, `stack_email` | `ai.lab.example.com`, `admin@example.com` | Traefik host and ACME mail |
 | `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
 | `tg_tenant_name`, `*_TOKEN*` | – | Twingate connector |
-| `n8n_user`, `n8n_password` | `admin` / `changeme` | Web UI credentials |
+| `n8n_admin_email`, `n8n_admin_password` | `admin@example.com` / `changeme` | n8n owner account |
 | `es_password`, `mysql_password`, `minio_root_password`, … | `changeme` | Service credentials |
 | `compose_repo` | `/opt/pocket_lab` | Where compose files are deployed |
 | `mem_limit` | `4g` | Memory limit for ES and Infinity |
@@ -147,6 +147,15 @@ Full variable reference lives in:
 |**ensure_conn_user**|Probe `root`, inventory user, first in `l3d_users__local_users`; cache winner for 24 h so every play can rely on `hostvars[host].conn_user`.|
 |**l3d.users.user / .admin**|Create regular + sudo users with SSH keys. [Ansible Galaxy](https://galaxy.ansible.com/ui/repo/published/l3d/users/content/role/user/?utm_source=chatgpt.com)|
 |**devsec.hardening.os_hardening / ssh_hardening**|CIS‑style OS tweaks, secure `sshd_config`. [GitHub](https://github.com/dev-sec/ansible-collection-hardening?utm_source=chatgpt.com)|
+
+## n8n
+
+The lab bootstraps its n8n instance automatically. A short‑lived
+`n8n-bootstrap` container runs `initial_admin_setup.sh` before the main
+service starts. The script resets user management once and uses
+`N8N_ADMIN_EMAIL` and `N8N_ADMIN_PASSWORD` from the env file to create the
+global owner account. It marks the database so this runs only once. If the
+bootstrap fails the stack still starts but no owner will exist.
 ## RAGFlow
 
 RAGFlow runs behind an internal nginx with Traefik handling the public endpoint.
@@ -168,6 +177,7 @@ The default language model backend is controlled via the `user_default_llm`
 block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
 `LLM_API_KEY` or `LLM_CHAT_MODEL` in your `.env` to point RAGFlow at a
 different provider or model.
+
 ---
 
 ## After cloning – quick checklist

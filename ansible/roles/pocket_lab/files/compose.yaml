@@ -131,6 +131,23 @@ services:
     environment:
     - TZ=${TIMEZONE}
 
+  smtp:
+    <<: *common
+    image: ${SMTP_IMAGE}
+    container_name: ${SMTP_HOST}
+    # accept mail from stack containers only
+    environment:
+      - ALLOWED_SENDER_DOMAINS=${TRAEFIK_DOMAIN}
+      - POSTFIX_myhostname=${SMTP_HOST}.${TRAEFIK_DOMAIN}
+      - POSTFIX_mynetworks=127.0.0.0/8 172.18.0.0/16   # docker subnet
+      - POSTFIX_smtp_tls_security_level=may
+    expose:
+      - "${SMTP_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "echo x | nc -w 2 localhost ${SMTP_PORT}"]
+      interval: 30s
+      retries: 3
+
   portainer:
     <<: *common
     image: portainer/portainer-ce:${PORTAINER_VERSION}
@@ -153,10 +170,30 @@ services:
   ############################
   #            APPS          #
   ############################
+  n8n-bootstrap:
+    <<: *common
+    image: n8nio/n8n:${N8N_VERSION}
+    restart: 'no'
+    depends_on:
+      smtp: { condition: service_healthy }
+    user: "1000:1000"             # run as the normal node user
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./n8n/initial_admin_setup.sh:/home/node/.n8n/init.sh:ro
+    entrypoint: []
+    command: ["/bin/sh", "/home/node/.n8n/init.sh"]
+
   n8n:
     <<: *common
     image: n8nio/n8n:${N8N_VERSION}
     container_name: n8n
+    depends_on:
+      n8n-bootstrap:
+        condition: service_completed_successfully
+    user: "1000:1000"             # run as the normal node user
+    environment:
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=${TIMEZONE}
     restart: on-failure
     expose:
     - "5678"
@@ -168,12 +205,6 @@ services:
     - traefik.http.routers.n8n.entrypoints=websecure
     - traefik.http.routers.n8n.tls.certresolver=le-dns
     - traefik.http.routers.n8n.tls=true
-    - traefik.http.routers.n8n.middlewares=auth@file #,n8n-headers@docker
-    # - traefik.http.middlewares.n8n-headers.STSSeconds=315360000
-    # - traefik.http.middlewares.n8n-headers.STSIncludeSubdomains=true
-    # - traefik.http.middlewares.n8n-headers.STSPreload=true
-    # - traefik.http.middlewares.n8n-headers.browserXSSFilter=true
-    # - traefik.http.middlewares.n8n-headers.contentTypeNosniff=true
 
 
   ollama:
@@ -184,14 +215,13 @@ services:
     - "11434"
     volumes:
     - ollama-data:/root/.ollama
-    entrypoint: >
-      sh -c '
+    entrypoint: /bin/sh -c
+    command: >
         /bin/ollama serve &
         until curl -s http://localhost:11434/ > /dev/null; do sleep 1; done
         ollama pull llama3.2 &&
         ollama pull bge-m3 &&
         fg
-      '
     labels:
     - traefik.enable=true
     - traefik.http.routers.ollama.rule=Host(`ollama.${TRAEFIK_DOMAIN}`)
