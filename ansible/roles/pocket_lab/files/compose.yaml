@@ -229,12 +229,29 @@ services:
     - traefik.http.routers.ollama.tls.certresolver=le-dns
     - traefik.http.routers.ollama.middlewares=auth@file
 
+
+  openwebui-bootstrap:
+    <<: *common
+    image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
+    container_name: openwebui-bootstrap
+    restart: false
+    user: "0:0"
+    volumes:
+      - openwebui-data:/app/backend/data
+      - ./openwebui/create_admin.py:/create_admin.py:ro
+    entrypoint: []
+    command: ["python3", "/create_admin.py"]
   openwebui:
     <<: *common
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
     container_name: openwebui
+    volumes:
+      - openwebui-data:/app/backend/data
     expose:
     - "8080"
+    depends_on:
+      openwebui-bootstrap:
+        condition: service_completed_successfully
     labels:
     - traefik.enable=true
     - traefik.http.routers.webui.rule=Host(`chat.${TRAEFIK_DOMAIN}`)
@@ -437,6 +454,7 @@ volumes:
   ragflow-logs:
   ragflow-history:
   le-data:
+  oepnwebui-data:
 
     ############################
     #         NETWORKS         #
