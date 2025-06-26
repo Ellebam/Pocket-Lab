@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+import contextlib, logging, os, pathlib, sqlite3, sys, time, traceback, uuid, bcrypt 
+
 """
 openwebui-bootstrap.py  –  first-admin initialiser for Open WebUI
 • honours GLOBAL_LOG_LEVEL & other Open WebUI logging env-vars
@@ -6,7 +7,6 @@ openwebui-bootstrap.py  –  first-admin initialiser for Open WebUI
 • never throws: all failures are logged, then we exit 0
 """
 
-import contextlib, logging, os, pathlib, sqlite3, sys, time, traceback, uuid, bcrypt 
 
 # ---------------------------------------------------------------------------
 # 0.-  logging  
