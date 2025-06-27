@@ -1,32 +1,32 @@
-- name: Create compose directory
+- name: Ensure compose directory exists
   file:
     path: "{{ compose_repo }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
+  notify: Restart stack # triggers only on first creation
 
-- name: Copy entire stack asset tree (preserve perms)
-  copy:
+- name: Synchronize stack asset tree (preserves permissions, deletes orphans)
+  ansible.posix.synchronize:
     src: "{{ role_path }}/files/"
     dest: "{{ compose_repo }}/"
-    mode: preserve
+    recursive: true
+    delete: true # remove files no longer under version control
+    rsync_opts:
+    - "--chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r"
+    _ssh_args: >
+      -o IdentitiesOnly=yes {% if ansible_ssh_private_key_file is defined %} -i {{ ansible_ssh_private_key_file }} {% endif %}
+  notify: Restart compose stack
 
-- name: Render .env file
+- name: Render environment file
   template:
     src: .env.j2
     dest: "{{ compose_repo }}/.env"
     mode: "0640"
+  notify: Restart compose stack
 
-- name: Render traefik_dynamic.yaml file
+- name: Render Traefik dynamic configuration
   template:
     src: traefik_dynamic.yaml.j2
     dest: "{{ compose_repo }}/traefik/traefik_dynamic.yaml"
     mode: "0640"
-
-- name: Launch stack
-  community.docker.docker_compose_v2:
-    project_src: "{{ compose_repo }}"
-    check_files_existing: false
-    pull: missing
-    state: present
-    files:
-    - compose.yaml
+  notify: Restart compose stack

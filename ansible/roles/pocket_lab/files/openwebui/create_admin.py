@@ -1,101 +1,130 @@
-import contextlib, logging, os, pathlib, sqlite3, sys, time, traceback, uuid, bcrypt 
-
+#!/usr/bin/env python3
 """
-openwebui-bootstrap.py  –  first-admin initialiser for Open WebUI
-• honours GLOBAL_LOG_LEVEL & other Open WebUI logging env-vars
-• idempotent – re-runs just update the row
-• never throws: all failures are logged, then we exit 0
+openwebui-bootstrap.py – create/refresh first admin account.
+Idempotent, verbose, and ALWAYS exits 0.
 """
+import contextlib, logging, os, pathlib, sqlite3, sys, time, traceback, uuid
 
-
-# ---------------------------------------------------------------------------
-# 0.-  logging  
-# ---------------------------------------------------------------------------
+# ───────── logging ───────────────────────────────────────────────
 try:
-    from open_webui.env import GLOBAL_LOG_LEVEL  
+    from open_webui.env import GLOBAL_LOG_LEVEL            # optional import
 except Exception:
     GLOBAL_LOG_LEVEL = os.getenv("GLOBAL_LOG_LEVEL", "INFO")
+
 logging.basicConfig(
     level=getattr(logging, GLOBAL_LOG_LEVEL.upper(), logging.INFO),
-    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-    force=True,
+    format="%(asctime)s | %(levelname)-7s | openwebui.bootstrap | %(message)s",
+    force=True,  # overwrite any handlers set earlier  :contentReference[oaicite:3]{index=3}
 )
-log = logging.getLogger("open_webui.bootstrap")
+log = logging.getLogger()
 
-# ---------------------------------------------------------------------------
-# 1.-  config & helpers
-# ---------------------------------------------------------------------------
+# ───────── config ────────────────────────────────────────────────
 DB      = pathlib.Path("/app/backend/data/webui.db")
-EMAIL   = os.getenv("OPENWEBUI_ADMIN_EMAIL",    "admin@example.com").lower()
-PASSWORD= os.getenv("OPENWEBUI_ADMIN_PASSWORD", "changeme").encode()
+EMAIL   = os.getenv("OPENWEBUI_ADMIN_EMAIL", "admin@example.com").lower()
+NAME    = os.getenv("OPENWEBUI_ADMIN_NAME", EMAIL.split("@")[0].title())
+PWD     = os.getenv("OPENWEBUI_ADMIN_PASSWORD", "changeme").encode()
+NOW     = int(time.time_ns())
 
-def _wait_for_db(timeout=60):
-    deadline = time.time() + timeout
-    while time.time() < deadline:
+# ───────── helpers ───────────────────────────────────────────────
+def wait_db(timeout=60):
+    t_end = time.time() + timeout
+    while time.time() < t_end:
         if DB.exists() and DB.stat().st_size:
             return True
         time.sleep(1)
     return False
 
-def _detect_user_table(cur):
-    """‘auth’ (≥ v0.3.17) or legacy ‘user’ table.”"""
+def log_schema(cur, tbl):
+    cur.execute(f"PRAGMA table_info({tbl});")
+    cols = ", ".join(f"{c[1]}[{c[3]}]" for c in cur.fetchall())    # c[3] => NOT-NULL flag
+    log.debug("Schema %s → %s", tbl, cols)
+
+def ensure_admin(conn):
+    import bcrypt                                               # already in the image
+    cur = conn.cursor()
     for tbl in ("auth", "user"):
-        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", (tbl,))
-        if cur.fetchone():
-            return tbl
-    raise RuntimeError("no suitable user table found")  # schema drift
+        log_schema(cur, tbl)
 
-def _ensure_admin(cur, tbl):
-    cur.execute(f"SELECT id FROM {tbl} WHERE email=?;", (EMAIL,))
-    uid = cur.fetchone()
-    hashed = bcrypt.hashpw(PASSWORD, bcrypt.gensalt()).decode()
+    # ---------- auth ----------
+    cur.execute("SELECT id FROM auth WHERE email=?;", (EMAIL,))
+    row = cur.fetchone()
+    hashed = bcrypt.hashpw(PWD, bcrypt.gensalt()).decode()
 
-    if uid:
-        log.info("Admin already exists – refreshing password")
-        cur.execute(f"UPDATE {tbl} SET password=?, role='admin', active=1 WHERE id=?;",
-                    (hashed, uid[0]))
-        return uid[0]
+    if row:
+        uid = row[0]
+        log.info("Updating auth row uid=%s", uid)
+        cur.execute(
+            "UPDATE auth SET password=?, active=1 WHERE id=?;", (hashed, uid)
+        )
+    else:
+        uid = str(uuid.uuid4())
+        log.info("Creating auth row uid=%s", uid)
+        cur.execute(
+            "INSERT INTO auth (id,email,password,active) VALUES (?,?,?,1);",
+            (uid, EMAIL, hashed),
+        )
 
-    uid = str(uuid.uuid4())
-    log.info("Creating admin user uid=%s", uid)
-    cur.execute(
-        f"INSERT INTO {tbl} (id,email,password,role,active) VALUES (?,?,?,?,1);",
-        (uid, EMAIL, hashed, "admin"),
-    )
+    # ---------- user ----------
+    cur.execute("SELECT id FROM user WHERE id=?;", (uid,))
+    if cur.fetchone():
+        log.info("Updating user row uid=%s", uid)
+        cur.execute(
+            """
+            UPDATE user
+               SET name=?,
+                   email=?,
+                   role='admin',
+                   updated_at=?
+             WHERE id=?;
+            """,
+            (NAME, EMAIL, NOW, uid),
+        )
+    else:
+        log.info("Creating user row uid=%s", uid)
+        cur.execute(
+            """
+            INSERT INTO user
+                   (id,  name, email, role, profile_image_url,
+                    last_active_at, updated_at, created_at)
+            VALUES (?,   ?,    ?,     'admin', '', ?,            ?,          ?);
+            """,
+            (uid, NAME, EMAIL, NOW, NOW, NOW),
+        )
     return uid
 
-def _verify(cur, tbl):
-    cur.execute(f"SELECT role,active FROM {tbl} WHERE email=?;", (EMAIL,))
-    row = cur.fetchone()
-    return row and row[0] == "admin" and row[1] == 1
+def verify(cur):
+    cur.execute(
+        """
+        SELECT u.role, u.name, a.active
+          FROM user u JOIN auth a USING(id)
+         WHERE u.email=?;
+        """,
+        (EMAIL,),
+    )
+    r = cur.fetchone()
+    return r and r[0] == "admin" and r[2] == 1
 
-# ---------------------------------------------------------------------------
-# 2.-  main
-# ---------------------------------------------------------------------------
+# ───────── main ────────────────────────────────────────────────
 def main():
-    if not _wait_for_db():
+    if not wait_db():
         log.error("webui.db never appeared – giving up")
         return
-
     with contextlib.closing(sqlite3.connect(DB)) as conn:
         try:
-            tbl  = _detect_user_table(conn.cursor())   # auth vs user
-            uid  = _ensure_admin(conn.cursor(), tbl)
+            uid = ensure_admin(conn)
             conn.commit()
-
-            if _verify(conn.cursor(), tbl):
-                log.info("Bootstrap succeeded (uid=%s)", uid)
+            if verify(conn.cursor()):
+                log.info("Bootstrap finished ✔ (uid=%s)", uid)
             else:
-                log.error("Verification failed – admin row not correct")
+                log.error("Verification failed – admin row inconsistent")
         except Exception:
-            log.exception("☠ bootstrap crashed")
-            # fall through to exit 0
+            log.exception("☠ bootstrap crashed – continuing so UI can start")
 
 if __name__ == "__main__":
     try:
         main()
     except Exception:
         traceback.print_exc()
-        log.critical("Fatal error bubbled out – continuing (exit 0)")
+        log.critical("Uncaught error – continuing (exit 0)")
     finally:
         sys.exit(0)

@@ -234,7 +234,7 @@ services:
     <<: *common
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
     container_name: openwebui-bootstrap
-    restart: false
+    restart: "no"
     user: "0:0"
     volumes:
       - openwebui-data:/app/backend/data
@@ -257,7 +257,6 @@ services:
     - traefik.http.routers.webui.rule=Host(`chat.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.webui.entrypoints=websecure
     - traefik.http.routers.webui.tls.certresolver=le-dns
-    - traefik.http.routers.webui.middlewares=auth@file
     - traefik.http.services.openwebui.loadbalancer.server.port=${OPENWEBUI_PORT}
     - traefik.http.services.openwebui.loadbalancer.server.scheme=http
 
@@ -454,7 +453,7 @@ volumes:
   ragflow-logs:
   ragflow-history:
   le-data:
-  oepnwebui-data:
+  openwebui-data:
 
     ############################
     #         NETWORKS         #

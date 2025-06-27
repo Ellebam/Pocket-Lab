@@ -1,4 +1,4 @@
-# This overrides Dev‑Sec's handler so sshd 
+# This overrides Dev‑Sec's handler so sshd
 # only restarts with a working config
 - name: Restart sshd
   block:
@@ -9,3 +9,13 @@
       service:
         name: ssh
         state: restarted
+
+- name: Restart compose stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ compose_repo }}"
+    files:
+      - compose.yaml
+    pull: always
+    recreate: always
+    remove_orphans: true
+    state: present
