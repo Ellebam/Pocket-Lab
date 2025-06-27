@@ -1,5 +1,5 @@
 - name: Ensure compose directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ compose_repo }}"
     state: directory
     mode: "0755"
@@ -18,14 +18,14 @@
   notify: Restart compose stack
 
 - name: Render environment file
-  template:
+  ansible.builtin.template:
     src: .env.j2
     dest: "{{ compose_repo }}/.env"
     mode: "0640"
   notify: Restart compose stack
 
 - name: Render Traefik dynamic configuration
-  template:
+  ansible.builtin.template:
     src: traefik_dynamic.yaml.j2
     dest: "{{ compose_repo }}/traefik/traefik_dynamic.yaml"
     mode: "0640"

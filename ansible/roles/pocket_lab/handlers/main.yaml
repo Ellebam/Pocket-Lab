@@ -3,10 +3,10 @@
 - name: Restart sshd
   block:
     - name: Validate new sshd_config
-      command: /usr/sbin/sshd -t -f /etc/ssh/sshd_config
+      ansible.builtin.command: /usr/sbin/sshd -t -f /etc/ssh/sshd_config
       changed_when: false
     - name: Restart sshd service
-      service:
+      ansible.builtin.service:
         name: ssh
         state: restarted
 

@@ -6,6 +6,6 @@
     - compose.yaml
 
 - name: Remove compose directory entirely
-  file:
+  ansible.builtin.file:
     path: "{{ compose_repo }}"
     state: absent

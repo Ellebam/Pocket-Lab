@@ -1,10 +1,11 @@
 ---
-- import_tasks: prereqs.yaml
+- name: Import prerequisite tasks
+  ansible.builtin.import_tasks: prereqs.yaml
 
-- name: include deploy tasks
-  include_tasks: deploy.yaml
+- name: Include deploy tasks
+  ansible.builtin.include_tasks: deploy.yaml
   when: stack_state | default('present') == 'present'
 
-- name: include cleanup tasks
-  include_tasks: cleanup.yaml
+- name: Include cleanup tasks
+  ansible.builtin.include_tasks: cleanup.yaml
   when: stack_state | default('present') != 'present'
