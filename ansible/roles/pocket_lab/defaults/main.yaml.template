@@ -42,6 +42,11 @@ ollama_version: "0.1.30"
 # ---------- openwebui ----------
 openwebui_version: "v0.6.9"
 openwebui_port: "8080"
+openwebui_admin_email: "admin@example.com"
+openwebui_admin_password: "changeme"
+openwebui_enable_signup: false
+openwebui_default_user_role: "pending"
+openwebui_enable_persistent_config: true
 
 # ----------  Elasticsearch ----------
 es_version: "8.13.4"

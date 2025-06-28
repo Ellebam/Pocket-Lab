@@ -110,6 +110,7 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
 | `tg_tenant_name`, `*_TOKEN*` | – | Twingate connector |
 | `n8n_admin_email`, `n8n_admin_password` | `admin@example.com` / `changeme` | n8n owner account |
+| `openwebui_admin_email`, `openwebui_admin_password` | `admin@example.com` / `changeme` | Open WebUI admin |
 | `es_password`, `mysql_password`, `minio_root_password`, … | `changeme` | Service credentials |
 | `compose_repo` | `/opt/pocket_lab` | Where compose files are deployed |
 | `mem_limit` | `4g` | Memory limit for ES and Infinity |
@@ -156,6 +157,17 @@ service starts. The script resets user management once and uses
 `N8N_ADMIN_EMAIL` and `N8N_ADMIN_PASSWORD` from the env file to create the
 global owner account. It marks the database so this runs only once. If the
 bootstrap fails the stack still starts but no owner will exist.
+
+
+## Open WebUI
+
+The `openwebui-bootstrap` container executes `create_admin.py` once before
+the actual service comes up. It creates or updates the administrator defined
+via `OPENWEBUI_ADMIN_EMAIL` and `OPENWEBUI_ADMIN_PASSWORD`. Registration
+behaviour is controlled through `ENABLE_SIGNUP`, the default role via
+`DEFAULT_USER_ROLE` and configuration persistence via
+`ENABLE_PERSISTENT_CONFIG`.
+
 ## RAGFlow
 
 RAGFlow runs behind an internal nginx with Traefik handling the public endpoint.
