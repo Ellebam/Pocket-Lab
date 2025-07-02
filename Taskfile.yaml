@@ -1,13 +1,17 @@
-# Taskfile.yaml
+# Taskfile.yaml – unified compose path & DX helpers
 version: "3"
 
 vars:
-  ROOT_COMPOSE: docker compose -f compose.yaml
-  ROLE_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/compose.yaml
+  # ----- Docker Compose path (single source of truth) -----------------------
+  STACK_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/compose.yaml
+
+  # ----- Python / Ansible virtual‑env ---------------------------------------
   VENV_DIR: .venv
   VENV_BIN: "{{ .VENV_DIR }}/bin"
   PYTHON: "{{ .VENV_BIN }}/python"
   ANSIBLE_PLAYBOOK_CMD: "{{ .VENV_BIN}}/ansible-playbook"
+
+  # ----- Ansible playbooks / inventory --------------------------------------
   ANSIBLE_PLAYBOOK: ansible/site.yaml
   ANSIBLE_INVENTORY: ansible/inventory/hosts.yaml
   ANSIBLE_DETECT_PLAY: ansible/plays/00-detect-user.yaml
@@ -15,7 +19,11 @@ vars:
   ANSIBLE_HARDEN_PLAY: ansible/plays/20-harden.yaml
   ANSIBLE_DEPLOY_PLAY: ansible/plays/30-deploy.yaml
 
+# ---------------------------------------------------------------------------
+# Helper tasks – `task --list` should read like a CLI reference
+# ---------------------------------------------------------------------------
 tasks:
+  # ───────────────────────── ENV / tooling ────────────────────────────────
   venv:init:
     desc: "Create venv & install Ansible + collections"
     cmds:
@@ -26,53 +34,70 @@ tasks:
     - "{{.VENV_BIN}}/ansible-galaxy role install -r ansible/requirements.yaml -p {{.VENV_DIR}}/ansible/roles"
 
   init-env:
-    desc: "Create .env from template (for manual compose)"
+    desc: "Create .env from template (manual compose)"
     cmds:
     - test -f .env || cp .env.template .env
 
-  docker-compose-up:
-    desc: "Start stack (root-level compose + .env)"
+  diff-env:
+    desc: "Fail if .env.template & .env.j2 diverge"
+    cmds:
+    - python scripts/sync_env.py
+
+  # ───────────────────────── Docker Compose DX ────────────────────────────
+  compose-up:
+    desc: "Start stack (unified compose path)"
     cmds:
     - task:init-env
-    - "{{.ROOT_COMPOSE}} pull"
-    - "{{.ROOT_COMPOSE}} up -d"
+    - "{{.STACK_COMPOSE}} pull"
+    - "{{.STACK_COMPOSE}} up -d"
 
-  docker-compose-down:
-    desc: "Stop & remove containers (root compose)"
-    cmds: [ "{{.ROOT_COMPOSE}} down -v --remove-orphans" ]
+  compose-down:
+    desc: "Stop & remove containers + volumes"
+    cmds:
+    - "{{.STACK_COMPOSE}} down -v --remove-orphans"
 
-  docker-compose-logs:
-    desc: "Tail logs (root compose)"
-    cmds: [ "{{.ROOT_COMPOSE}} logs -f --tail=100" ]
+  compose-logs:
+    desc: "Tail stack logs"
+    cmds:
+    - "{{.STACK_COMPOSE}} logs -f --tail=100"
 
   docker-restart:
-    desc: "Restart one service – usage: task restart -- n8n"
-    cmds: [ "{{.ROOT_COMPOSE}} restart {{.CLI_ARGS}}" ]
+    desc: "Restart a service – usage: task docker-restart -- <service>"
+    cmds:
+    - "{{.STACK_COMPOSE}} restart {{.CLI_ARGS}}"
 
   docker-prune:
     desc: "Docker system prune"
-    cmds: [ "docker system prune -f" ]
+    cmds:
+    - docker system prune -f
 
+  # ───────────────────────── Ansible wrappers ─────────────────────────────
   ansible_detect:
     deps: [ venv:init ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DETECT_PLAY}} {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DETECT_PLAY}} {{.CLI_ARGS}}"
 
   ansible_bootstrap:
     deps: [ ansible_detect ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_BOOTSTRAP_PLAY}} {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_BOOTSTRAP_PLAY}} {{.CLI_ARGS}}"
 
   ansible_harden:
     deps: [ ansible_detect ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_HARDEN_PLAY}} {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_HARDEN_PLAY}} {{.CLI_ARGS}}"
 
   ansible_deploy:
     deps: [ ansible_detect ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DEPLOY_PLAY}} {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DEPLOY_PLAY}} {{.CLI_ARGS}}"
 
   ansible_full:
     deps: [ venv:init ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} ansible/site.yaml {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} ansible/site.yaml {{.CLI_ARGS}}"
 
   ansible_check:
     deps: [ venv:init ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_PLAYBOOK}} --check {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_PLAYBOOK}} --check {{.CLI_ARGS}}"
