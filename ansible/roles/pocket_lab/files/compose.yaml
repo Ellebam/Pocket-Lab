@@ -91,7 +91,6 @@ services:
     - traefik.http.routers.dashboard.tls.certresolver=le-dns
     - traefik.http.routers.dashboard.service=api@internal
     - traefik.http.routers.dashboard.middlewares=auth@file
-    - traefik.http.middlewares.strip-auth-header.headers.customRequestHeaders.Authorization=""
     ## Bootstrap router – never exposed
     - traefik.http.routers.le-bootstrap.rule=Host(`boot.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.le-bootstrap.entrypoints=websecure
@@ -367,7 +366,7 @@ services:
     labels:
     - "traefik.enable=true"
 
-    - traefik.http.routers.minio-api.rule=Host(`minio.${TRAEFIK_DOMAIN})
+    - traefik.http.routers.minio-api.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.minio-api.entrypoints=websecure
     - traefik.http.routers.minio-api.tls.certresolver=le-dns
     - traefik.http.routers.minio-api.service=minio-api
