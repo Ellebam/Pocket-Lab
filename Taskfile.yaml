@@ -1,13 +1,14 @@
-# Taskfile.yaml – unified compose path & developer convenience
+# Taskfile.yaml – one‑shot dev UX, single source of truth
 version: "3"
 
 #################
 #   Variables   #
 #################
 vars:
-  # Path to the *authoritative* Compose file (only one in the repo!)
-  AUTHOR_COMPOSE: ansible/roles/pocket_lab/files/compose.yaml
-  STACK_COMPOSE: docker compose -f compose.yaml
+  # Upstream location
+  AUTHOR_FILES_DIR: ansible/roles/pocket_lab/files # authoritative stack assets
+  DOCKER_DIR: docker # generated dev dir at repo root
+  STACK_COMPOSE: docker compose -f {{ .DOCKER_DIR }}/compose.yaml
 
   # Python / Ansible virtual‑env
   VENV_DIR: .venv
@@ -28,23 +29,26 @@ vars:
 #################
 tasks:
   # ───────────────────────── Re‑usable helpers ────────────────────────────
-  copy-compose:
+  sync-docker-dir:
     internal: true # invisible in `task --list`
-    desc: "Copy the authoritative compose.yaml to repo root (for vanilla docker compose)"
+    desc: "Mirror stack asset tree (compose.yaml + configs) to ./docker/"
     cmds:
+    # rsync keeps permissions & deletes removed files
     - |
-      # Ensure a non‑tracked compose.yaml exists at the project root
-      if [ ! -f compose.yaml ] || [ {{ .AUTHOR_COMPOSE }} -nt compose.yaml ]; then
-        echo "↺ Syncing compose.yaml from {{ .AUTHOR_COMPOSE }}"
-        cp {{ .AUTHOR_COMPOSE }} compose.yaml
+      mkdir -p {{ .DOCKER_DIR }}
+      rsync -a --delete "{{ .AUTHOR_FILES_DIR }}/" "{{ .DOCKER_DIR }}/"
+
+  ensure-env:
+    internal: true
+    desc: "Ensure ./docker/.env exists (creates from template first time)"
+    cmds:
+    - mkdir -p {{ .DOCKER_DIR }}
+    - |
+      if [ ! -f {{ .DOCKER_DIR }}/.env ]; then
+        cp .env.template {{ .DOCKER_DIR }}/.env
       fi
-      # Warn if someone edited compose.yaml manually
-      sum_root=$(sha1sum compose.yaml | cut -d' ' -f1)
-      sum_src=$(sha1sum {{ .AUTHOR_COMPOSE }} | cut -d' ' -f1)
-      if [ "$sum_root" != "$sum_src" ]; then
-        echo "⚠ compose.yaml differs from the authoritative version." >&2
-        echo "  Re‑run 'task copy-compose' to reset or delete the file." >&2
-      fi
+    # Convenience shim so `docker compose` at repo root still sees a .env
+    - ln -sf {{ .DOCKER_DIR }}/.env .env
 
   venv:init:
     desc: "Create venv & install Ansible + collections"
@@ -55,39 +59,40 @@ tasks:
     - "{{.VENV_BIN}}/ansible-galaxy collection install -r ansible/requirements.yaml -p {{.VENV_DIR}}/ansible/collections"
     - "{{.VENV_BIN}}/ansible-galaxy role install -r ansible/requirements.yaml -p {{.VENV_DIR}}/ansible/roles"
 
-  init-env:
-    desc: "Create .env from template (for manual compose)"
-    cmds:
-    - test -f .env || cp .env.template .env
-
   diff-env:
     desc: "Fail if .env.template & .env.j2 drift"
     cmds:
     - python scripts/sync_env.py
 
   # ───────────────────────── Docker Compose commands ───────────────────────
+
+  compose-prepare:
+    desc: "Prepare resources for compose stack"
+    deps: [ sync-docker-dir, ensure-env ]
+    cmds:
+    - echo "All resources set up correctly. Do not forget to edit the .env file"
+
   compose-up:
-    desc: "Start stack (works via Taskfile *or* plain docker compose)"
-    deps: [ copy-compose, init-env ]
+    desc: "Start stack (Taskfile or plain docker compose)"
     cmds:
     - "{{ .STACK_COMPOSE }} pull"
     - "{{ .STACK_COMPOSE }} up -d"
 
   compose-down:
     desc: "Stop & remove containers + volumes"
-    deps: [ copy-compose ]
+    deps: [ sync-docker-dir ]
     cmds:
     - "{{ .STACK_COMPOSE }} down -v --remove-orphans"
 
   compose-logs:
     desc: "Tail stack logs"
-    deps: [ copy-compose ]
+    deps: [ sync-docker-dir ]
     cmds:
     - "{{ .STACK_COMPOSE }} logs -f --tail=100"
 
   docker-restart:
     desc: "Restart a service – usage: task docker-restart -- <service>"
-    deps: [ copy-compose ]
+    deps: [ sync-docker-dir ]
     cmds:
     - "{{ .STACK_COMPOSE }} restart {{ .CLI_ARGS }}"
 
