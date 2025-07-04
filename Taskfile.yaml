@@ -1,17 +1,21 @@
-# Taskfile.yaml – unified compose path & DX helpers
+# Taskfile.yaml – unified compose path & developer convenience
 version: "3"
 
+#################
+#   Variables   #
+#################
 vars:
-  # ----- Docker Compose path (single source of truth) -----------------------
-  STACK_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/compose.yaml
+  # Path to the *authoritative* Compose file (only one in the repo!)
+  AUTHOR_COMPOSE: ansible/roles/pocket_lab/files/compose.yaml
+  STACK_COMPOSE: docker compose -f compose.yaml
 
-  # ----- Python / Ansible virtual‑env ---------------------------------------
+  # Python / Ansible virtual‑env
   VENV_DIR: .venv
   VENV_BIN: "{{ .VENV_DIR }}/bin"
   PYTHON: "{{ .VENV_BIN }}/python"
-  ANSIBLE_PLAYBOOK_CMD: "{{ .VENV_BIN}}/ansible-playbook"
+  ANSIBLE_PLAYBOOK_CMD: "{{ .VENV_BIN }}/ansible-playbook"
 
-  # ----- Ansible playbooks / inventory --------------------------------------
+  # Ansible playbooks / inventory
   ANSIBLE_PLAYBOOK: ansible/site.yaml
   ANSIBLE_INVENTORY: ansible/inventory/hosts.yaml
   ANSIBLE_DETECT_PLAY: ansible/plays/00-detect-user.yaml
@@ -19,11 +23,29 @@ vars:
   ANSIBLE_HARDEN_PLAY: ansible/plays/20-harden.yaml
   ANSIBLE_DEPLOY_PLAY: ansible/plays/30-deploy.yaml
 
-# ---------------------------------------------------------------------------
-# Helper tasks – `task --list` should read like a CLI reference
-# ---------------------------------------------------------------------------
+#################
+#     Tasks     #
+#################
 tasks:
-  # ───────────────────────── ENV / tooling ────────────────────────────────
+  # ───────────────────────── Re‑usable helpers ────────────────────────────
+  copy-compose:
+    internal: true # invisible in `task --list`
+    desc: "Copy the authoritative compose.yaml to repo root (for vanilla docker compose)"
+    cmds:
+    - |
+      # Ensure a non‑tracked compose.yaml exists at the project root
+      if [ ! -f compose.yaml ] || [ {{ .AUTHOR_COMPOSE }} -nt compose.yaml ]; then
+        echo "↺ Syncing compose.yaml from {{ .AUTHOR_COMPOSE }}"
+        cp {{ .AUTHOR_COMPOSE }} compose.yaml
+      fi
+      # Warn if someone edited compose.yaml manually
+      sum_root=$(sha1sum compose.yaml | cut -d' ' -f1)
+      sum_src=$(sha1sum {{ .AUTHOR_COMPOSE }} | cut -d' ' -f1)
+      if [ "$sum_root" != "$sum_src" ]; then
+        echo "⚠ compose.yaml differs from the authoritative version." >&2
+        echo "  Re‑run 'task copy-compose' to reset or delete the file." >&2
+      fi
+
   venv:init:
     desc: "Create venv & install Ansible + collections"
     cmds:
@@ -34,70 +56,73 @@ tasks:
     - "{{.VENV_BIN}}/ansible-galaxy role install -r ansible/requirements.yaml -p {{.VENV_DIR}}/ansible/roles"
 
   init-env:
-    desc: "Create .env from template (manual compose)"
+    desc: "Create .env from template (for manual compose)"
     cmds:
     - test -f .env || cp .env.template .env
 
   diff-env:
-    desc: "Fail if .env.template & .env.j2 diverge"
+    desc: "Fail if .env.template & .env.j2 drift"
     cmds:
     - python scripts/sync_env.py
 
-  # ───────────────────────── Docker Compose DX ────────────────────────────
+  # ───────────────────────── Docker Compose commands ───────────────────────
   compose-up:
-    desc: "Start stack (unified compose path)"
+    desc: "Start stack (works via Taskfile *or* plain docker compose)"
+    deps: [ copy-compose, init-env ]
     cmds:
-    - task:init-env
-    - "{{.STACK_COMPOSE}} pull"
-    - "{{.STACK_COMPOSE}} up -d"
+    - "{{ .STACK_COMPOSE }} pull"
+    - "{{ .STACK_COMPOSE }} up -d"
 
   compose-down:
     desc: "Stop & remove containers + volumes"
+    deps: [ copy-compose ]
     cmds:
-    - "{{.STACK_COMPOSE}} down -v --remove-orphans"
+    - "{{ .STACK_COMPOSE }} down -v --remove-orphans"
 
   compose-logs:
     desc: "Tail stack logs"
+    deps: [ copy-compose ]
     cmds:
-    - "{{.STACK_COMPOSE}} logs -f --tail=100"
+    - "{{ .STACK_COMPOSE }} logs -f --tail=100"
 
   docker-restart:
     desc: "Restart a service – usage: task docker-restart -- <service>"
+    deps: [ copy-compose ]
     cmds:
-    - "{{.STACK_COMPOSE}} restart {{.CLI_ARGS}}"
+    - "{{ .STACK_COMPOSE }} restart {{ .CLI_ARGS }}"
 
   docker-prune:
     desc: "Docker system prune"
     cmds:
     - docker system prune -f
 
-  # ───────────────────────── Ansible wrappers ─────────────────────────────
+  # ───────────────────────── Ansible wrappers ──────────────────────────────
   ansible_detect:
     deps: [ venv:init ]
     cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DETECT_PLAY}} {{.CLI_ARGS}}"
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_DETECT_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_bootstrap:
     deps: [ ansible_detect ]
     cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_BOOTSTRAP_PLAY}} {{.CLI_ARGS}}"
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_BOOTSTRAP_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_harden:
     deps: [ ansible_detect ]
     cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_HARDEN_PLAY}} {{.CLI_ARGS}}"
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_HARDEN_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_deploy:
     deps: [ ansible_detect ]
     cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DEPLOY_PLAY}} {{.CLI_ARGS}}"
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_DEPLOY_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_full:
     deps: [ venv:init ]
     cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} ansible/site.yaml {{.CLI_ARGS}}"
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} ansible/site.yaml {{ .CLI_ARGS }}"
 
   ansible_check:
     deps: [ venv:init ]
     cmds:
-    - "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_PLAYBOOK}} --check {{.CLI_ARGS}}"
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_PLAYBOOK }} --check {{ .CLI_ARGS }}"
