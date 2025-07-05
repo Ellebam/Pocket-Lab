@@ -172,6 +172,7 @@ services:
   n8n-bootstrap:
     <<: *common
     image: n8nio/n8n:${N8N_VERSION}
+    container_name: n8n-bootstrap
     restart: 'no'
     depends_on:
       smtp: { condition: service_healthy }
@@ -237,9 +238,9 @@ services:
     user: "0:0"
     volumes:
       - openwebui-data:/app/backend/data
-      - ./openwebui/create_admin.py:/create_admin.py:ro
+      - ./openwebui/create_admin.py:/app/backend/create_admin.py:ro
     entrypoint: []
-    command: ["python3", "/create_admin.py"]
+    command: ["python3", "/app/backend/create_admin.py"]
   openwebui:
     <<: *common
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}

@@ -80,19 +80,16 @@ tasks:
 
   compose-down:
     desc: "Stop & remove containers + volumes"
-    deps: [ sync-docker-dir ]
     cmds:
     - "{{ .STACK_COMPOSE }} down -v --remove-orphans"
 
   compose-logs:
     desc: "Tail stack logs"
-    deps: [ sync-docker-dir ]
     cmds:
     - "{{ .STACK_COMPOSE }} logs -f --tail=100"
 
   docker-restart:
     desc: "Restart a service – usage: task docker-restart -- <service>"
-    deps: [ sync-docker-dir ]
     cmds:
     - "{{ .STACK_COMPOSE }} restart {{ .CLI_ARGS }}"
 

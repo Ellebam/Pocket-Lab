@@ -14,7 +14,7 @@ except Exception:
 logging.basicConfig(
     level=getattr(logging, GLOBAL_LOG_LEVEL.upper(), logging.INFO),
     format="%(asctime)s | %(levelname)-7s | openwebui.bootstrap | %(message)s",
-    force=True,  # overwrite any handlers set earlier  :contentReference[oaicite:3]{index=3}
+    force=True,
 )
 log = logging.getLogger()
 
@@ -26,12 +26,27 @@ PWD     = os.getenv("OPENWEBUI_ADMIN_PASSWORD", "changeme").encode()
 NOW     = int(time.time_ns())
 
 # ───────── helpers ───────────────────────────────────────────────
-def wait_db(timeout=60):
+def bootstrap_schema_if_missing() -> None:
+    """Import the internal DB module once – this runs all Peewee/Alembic
+    migrations and creates `webui.db` on a blank volume."""
+    if DB.exists():
+        log.debug("DB already exists (%s bytes) – skipping migrations", DB.stat().st_size)
+        return
+    log.info("webui.db does not exist – triggering built-in migrations")
+    try:
+        import open_webui.internal.db  # noqa: F401  ※ side-effect: creates DB
+        log.info("Migrations finished – DB created")
+    except ModuleNotFoundError as exc:
+        log.error("Cannot import open_webui.internal.db – image layout changed? %s", exc)
+        raise
+
+def wait_db(timeout: int = 90) -> bool:
     t_end = time.time() + timeout
     while time.time() < t_end:
         if DB.exists() and DB.stat().st_size:
             return True
-        time.sleep(1)
+        log.debug("Waiting for DB … (%ds left)", int(t_end - time.time()))
+        time.sleep(2)
     return False
 
 def log_schema(cur, tbl):
@@ -106,6 +121,16 @@ def verify(cur):
 
 # ───────── main ────────────────────────────────────────────────
 def main():
+    # -----------------------------------------------------------------
+    # minimal env that Open WebUI MUST see before any db setup  happens
+    # -----------------------------------------------------------------
+    os.environ.setdefault("DATA_DIR", "/app/backend/data")
+    if not os.environ.get("WEBUI_SECRET_KEY"):
+        os.environ["WEBUI_SECRET_KEY"] = uuid.uuid4().hex  # 32-char random
+    pathlib.Path(os.environ["DATA_DIR"]).mkdir(parents=True, exist_ok=True)
+
+    bootstrap_schema_if_missing()
+
     if not wait_db():
         log.error("webui.db never appeared – giving up")
         return
