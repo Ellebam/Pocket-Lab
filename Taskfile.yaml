@@ -30,8 +30,8 @@ vars:
 tasks:
   # ───────────────────────── Re‑usable helpers ────────────────────────────
   sync-docker-dir:
-    internal: true # invisible in `task --list`
     desc: "Mirror stack asset tree (compose.yaml + configs) to ./docker/"
+    deps: [ ensure-executable-bootstrap-scripts ]
     cmds:
     # rsync keeps permissions & deletes removed files
     - |
@@ -75,13 +75,12 @@ tasks:
 
   compose-prepare:
     desc: "Prepare resources for compose stack"
-    deps: [ sync-docker-dir, ensure-env, ensure-executable-bootstrap-scripts ]
+    deps: [ sync-docker-dir, ensure-env ]
     cmds:
     - echo "All resources set up correctly. Do not forget to edit the .env file"
 
   compose-up:
     desc: "Start stack (Taskfile or plain docker compose)"
-    deps: [ ensure-executable-bootstrap-scripts ]
     cmds:
     - "{{ .STACK_COMPOSE }} pull"
     - "{{ .STACK_COMPOSE }} up -d"
