@@ -36,7 +36,7 @@ tasks:
     # rsync keeps permissions & deletes removed files
     - |
       mkdir -p {{ .DOCKER_DIR }}
-      rsync -a --delete "{{ .AUTHOR_FILES_DIR }}/" "{{ .DOCKER_DIR }}/"
+      rsync -a "{{ .AUTHOR_FILES_DIR }}/" "{{ .DOCKER_DIR }}/"
 
   ensure-env:
     internal: true
