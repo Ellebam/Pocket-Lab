@@ -50,6 +50,13 @@ tasks:
     # Convenience shim so `docker compose` at repo root still sees a .env
     - ln -sf {{ .DOCKER_DIR }}/.env .env
 
+  ensure-executable-bootstrap-scripts:
+    internal: true
+    desc: "Make key scripts used for bootstrapping various services executable"
+    cmds:
+    - "chmod 775 {{ .AUTHOR_FILES_DIR }}/n8n/initial_admin_setup.sh"
+    - "chmod 775 {{ .AUTHOR_FILES_DIR }}/ragflow/entrypoint.sh"
+
   venv:init:
     desc: "Create venv & install Ansible + collections"
     cmds:
@@ -68,12 +75,13 @@ tasks:
 
   compose-prepare:
     desc: "Prepare resources for compose stack"
-    deps: [ sync-docker-dir, ensure-env ]
+    deps: [ sync-docker-dir, ensure-env, ensure-executable-bootstrap-scripts ]
     cmds:
     - echo "All resources set up correctly. Do not forget to edit the .env file"
 
   compose-up:
     desc: "Start stack (Taskfile or plain docker compose)"
+    deps: [ ensure-executable-bootstrap-scripts ]
     cmds:
     - "{{ .STACK_COMPOSE }} pull"
     - "{{ .STACK_COMPOSE }} up -d"
@@ -115,12 +123,12 @@ tasks:
     - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_HARDEN_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_deploy:
-    deps: [ ansible_detect ]
+    deps: [ ansible_detect, ensure-executable-bootstrap-scripts ]
     cmds:
     - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_DEPLOY_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_full:
-    deps: [ venv:init ]
+    deps: [ venv:init, ensure-executable-bootstrap-scripts ]
     cmds:
     - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} ansible/site.yaml {{ .CLI_ARGS }}"
 
