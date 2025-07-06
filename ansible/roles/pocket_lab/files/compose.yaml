@@ -181,7 +181,7 @@ services:
       - n8n-data:/home/node/.n8n
       - ./n8n/initial_admin_setup.sh:/home/node/.n8n/init.sh:ro
     entrypoint: []
-    command: ["/bin/sh", "/home/node/.n8n/init.sh"]
+    command: ["sh", "-c", "/home/node/.n8n/init.sh"]
 
   n8n:
     <<: *common
