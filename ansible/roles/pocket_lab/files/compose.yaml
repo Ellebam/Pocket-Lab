@@ -27,7 +27,7 @@ services:
     - traefik.http.routers.prometheus.rule=Host(`prometheus.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.prometheus.entrypoints=websecure
     - traefik.http.routers.prometheus.tls.certresolver=le-dns
-    - traefik.http.routers.prometheus.middlewares=auth@file
+    - traefik.http.routers.prometheus.middlewares=auth@docker
     - traefik.http.services.prometheus.loadbalancer.server.port=9090
 
   loki:
@@ -54,7 +54,6 @@ services:
     - traefik.http.routers.grafana.rule=Host(`grafana.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.grafana.entrypoints=websecure
     - traefik.http.routers.grafana.tls.certresolver=le-dns
-    - traefik.http.routers.grafana.middlewares=auth@file
 
   node-exporter:
     container_name: node-exporter
@@ -82,15 +81,18 @@ services:
     - "443:443"
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
-    - ./traefik/traefik_dynamic.yaml:/traefik_dynamic.yaml:ro
     - le-data:/acme
     labels:
+    ## Basic-Auth middleware through env
+    - traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_BASIC_AUTH}
+
+    ## Traefik dashboard router
     - traefik.enable=true
     - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
     - traefik.http.routers.dashboard.entrypoints=websecure
+    - traefik.http.routers.dashboard.middlewares=auth@docker
     - traefik.http.routers.dashboard.tls.certresolver=le-dns
     - traefik.http.routers.dashboard.service=api@internal
-    - traefik.http.routers.dashboard.middlewares=auth@file
     ## Bootstrap router – never exposed
     - traefik.http.routers.le-bootstrap.rule=Host(`boot.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.le-bootstrap.entrypoints=websecure
@@ -110,7 +112,7 @@ services:
     - --certificatesresolvers.le-dns.acme.dnschallenge.provider=cloudflare
     - --certificatesresolvers.le-dns.acme.dnschallenge.delaybeforecheck=0
     - --log.level=DEBUG
-    - --accesslog=true
+    - --accesslog=true  
 
   twingate-1:
     restart: unless-stopped
@@ -161,7 +163,7 @@ services:
     - traefik.http.routers.portainer.rule=Host(`portainer.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.portainer.entrypoints=websecure
     - traefik.http.routers.portainer.tls.certresolver=le-dns
-    - traefik.http.routers.portainer.middlewares=auth@file
+    - traefik.http.routers.portainer.middlewares=auth@docker
     - traefik.http.services.portainer.loadbalancer.server.port=${PORTAINER_PORT}
     - traefik.http.services.portainer.loadbalancer.server.scheme=https
     - traefik.http.services.portainer.loadbalancer.server.insecureSkipVerify=true
@@ -227,7 +229,7 @@ services:
     - traefik.http.routers.ollama.rule=Host(`ollama.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.ollama.entrypoints=websecure
     - traefik.http.routers.ollama.tls.certresolver=le-dns
-    - traefik.http.routers.ollama.middlewares=auth@file
+    - traefik.http.routers.ollama.middlewares=auth@docker
 
 
   openwebui-bootstrap:

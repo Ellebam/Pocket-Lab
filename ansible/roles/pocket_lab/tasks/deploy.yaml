@@ -23,10 +23,3 @@
     dest: "{{ compose_repo }}/.env"
     mode: "0640"
   notify: Restart compose stack
-
-- name: Render Traefik dynamic configuration
-  ansible.builtin.template:
-    src: traefik_dynamic.yaml.j2
-    dest: "{{ compose_repo }}/traefik/traefik_dynamic.yaml"
-    mode: "0640"
-  notify: Restart compose stack
