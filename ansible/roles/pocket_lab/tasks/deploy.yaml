@@ -3,7 +3,6 @@
     path: "{{ compose_repo }}"
     state: directory
     mode: "0755"
-  notify: Restart stack # triggers only on first creation
 
 - name: Synchronize stack asset tree (preserves permissions, deletes orphans)
   ansible.posix.synchronize:
