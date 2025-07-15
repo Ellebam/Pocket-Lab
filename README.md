@@ -1,4 +1,4 @@
-# Pocket-Lab
+# Pocket-Lab 🧪
 
 **Pocket‑Lab** provisions a full‑stack, self‑hosted AI laboratory on any fresh Linux host.\
 Everything – from host hardening over reverse‑proxy, observability, vector and relational stores up to LLM tooling is bootstrapped with repeatable automation.
@@ -22,14 +22,15 @@ Everything – from host hardening over reverse‑proxy, observability, vector a
 
 ## Key features
 
-- **One code base – three ways to deploy**
+- ✨ **One code base – three ways to deploy**
 
   1. **Ansible** – run `task ansible_full` and get a hardened host plus a running stack.
   2. **Go Task + Docker Compose** – developer‑friendly shortcuts (`task compose‑*`) that mirror the authoritative stack assets into `./docker/`.
   3. **Plain Docker Compose** – copy `ansible/roles/pocket_lab/files/compose.yaml` next to a hand‑crafted `.env` and run `docker compose up -d`.
 
-- \*\*First run bootstrap for upstream projects without automated admin account creation\*\*\
+- ✨ **First run bootstrap for upstream projects without automated admin account creation**\
   Short‑lived helper containers/scripts create the very first administrator and disable sign‑up where the upstream image offers neither:
+
 
   | Service    | Bootstrap helper                          | Variables                                           |
   | ---------- | ----------------------------------------- | --------------------------------------------------- |
@@ -37,12 +38,12 @@ Everything – from host hardening over reverse‑proxy, observability, vector a
   | Open WebUI | `openwebui-bootstrap → create_admin.py`   | `OPENWEBUI_ADMIN_EMAIL`, `OPENWEBUI_ADMIN_PASSWORD` |
   | RAGFlow    | `ragflow/entrypoint.sh → create_admin.py` | `RAGFLOW_ADMIN_EMAIL`, `RAGFLOW_ADMIN_PASSWORD`     |
 
-- **Secrets by design**
+- 🔐 **Secrets by design**
   All credentials and tunables live in a single `.env` file.
   Ansible renders it from `templates/.env.j2` – **or** – developers copy `.env.template` manually.
   A small guard script `scripts/sync_env.py` keeps both sources of truth in sync and regenerates `docs/ENVIRONMENT.md`.
 
-- **Secure defaults**
+- 🛡️ **Secure defaults**
   Traefik terminates TLS (Let’s Encrypt DNS‑01 via Cloudflare) and injects a Basic‑Auth middleware for every UI unless the upstream project has its own authentication.\
   OS and SSH are hardened via the Dev‑Sec hardening collection.
 
@@ -70,7 +71,7 @@ Everything – from host hardening over reverse‑proxy, observability, vector a
 
 ---
 
-## Quick start (Ansible path)
+## Quick start (Ansible path) 🚀
 
 Follow the five commands below in order. Each snippet is **copy‑safe** (no inline comments):
 
@@ -88,7 +89,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
    ```
    Alternatively you can also a dedicated `group_vars/<group>.yaml` or `host_vars/<host>.yaml` file.
 
-3. **Add your target server to the inventory (then edit **``** with its IP/FQDN; ensure your user’s SSH key is in **``** and has password‑less sudo)**
+3. **Add your target server to the inventory** (edit `ansible/inventory/hosts.yaml` with its IP/FQDN; ensure your SSH user can run `sudo` without a password)
 
    ```bash
    cp ansible/inventory/hosts.yaml.template ansible/inventory/hosts.yaml
@@ -106,7 +107,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
    task ansible_full
    ```
 
-### Developer workflow (Taskfile)
+### Developer workflow (Taskfile) 🛠️
 
 1. ** Mirror stack assets and generate the `.env` file **
 
@@ -127,7 +128,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
    docker compose up -d
    ```
 
-### Plain Docker Compose
+### Plain Docker Compose 🐳
 
 1. ** Copy the compose spec and create **
 
@@ -136,7 +137,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
    cp .env.template .env
    ```
 
-2. ** Edit the `.env` file and replace every default credentials with secure values before starting the stack. **|
+2. **Edit the `.env` file and replace every default credential with a secure value before starting the stack.**
    
    ```bash
    vim .env
@@ -161,7 +162,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 
 
-## Configuration Reference
+## Configuration Reference 📝
 
 ### Table of all Variables
 
@@ -306,7 +307,7 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 ---
 
 
-### Traefik Basic‑Auth
+### Traefik Basic‑Auth 🔒
 
 Pocket‑Lab ships with a **demo** hash (`admin / admin`) so the dashboards are reachable right away.\
 Generate your own credentials with:
@@ -327,7 +328,7 @@ htpasswd -nbB admin 'myStrongP@ssw0rd'
 
 ---
   
-### n8n
+### n8n 🔁
 
 The lab bootstraps its n8n instance automatically. A short‑lived
 `n8n-bootstrap` container runs `initial_admin_setup.sh` before the main
@@ -338,7 +339,7 @@ bootstrap fails the stack still starts but no owner will exist.
 
 ---
 
-### Open WebUI
+### Open WebUI 🌐
 
 The `openwebui-bootstrap` container executes `create_admin.py` once before
 the actual service comes up. It creates or updates the administrator defined
@@ -349,7 +350,7 @@ behaviour is controlled through `ENABLE_SIGNUP`, the default role via
 
 ---
 
-### RAGFlow
+### RAGFlow 📚
 
 RAGFlow runs behind an internal nginx with Traefik handling the public endpoint.
 User sign‑up is disabled by default (`REGISTER_ENABLED=0`).
@@ -373,7 +374,7 @@ different provider or model.
 
 ---
 
-### MinIO
+### MinIO ☁️
 
 The lab ships with a [MinIO](https://min.io) server used as the S3 backend for
 other services. Traefik simply forwards `https://minio.${TRAEFIK_DOMAIN}` to the
