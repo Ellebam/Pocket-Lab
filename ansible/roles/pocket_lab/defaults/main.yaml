@@ -15,7 +15,9 @@ mem_limit: "4g"
 traefik_version: "v3.4.1"
 
 # ---------- Auth ----------
-basic_auth: "user:$$2y$$exampleHash"
+# create with:  htpasswd -nbB user "yourpassword"
+# Current set Defaults - User: admin | Password: admin
+basic_auth: 'admin:$2y$05$F6KSt6mnvnqqPhQ3VTLIAugnQuhhtJAhdi09Qf0oxBysbbZacqbXK'
 
 
 # ───── Observability  ────
@@ -26,15 +28,14 @@ grafana_admin_user: "admin"
 grafana_admin_password: "admin"
 node_exporter_version: "v1.9.1"
 portainer_version: "2.20.3"
-portainer_port: "9000"
+portainer_port: "9443"
 
 # ---------- n8n ----------
 n8n_version: "1.50.0"
 n8n_admin_email: "admin@example.com"
 n8n_admin_password: "changeme"
-n8n_basic_auth_active: 'false'
-n8n_user_management_disabled: 'true'
-n8n_personalization_enabled: 'false'
+n8n_basic_auth_active: false
+n8n_personalization_enabled: false
 
 # ---------- ollama ----------
 ollama_version: "0.1.30"
@@ -50,7 +51,7 @@ openwebui_enable_persistent_config: true
 
 # ----------  Elasticsearch ----------
 es_version: "8.13.4"
-es_port: 19200
+es_port: 9200
 es_password: "changeme"
 es_host: "es01"
 
@@ -91,6 +92,7 @@ macos: false
 ragflow_doc_engine: "elasticsearch"
 ragflow_version: "v0.18.0"
 ragflow_extra_ports: "9382"
+ragflow_nginx_conf_dir: "./ragflow/nginx"
 ragflow_history_dir: "./ragflow/history_data_agent"
 ragflow_log_dir: "./ragflow/ragflow-logs"
 
@@ -98,14 +100,14 @@ register_enabled: 0
 ragflow_admin_email: "admin@ragflow.io"
 ragflow_admin_password: "changeme"
 
-# llm_factory: "local"
-# llm_api_key: ""
-# llm_api_base: ""
-# llm_chat_model: ""
-# llm_embedding_model: "text-embedding-ada-002"
-# llm_rerank_model: ""
-# llm_asr_model: ""
-# llm_image2text_model: ""
+llm_factory: "Ollama"
+llm_api_key: ""
+llm_api_base: "http://ollama:11434"
+llm_chat_model: "llama3.2"
+llm_embedding_model: "bge-m3"
+llm_rerank_model: ""
+llm_asr_model: ""
+llm_image2text_model: ""
 
 # ---------- Twingate ----------
 tg_tenant_name: "your-tenant"
@@ -132,5 +134,15 @@ sshd_priv_separation_path: >-
   {{ (ansible_service_mgr == 'systemd')
        | ternary('/run/sshd', '/var/empty/sshd') }}
 
+
 # ---------- Users ----------
-l3d_users__local_users: []
+l3d_users__local_users:
+- name: ansible
+  state: present
+  shell: /bin/bash
+  create_home: true
+  admin: true
+  admin_commands: 'ALL'
+  admin_nopassword: true
+  pubkeys: |
+    <YOUR_SSH_PUBLIC_KEY>

@@ -1,5 +1,5 @@
 - name: Install base packages
-  package:
+  ansible.builtin.package:
     name: "{{ _base_pkgs[ansible_os_family] | default(_base_pkgs['Fallback']) }}"
     state: present
   vars:

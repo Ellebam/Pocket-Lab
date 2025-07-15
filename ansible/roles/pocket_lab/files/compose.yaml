@@ -27,7 +27,7 @@ services:
     - traefik.http.routers.prometheus.rule=Host(`prometheus.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.prometheus.entrypoints=websecure
     - traefik.http.routers.prometheus.tls.certresolver=le-dns
-    - traefik.http.routers.prometheus.middlewares=auth@file
+    - traefik.http.routers.prometheus.middlewares=auth@docker
     - traefik.http.services.prometheus.loadbalancer.server.port=9090
 
   loki:
@@ -54,7 +54,6 @@ services:
     - traefik.http.routers.grafana.rule=Host(`grafana.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.grafana.entrypoints=websecure
     - traefik.http.routers.grafana.tls.certresolver=le-dns
-    - traefik.http.routers.grafana.middlewares=auth@file
 
   node-exporter:
     container_name: node-exporter
@@ -82,16 +81,18 @@ services:
     - "443:443"
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
-    - ./traefik/traefik_dynamic.yaml:/traefik_dynamic.yaml:ro
     - le-data:/acme
     labels:
+    ## Basic-Auth middleware through env
+    - traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_BASIC_AUTH}
+
+    ## Traefik dashboard router
     - traefik.enable=true
     - traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
     - traefik.http.routers.dashboard.entrypoints=websecure
+    - traefik.http.routers.dashboard.middlewares=auth@docker
     - traefik.http.routers.dashboard.tls.certresolver=le-dns
     - traefik.http.routers.dashboard.service=api@internal
-    - traefik.http.routers.dashboard.middlewares=auth@file
-    - traefik.http.middlewares.strip-auth-header.headers.customRequestHeaders.Authorization=""
     ## Bootstrap router – never exposed
     - traefik.http.routers.le-bootstrap.rule=Host(`boot.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.le-bootstrap.entrypoints=websecure
@@ -111,7 +112,7 @@ services:
     - --certificatesresolvers.le-dns.acme.dnschallenge.provider=cloudflare
     - --certificatesresolvers.le-dns.acme.dnschallenge.delaybeforecheck=0
     - --log.level=DEBUG
-    - --accesslog=true
+    - --accesslog=true  
 
   twingate-1:
     restart: unless-stopped
@@ -162,7 +163,7 @@ services:
     - traefik.http.routers.portainer.rule=Host(`portainer.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.portainer.entrypoints=websecure
     - traefik.http.routers.portainer.tls.certresolver=le-dns
-    - traefik.http.routers.portainer.middlewares=auth@file
+    - traefik.http.routers.portainer.middlewares=auth@docker
     - traefik.http.services.portainer.loadbalancer.server.port=${PORTAINER_PORT}
     - traefik.http.services.portainer.loadbalancer.server.scheme=https
     - traefik.http.services.portainer.loadbalancer.server.insecureSkipVerify=true
@@ -173,6 +174,7 @@ services:
   n8n-bootstrap:
     <<: *common
     image: n8nio/n8n:${N8N_VERSION}
+    container_name: n8n-bootstrap
     restart: 'no'
     depends_on:
       smtp: { condition: service_healthy }
@@ -181,7 +183,7 @@ services:
       - n8n-data:/home/node/.n8n
       - ./n8n/initial_admin_setup.sh:/home/node/.n8n/init.sh:ro
     entrypoint: []
-    command: ["/bin/sh", "/home/node/.n8n/init.sh"]
+    command: ["sh", "-c", "/home/node/.n8n/init.sh"]
 
   n8n:
     <<: *common
@@ -227,20 +229,36 @@ services:
     - traefik.http.routers.ollama.rule=Host(`ollama.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.ollama.entrypoints=websecure
     - traefik.http.routers.ollama.tls.certresolver=le-dns
-    - traefik.http.routers.ollama.middlewares=auth@file
+    - traefik.http.routers.ollama.middlewares=auth@docker
 
+
+  openwebui-bootstrap:
+    <<: *common
+    image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
+    container_name: openwebui-bootstrap
+    restart: "no"
+    user: "0:0"
+    volumes:
+      - openwebui-data:/app/backend/data
+      - ./openwebui/create_admin.py:/app/backend/create_admin.py:ro
+    entrypoint: []
+    command: ["python3", "/app/backend/create_admin.py"]
   openwebui:
     <<: *common
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
     container_name: openwebui
+    volumes:
+      - openwebui-data:/app/backend/data
     expose:
     - "8080"
+    depends_on:
+      openwebui-bootstrap:
+        condition: service_completed_successfully
     labels:
     - traefik.enable=true
     - traefik.http.routers.webui.rule=Host(`chat.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.webui.entrypoints=websecure
     - traefik.http.routers.webui.tls.certresolver=le-dns
-    - traefik.http.routers.webui.middlewares=auth@file
     - traefik.http.services.openwebui.loadbalancer.server.port=${OPENWEBUI_PORT}
     - traefik.http.services.openwebui.loadbalancer.server.scheme=http
 
@@ -311,19 +329,17 @@ services:
     - --collation-server=utf8mb4_unicode_ci
     - --default-authentication-plugin=mysql_native_password
     - --tls_version=TLSv1.2,TLSv1.3
-    - --init-file=/data/application/init.sql
     - --binlog_expire_logs_seconds=604800
     expose:
     - "${MYSQL_PORT}"
     volumes:
     - mysql_data:/var/lib/mysql
-    - ./ragflow/init.sql:/data/application/init.sql:ro
     environment:
     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-uroot", "-p${MYSQL_ROOT_PASSWORD}" ]
-      interval: 10s
-      timeout: 5s
+      interval: 15s
+      timeout: 8s
       retries: 5
 
   minio:
@@ -351,7 +367,7 @@ services:
     labels:
     - "traefik.enable=true"
 
-    - traefik.http.routers.minio-api.rule=Host(`minio.${TRAEFIK_DOMAIN})
+    - traefik.http.routers.minio-api.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.minio-api.entrypoints=websecure
     - traefik.http.routers.minio-api.tls.certresolver=le-dns
     - traefik.http.routers.minio-api.service=minio-api
@@ -437,6 +453,7 @@ volumes:
   ragflow-logs:
   ragflow-history:
   le-data:
+  openwebui-data:
 
     ############################
     #         NETWORKS         #

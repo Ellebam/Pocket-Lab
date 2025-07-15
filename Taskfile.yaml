@@ -1,13 +1,22 @@
-# Taskfile.yaml
+# Taskfile.yaml – one‑shot dev UX, single source of truth
 version: "3"
 
+#################
+#   Variables   #
+#################
 vars:
-  ROOT_COMPOSE: docker compose -f compose.yaml
-  ROLE_COMPOSE: docker compose -f ansible/roles/pocket_lab/files/compose.yaml
+  # Upstream location
+  AUTHOR_FILES_DIR: ansible/roles/pocket_lab/files # authoritative stack assets
+  DOCKER_DIR: docker # generated dev dir at repo root
+  STACK_COMPOSE: docker compose -f {{ .DOCKER_DIR }}/compose.yaml
+
+  # Python / Ansible virtual‑env
   VENV_DIR: .venv
   VENV_BIN: "{{ .VENV_DIR }}/bin"
   PYTHON: "{{ .VENV_BIN }}/python"
-  ANSIBLE_PLAYBOOK_CMD: "{{ .VENV_BIN}}/ansible-playbook"
+  ANSIBLE_PLAYBOOK_CMD: "{{ .VENV_BIN }}/ansible-playbook"
+
+  # Ansible playbooks / inventory
   ANSIBLE_PLAYBOOK: ansible/site.yaml
   ANSIBLE_INVENTORY: ansible/inventory/hosts.yaml
   ANSIBLE_DETECT_PLAY: ansible/plays/00-detect-user.yaml
@@ -15,7 +24,39 @@ vars:
   ANSIBLE_HARDEN_PLAY: ansible/plays/20-harden.yaml
   ANSIBLE_DEPLOY_PLAY: ansible/plays/30-deploy.yaml
 
+#################
+#     Tasks     #
+#################
 tasks:
+  # ───────────────────────── Re‑usable helpers ────────────────────────────
+  sync-docker-dir:
+    desc: "Mirror stack asset tree (compose.yaml + configs) to ./docker/"
+    deps: [ ensure-executable-bootstrap-scripts ]
+    cmds:
+    # rsync keeps permissions & deletes removed files
+    - |
+      mkdir -p {{ .DOCKER_DIR }}
+      rsync -a "{{ .AUTHOR_FILES_DIR }}/" "{{ .DOCKER_DIR }}/"
+
+  ensure-env:
+    internal: true
+    desc: "Ensure ./docker/.env exists (creates from template first time)"
+    cmds:
+    - mkdir -p {{ .DOCKER_DIR }}
+    - |
+      if [ ! -f {{ .DOCKER_DIR }}/.env ]; then
+        cp .env.template {{ .DOCKER_DIR }}/.env
+      fi
+    # Convenience shim so `docker compose` at repo root still sees a .env
+    - ln -sf {{ .DOCKER_DIR }}/.env .env
+
+  ensure-executable-bootstrap-scripts:
+    internal: true
+    desc: "Make key scripts used for bootstrapping various services executable"
+    cmds:
+    - "chmod 775 {{ .AUTHOR_FILES_DIR }}/n8n/initial_admin_setup.sh"
+    - "chmod 775 {{ .AUTHOR_FILES_DIR }}/ragflow/entrypoint.sh"
+
   venv:init:
     desc: "Create venv & install Ansible + collections"
     cmds:
@@ -25,54 +66,72 @@ tasks:
     - "{{.VENV_BIN}}/ansible-galaxy collection install -r ansible/requirements.yaml -p {{.VENV_DIR}}/ansible/collections"
     - "{{.VENV_BIN}}/ansible-galaxy role install -r ansible/requirements.yaml -p {{.VENV_DIR}}/ansible/roles"
 
-  init-env:
-    desc: "Create .env from template (for manual compose)"
+  diff-env:
+    desc: "Fail if .env.template & .env.j2 drift"
     cmds:
-    - test -f .env || cp .env.template .env
+    - python3 scripts/sync_env.py
 
-  docker-compose-up:
-    desc: "Start stack (root-level compose + .env)"
+  # ───────────────────────── Docker Compose commands ───────────────────────
+
+  compose-prepare:
+    desc: "Prepare resources for compose stack"
+    deps: [ sync-docker-dir, ensure-env ]
     cmds:
-    - task:init-env
-    - "{{.ROOT_COMPOSE}} pull"
-    - "{{.ROOT_COMPOSE}} up -d"
+    - echo "All resources set up correctly. Do not forget to edit the .env file"
 
-  docker-compose-down:
-    desc: "Stop & remove containers (root compose)"
-    cmds: [ "{{.ROOT_COMPOSE}} down -v --remove-orphans" ]
+  compose-up:
+    desc: "Start stack (Taskfile or plain docker compose)"
+    cmds:
+    - "{{ .STACK_COMPOSE }} pull"
+    - "{{ .STACK_COMPOSE }} up -d"
 
-  docker-compose-logs:
-    desc: "Tail logs (root compose)"
-    cmds: [ "{{.ROOT_COMPOSE}} logs -f --tail=100" ]
+  compose-down:
+    desc: "Stop & remove containers + volumes"
+    cmds:
+    - "{{ .STACK_COMPOSE }} down -v --remove-orphans"
+
+  compose-logs:
+    desc: "Tail stack logs"
+    cmds:
+    - "{{ .STACK_COMPOSE }} logs -f --tail=100"
 
   docker-restart:
-    desc: "Restart one service – usage: task restart -- n8n"
-    cmds: [ "{{.ROOT_COMPOSE}} restart {{.CLI_ARGS}}" ]
+    desc: "Restart a service – usage: task docker-restart -- <service>"
+    cmds:
+    - "{{ .STACK_COMPOSE }} restart {{ .CLI_ARGS }}"
 
   docker-prune:
     desc: "Docker system prune"
-    cmds: [ "docker system prune -f" ]
+    cmds:
+    - docker system prune -f
 
+  # ───────────────────────── Ansible wrappers ──────────────────────────────
   ansible_detect:
     deps: [ venv:init ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DETECT_PLAY}} {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_DETECT_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_bootstrap:
     deps: [ ansible_detect ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_BOOTSTRAP_PLAY}} {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_BOOTSTRAP_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_harden:
     deps: [ ansible_detect ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_HARDEN_PLAY}} {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_HARDEN_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_deploy:
-    deps: [ ansible_detect ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_DEPLOY_PLAY}} {{.CLI_ARGS}}" ]
+    deps: [ ansible_detect, ensure-executable-bootstrap-scripts ]
+    cmds:
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_DEPLOY_PLAY }} {{ .CLI_ARGS }}"
 
   ansible_full:
-    deps: [ venv:init ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} ansible/site.yaml {{.CLI_ARGS}}" ]
+    deps: [ venv:init, ensure-executable-bootstrap-scripts ]
+    cmds:
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} ansible/site.yaml {{ .CLI_ARGS }}"
 
   ansible_check:
     deps: [ venv:init ]
-    cmds: [ "{{.ANSIBLE_PLAYBOOK_CMD}} -i {{.ANSIBLE_INVENTORY}} {{.ANSIBLE_PLAYBOOK}} --check {{.CLI_ARGS}}" ]
+    cmds:
+    - "{{ .ANSIBLE_PLAYBOOK_CMD }} -i {{ .ANSIBLE_INVENTORY }} {{ .ANSIBLE_PLAYBOOK }} --check {{ .CLI_ARGS }}"
