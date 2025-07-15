@@ -12,8 +12,6 @@ ansible/inventory/hosts.yaml
 ansible/inventory/group_vars/
 ansible/inventory/host_vars/
 
-ansible/roles/pocket_lab/defaults/main.yaml
-!ansible/roles/pocket_lab/defaults/main.yaml.template
 
 .cache/
 
