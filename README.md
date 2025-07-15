@@ -1,6 +1,26 @@
 # Pocket-Lab 🧪
 
-[TOC]
+**Contents**
+
+- [Stack overview](#stack-overview)
+- [Key features](#key-features)
+- [Repository map](#repository-map)
+- [Requirements](#requirements)
+- [Quick start (Ansible path)](#quick-start-ansible-path-)
+  - [Developer workflow (Taskfile)](#developer-workflow-taskfile-)
+  - [Plain Docker Compose](#plain-docker-compose-)
+- [Configuration Reference](#configuration-reference-)
+  - [Traefik Basic-Auth](#traefik-basic-auth-)
+  - [n8n](#n8n-)
+  - [Open WebUI](#open-webui-)
+  - [RAGFlow](#ragflow-)
+  - [MinIO](#minio-)
+  - [Provisioning with Ansible](#provisioning-with-ansible)
+    - [Task catalogue](#task-catalogue)
+    - [Variables you will likely change](#variables-you-will-likely-change)
+    - [Role overview](#role-overview)
+  - [Table of all Variables](#table-of-all-variables)
+- [Contributing & CI hints](#contributing--ci-hints)
 
 **Pocket‑Lab** provisions a full‑stack, self‑hosted AI laboratory on any fresh Linux host.\
 Everything – from host hardening over reverse‑proxy, observability, vector and relational stores up to LLM tooling is bootstrapped with repeatable automation.
@@ -111,13 +131,13 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 ### Developer workflow (Taskfile) 🛠️
 
-1. ** Mirror stack assets and generate the `.env` file **
+1. **Mirror stack assets and generate the `.env` file**
 
    ```bash
    task compose-prepare
    ```
 
-2. ** Edit and set strong passwords, API keys and any secrets marked **
+2. **Edit and set strong passwords, API keys and any secrets marked**
 
    ```bash
    vim docker/.env
@@ -132,7 +152,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 ### Plain Docker Compose 🐳
 
-1. ** Copy the compose spec and create **
+1. **Copy the compose spec and create**
 
    ```bash
    cp ansible/roles/pocket_lab/files/compose.yaml .
