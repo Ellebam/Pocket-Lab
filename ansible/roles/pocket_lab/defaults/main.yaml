@@ -15,7 +15,9 @@ mem_limit: "4g"
 traefik_version: "v3.4.1"
 
 # ---------- Auth ----------
-basic_auth: "user:$$2y$$exampleHash"
+# create with:  htpasswd -nbB user "yourpassword"
+# Current set Defaults - User: admin | Password: admin
+basic_auth: 'admin:$2y$05$F6KSt6mnvnqqPhQ3VTLIAugnQuhhtJAhdi09Qf0oxBysbbZacqbXK'
 
 
 # ───── Observability  ────
