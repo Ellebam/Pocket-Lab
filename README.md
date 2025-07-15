@@ -1,5 +1,7 @@
 # Pocket-Lab 🧪
 
+[TOC]
+
 **Pocket‑Lab** provisions a full‑stack, self‑hosted AI laboratory on any fresh Linux host.\
 Everything – from host hardening over reverse‑proxy, observability, vector and relational stores up to LLM tooling is bootstrapped with repeatable automation.
 
@@ -164,149 +166,6 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 ## Configuration Reference 📝
 
-### Table of all Variables
-
-| Variable                             |  Default             value                                        |       Service        |                                           Description                                                  |                                                                |
-| ------------------------------------ | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-|                                                                |
-| `TRAEFIK_BASIC_AUTH`                 | `admin:$2y$12$Kz0IUpZjbNkS7N0S2E5qeOeJ8V4aH.E4W2KIiMzFxLpy0X58F3Riq` | Traefik       | htpasswd‑style `user:hash`.  Demo credentials = **admin / admin** – replace for production. | user\:hash used by Traefik basic-auth middleware for most UIs. |
-| `TRAEFIK_DOMAIN`                     | `ai.lab.example.com`                                                 | Traefik       | Apex domain under which all sub‑services are published.                                     |                                                                |
-| `TRAEFIK_LE_EMAIL`                   | `admin@example.com`                                                  | Traefik       | Contact e‑mail for Let’s Encrypt.                                                           |                                                                |
-| `TRAEFIK_VERSION`                    | `3.4.1`                                                              | Traefik       | Traefik docker image tag.                                                                   |                                                                |
-| `ES_VERSION`                         | `8.13.4`                                                             | Elasticsearch | Elasticsearch image tag.                                                                    |                                                                |
-| `GRAFANA_VERSION`                    | `10.4.3`                                                             | Misc          | Grafana image tag.                                                                          |                                                                |
-| `INFINITY_VERSION`                   | `v0.6.0-dev3`                                                        | Infinity      | Infinity vector database image tag.                                                         |                                                                |
-| `LOKI_VERSION`                       | `3.0.0`                                                              | Misc          | Grafana Loki log aggregator version.                                                        |                                                                |
-| `MINIO_VERSION`                      | `RELEASE.2023-12-20T01-00-02Z`                                       | MinIO         | MinIO object storage version.                                                               |                                                                |
-| `MYSQL_VERSION`                      | `8.0.39`                                                             | MySQL         | MySQL database version.                                                                     |                                                                |
-| `N8N_VERSION`                        | `1.50.0`                                                             | n8n           | n8n automation tool version.                                                                |                                                                |
-| `NODE_EXPORTER_VERSION`              | `v1.9.1`                                                             | Misc          | Prometheus node exporter version.                                                           |                                                                |
-| `OLLAMA_VERSION`                     | `0.1.30`                                                             | Misc          | Ollama model server version.                                                                |                                                                |
-| `OPENWEBUI_VERSION`                  | `0.6.9`                                                              | Open WebUI    | Open WebUI image tag.                                                                       |                                                                |
-| `OPENWEBUI_PORT`                     | `8080`                                                               | Open WebUI    | Internal UI port inside container.                                                          |                                                                |
-| `PORTAINER_VERSION`                  | `2.20.3`                                                             | Misc          | Portainer version.                                                                          |                                                                |
-| `PROMETHEUS_VERSION`                 | `v3.3.1`                                                             | Misc          | Prometheus version.                                                                         |                                                                |
-| `TG_CONNECTOR_VERSION`               | `1.68.0`                                                             | Twingate      | Twingate connector version.                                                                 |                                                                |
-| `GRAFANA_ADMIN_PASSWORD`             | `admin`                                                              | Misc          | Initial Grafana admin password.                                                             |                                                                |
-| `GRAFANA_ADMIN_USER`                 | `admin`                                                              | Misc          | Initial Grafana admin user.                                                                 |                                                                |
-| `PORTAINER_PORT`                     | `9443`                                                               | Misc          | HTTPS port of Portainer inside container.                                                   |                                                                |
-| `TG_ACCESS_TOKEN_1`                  | \`\`                                                                 | Twingate      | Auth token for first Twingate connector.                                                    |                                                                |
-| `TG_ACCESS_TOKEN_2`                  | \`\`                                                                 | Twingate      | Auth token for second Twingate connector.                                                   |                                                                |
-| `TG_CONN1_NAME`                      | `tg-connector-1`                                                     | Twingate      | Container name override for connector 1.                                                    |                                                                |
-| `TG_CONN2_NAME`                      | `tg-connector-2`                                                     | Twingate      | Container name override for connector 2.                                                    |                                                                |
-| `TG_REFRESH_TOKEN_1`                 | \`\`                                                                 | Twingate      | Refresh token for first connector.                                                          |                                                                |
-| `TG_REFRESH_TOKEN_2`                 | \`\`                                                                 | Twingate      | Refresh token for second connector.                                                         |                                                                |
-| `TG_TENANT_NAME`                     | `your-tenant`                                                        | Twingate      | Your Twingate tenant (sub‑domain).                                                          |                                                                |
-| `SMTP_IMAGE`                         | `boky/postfix:latest`                                                | SMTP relay    | Postfix image to act as internal SMTP relay.                                                |                                                                |
-| `SMTP_HOST`                          | `smtp`                                                               | SMTP relay    | Container name / hostname for SMTP relay.                                                   |                                                                |
-| `SMTP_PORT`                          | `25`                                                                 | SMTP relay    | Port the SMTP relay listens on.                                                             |                                                                |
-| `SMTP_SSL`                           | `false`                                                              | SMTP relay    | Enable STARTTLS (true/false).                                                               |                                                                |
-| `OPENWEBUI_ADMIN_EMAIL`              | `admin@example.com`                                                  | Open WebUI    | Bootstrapped Open WebUI admin account.                                                      |                                                                |
-| `OPENWEBUI_ADMIN_PASSWORD`           | `changeme`                                                           | Open WebUI    | Password for Open WebUI admin.                                                              |                                                                |
-| `OPENWEBUI_ENABLE_PERSISTENT_CONFIG` | `true`                                                               | Open WebUI    | Keep configuration across container restarts.                                               |                                                                |
-| `OPENWEBUI_ENABLE_SIGNUP`            | `false`                                                              | Open WebUI    | Allow self‑registration (true/false).                                                       |                                                                |
-| `OPENWEBUI_DEFAULT_USER_ROLE`        | `pending`                                                            | Open WebUI    | Role newly signed‑up users get.                                                             |                                                                |
-| `N8N_BASIC_AUTH_ACTIVE`              | `false`                                                              | n8n           | Enable n8n basic auth before the UI loads.                                                  |                                                                |
-| `N8N_USER_MANAGEMENT_DISABLED`       | `true`                                                               | n8n           | Disable n8n built‑in sign‑up pages.                                                         |                                                                |
-| `N8N_ADMIN_EMAIL`                    | `admin@example.com`                                                  | n8n           | n8n owner e‑mail.                                                                           |                                                                |
-| `N8N_EMAIL_MODE`                     | `smtp`                                                               | n8n           | E‑mail mode for n8n notifications.                                                          |                                                                |
-| `N8N_SMTP_HOST`                      | `smtp`                                                               | n8n           | SMTP relay host for n8n e‑mails.                                                            |                                                                |
-| `N8N_SMTP_PORT`                      | `25`                                                                 | n8n           | SMTP relay port.                                                                            |                                                                |
-| `N8N_SMTP_SSL`                       | `false`                                                              | n8n           | Use TLS for SMTP.                                                                           |                                                                |
-| `N8N_SMTP_SENDER`                    | `"n8n <admin@example.com>"`                                          | n8n           | “From:” address used in n8n mails.                                                          |                                                                |
-| `N8N_ADMIN_PASSWORD`                 | `changeme`                                                           | n8n           | n8n owner password.                                                                         |                                                                |
-| `N8N_PERSONALIZATION_ENABLED`        | `false`                                                              | n8n           | Share anonymous telemetry (false recommended).                                              |                                                                |
-| `DOC_ENGINE`                         | `elasticsearch`                                                      | RAGFlow       | Which backend vector/semantic engine RAGFlow uses.                                          |                                                                |
-| `ES_HOST`                            | `es01`                                                               | Elasticsearch | Elasticsearch host for RAGFlow.                                                             |                                                                |
-| `ES_PASSWORD`                        | `changeme`                                                           | Elasticsearch | Elasticsearch super‑user password.                                                          |                                                                |
-| `ES_PORT`                            | `9200`                                                               | Elasticsearch | Elasticsearch HTTP port.                                                                    |                                                                |
-| `HF_ENDPOINT`                        | `https://huggingface.co`                                             | RAGFlow       | HuggingFace API base‑URL.                                                                   |                                                                |
-| `INFINITY_HTTP_PORT`                 | `23820`                                                              | Infinity      | Infinity REST API port.                                                                     |                                                                |
-| `INFINITY_HOST`                      | `infinity`                                                           | Infinity      | Infinity host name.                                                                         |                                                                |
-| `INFINITY_PSQL_PORT`                 | `15432`                                                              | Infinity      | Infinity Postgres compatibility port.                                                       |                                                                |
-| `INFINITY_THRIFT_PORT`               | `23817`                                                              | Infinity      | Infinity Thrift RPC port.                                                                   |                                                                |
-| `MACOS`                              | `false`                                                              | Global        | Set true when building on MacOS (disables some optimisations).                              |                                                                |
-| `MYSQL_DATABASE`                     | `pocket_lab`                                                         | MySQL         | MySQL schema for RAGFlow.                                                                   |                                                                |
-| `MYSQL_HOST`                         | `mysql`                                                              | MySQL         | MySQL host.                                                                                 |                                                                |
-| `MYSQL_PORT`                         | `3306`                                                               | MySQL         | MySQL TCP port.                                                                             |                                                                |
-| `MYSQL_ROOT_HOST`                    | `%`                                                                  | MySQL         | Allowed root origin hosts.                                                                  |                                                                |
-| `MYSQL_ROOT_PASSWORD`                | `changeme`                                                           | MySQL         | MySQL root password.                                                                        |                                                                |
-| `MINIO_CONSOLE_PORT`                 | `9001`                                                               | MinIO         | MinIO web console port.                                                                     |                                                                |
-| `MINIO_PORT`                         | `9000`                                                               | MinIO         | MinIO S3 API port.                                                                          |                                                                |
-| `MINIO_ROOT_PASSWORD`                | `minioadmin`                                                         | MinIO         | MinIO root password.                                                                        |                                                                |
-| `MINIO_ROOT_USER`                    | `minioadmin`                                                         | MinIO         | MinIO root user.                                                                            |                                                                |
-| `REDIS_HOST`                         | `redis`                                                              | Valkey        | Valkey/Redis host.                                                                          |                                                                |
-| `REDIS_PASSWORD`                     | `changeme`                                                           | Valkey        | Valkey password.                                                                            |                                                                |
-| `REDIS_PORT`                         | `6379`                                                               | Valkey        | Valkey port.                                                                                |                                                                |
-| `REDIS_VERSION`                      | `8.1.0`                                                              | Valkey        | Valkey image tag.                                                                           |                                                                |
-| `RAGFLOW_ADMIN_EMAIL`                | `admin@ragflow.io`                                                   | RAGFlow       | Bootstrapped RAGFlow admin account.                                                         |                                                                |
-| `RAGFLOW_ADMIN_PASSWORD`             | `changeme`                                                           | RAGFlow       | RAGFlow admin password.                                                                     |                                                                |
-| `RAGFLOW_EXTRA_PORTS`                | `9382`                                                               | RAGFlow       | Additional exposed ports (MCP).                                                             |                                                                |
-| `RAGFLOW_HISTORY_DIR`                | `./ragflow/history_data_agent`                                       | RAGFlow       | Host path for chat history.                                                                 |                                                                |
-| `RAGFLOW_LOG_DIR`                    | `./ragflow/ragflow-logs`                                             | RAGFlow       | Host path for RAGFlow logs.                                                                 |                                                                |
-| `RAGFLOW_NGINX_CONF_DIR`             | \`\`                                                                 | RAGFlow       | Optional mount to inject custom nginx.conf.                                                 |                                                                |
-| `RAGFLOW_VERSION`                    | `v0.18.0`                                                            | RAGFlow       | RAGFlow image tag.                                                                          |                                                                |
-| `REGISTER_ENABLED`                   | `0`                                                                  | RAGFlow       | Allow public sign‑up in RAGFlow.                                                            |                                                                |
-| `SVR_HTTP_PORT`                      | `9380`                                                               | RAGFlow       | RAGFlow backend HTTP port.                                                                  |                                                                |
-
-For deep‑links and automatic change‑tracking the same table is regenerated in `docs/ENVIRONMENT.md` whenever `scripts/sync_env.py --docs` is executed.
-
----
-
-### Provisioning with Ansible
-
-The repository bundles a small automation layer under `ansible/`. After
-preparing your `.env` and inventory you only need two commands:
-
-```bash
-task venv:init  # install Ansible and required collections
-task ansible_full  # detect → bootstrap → harden → deploy
-```
-
-The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
-`task ansible_detect`, `task ansible_bootstrap`, `task ansible_harden` and
-`task ansible_deploy` if you want to execute them separately.
-
----
-
-#### Task catalogue
-
-| Command | What it does |
-| --- | --- |
-| `task ansible_detect` | Cache a working SSH login |
-| `task ansible_bootstrap` | Create users only |
-| `task ansible_harden` | Apply DevSec OS and SSH hardening |
-| `task ansible_deploy` | Copy compose files and launch the stack |
-| `task ansible_full` | Full pipeline |
-| `task docker-*` | Shortcuts for Compose up/down/logs |
-
----
-
-#### Variables you will likely change
-
-| Variable | Default | Notes |
-| --- | --- | --- |
-| `stack_domain`, `stack_email` | `ai.lab.example.com`, `admin@example.com` | Traefik host and ACME mail |
-| `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
-| `tg_tenant_name`, `*_TOKEN*` | – | Twingate connector |
-| `n8n_admin_email`, `n8n_admin_password` | `admin@example.com` / `changeme` | n8n owner account |
-| `openwebui_admin_email`, `openwebui_admin_password` | `admin@example.com` / `changeme` | Open WebUI admin |
-| `es_password`, `mysql_password`, `minio_root_password`, … | `changeme` | Service credentials |
-| `compose_repo` | `/opt/pocket_lab` | Where compose files are deployed |
-| `mem_limit` | `4g` | Memory limit for ES and Infinity |
-| everything in `.env.template` | – | Mirrors compose environment |
-
-#### Role overview
-
-|Role|Purpose|
-|---|---|
-|**ensure_conn_user**|Probe `root`, inventory user, first in `l3d_users__local_users`; cache winner for 24 h so every play can rely on `hostvars[host].conn_user`.|
-|**l3d.users.user / .admin**|Create regular + sudo users with SSH keys. [Ansible Galaxy](https://galaxy.ansible.com/ui/repo/published/l3d/users/content/role/user/?utm_source=chatgpt.com)|
-|**devsec.hardening.os_hardening / ssh_hardening**|CIS‑style OS tweaks, secure `sshd_config`. [GitHub](https://github.com/dev-sec/ansible-collection-hardening?utm_source=chatgpt.com)|
-
----
-
-
 ### Traefik Basic‑Auth 🔒
 
 Pocket‑Lab ships with a **demo** hash (`admin / admin`) so the dashboards are reachable right away.\
@@ -393,8 +252,149 @@ dashboard can reach the backend.
 Full variable reference lives in:
     
 - `ansible/roles/ensure_conn_user/defaults/main.yaml`
-    
+   
 
+---
+
+### Provisioning with Ansible
+
+The repository bundles a small automation layer under `ansible/`. After
+preparing your `.env` and inventory you only need two commands:
+
+```bash
+task venv:init  # install Ansible and required collections
+task ansible_full  # detect → bootstrap → harden → deploy
+```
+
+The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
+`task ansible_detect`, `task ansible_bootstrap`, `task ansible_harden` and
+`task ansible_deploy` if you want to execute them separately.
+
+---
+
+#### Task catalogue
+
+| Command | What it does |
+| --- | --- |
+| `task ansible_detect` | Cache a working SSH login |
+| `task ansible_bootstrap` | Create users only |
+| `task ansible_harden` | Apply DevSec OS and SSH hardening |
+| `task ansible_deploy` | Copy compose files and launch the stack |
+| `task ansible_full` | Full pipeline |
+| `task docker-*` | Shortcuts for Compose up/down/logs |
+
+---
+
+#### Variables you will likely change
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `stack_domain`, `stack_email` | `ai.lab.example.com`, `admin@example.com` | Traefik host and ACME mail |
+| `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
+| `tg_tenant_name`, `*_TOKEN*` | – | Twingate connector |
+| `n8n_admin_email`, `n8n_admin_password` | `admin@example.com` / `changeme` | n8n owner account |
+| `openwebui_admin_email`, `openwebui_admin_password` | `admin@example.com` / `changeme` | Open WebUI admin |
+| `es_password`, `mysql_password`, `minio_root_password`, … | `changeme` | Service credentials |
+| `compose_repo` | `/opt/pocket_lab` | Where compose files are deployed |
+| `mem_limit` | `4g` | Memory limit for ES and Infinity |
+| everything in `.env.template` | – | Mirrors compose environment |
+
+#### Role overview
+
+|Role|Purpose|
+|---|---|
+|**ensure_conn_user**|Probe `root`, inventory user, first in `l3d_users__local_users`; cache winner for 24 h so every play can rely on `hostvars[host].conn_user`.|
+|**l3d.users.user / .admin**|Create regular + sudo users with SSH keys. [Ansible Galaxy](https://galaxy.ansible.com/ui/repo/published/l3d/users/content/role/user/?utm_source=chatgpt.com)|
+|**devsec.hardening.os_hardening / ssh_hardening**|CIS‑style OS tweaks, secure `sshd_config`. [GitHub](https://github.com/dev-sec/ansible-collection-hardening?utm_source=chatgpt.com)|
+
+---
+
+### Table of all Variables
+
+| Variable                             |  Default             value                                        |       Service        |                                           Description                                                  |                                                                |
+| ------------------------------------ | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+|                                                                |
+| `TRAEFIK_BASIC_AUTH`                 | `admin:$2y$12$Kz0IUpZjbNkS7N0S2E5qeOeJ8V4aH.E4W2KIiMzFxLpy0X58F3Riq` | Traefik       | htpasswd‑style `user:hash`.  Demo credentials = **admin / admin** – replace for production. | user\:hash used by Traefik basic-auth middleware for most UIs. |
+| `TRAEFIK_DOMAIN`                     | `ai.lab.example.com`                                                 | Traefik       | Apex domain under which all sub‑services are published.                                     |                                                                |
+| `TRAEFIK_LE_EMAIL`                   | `admin@example.com`                                                  | Traefik       | Contact e‑mail for Let’s Encrypt.                                                           |                                                                |
+| `TRAEFIK_VERSION`                    | `3.4.1`                                                              | Traefik       | Traefik docker image tag.                                                                   |                                                                |
+| `ES_VERSION`                         | `8.13.4`                                                             | Elasticsearch | Elasticsearch image tag.                                                                    |                                                                |
+| `GRAFANA_VERSION`                    | `10.4.3`                                                             | Misc          | Grafana image tag.                                                                          |                                                                |
+| `INFINITY_VERSION`                   | `v0.6.0-dev3`                                                        | Infinity      | Infinity vector database image tag.                                                         |                                                                |
+| `LOKI_VERSION`                       | `3.0.0`                                                              | Misc          | Grafana Loki log aggregator version.                                                        |                                                                |
+| `MINIO_VERSION`                      | `RELEASE.2023-12-20T01-00-02Z`                                       | MinIO         | MinIO object storage version.                                                               |                                                                |
+| `MYSQL_VERSION`                      | `8.0.39`                                                             | MySQL         | MySQL database version.                                                                     |                                                                |
+| `N8N_VERSION`                        | `1.50.0`                                                             | n8n           | n8n automation tool version.                                                                |                                                                |
+| `NODE_EXPORTER_VERSION`              | `v1.9.1`                                                             | Misc          | Prometheus node exporter version.                                                           |                                                                |
+| `OLLAMA_VERSION`                     | `0.1.30`                                                             | Misc          | Ollama model server version.                                                                |                                                                |
+| `OPENWEBUI_VERSION`                  | `0.6.9`                                                              | Open WebUI    | Open WebUI image tag.                                                                       |                                                                |
+| `OPENWEBUI_PORT`                     | `8080`                                                               | Open WebUI    | Internal UI port inside container.                                                          |                                                                |
+| `PORTAINER_VERSION`                  | `2.20.3`                                                             | Misc          | Portainer version.                                                                          |                                                                |
+| `PROMETHEUS_VERSION`                 | `v3.3.1`                                                             | Misc          | Prometheus version.                                                                         |                                                                |
+| `TG_CONNECTOR_VERSION`               | `1.68.0`                                                             | Twingate      | Twingate connector version.                                                                 |                                                                |
+| `GRAFANA_ADMIN_PASSWORD`             | `admin`                                                              | Misc          | Initial Grafana admin password.                                                             |                                                                |
+| `GRAFANA_ADMIN_USER`                 | `admin`                                                              | Misc          | Initial Grafana admin user.                                                                 |                                                                |
+| `PORTAINER_PORT`                     | `9443`                                                               | Misc          | HTTPS port of Portainer inside container.                                                   |                                                                |
+| `TG_ACCESS_TOKEN_1`                  | \`\`                                                                 | Twingate      | Auth token for first Twingate connector.                                                    |                                                                |
+| `TG_ACCESS_TOKEN_2`                  | \`\`                                                                 | Twingate      | Auth token for second Twingate connector.                                                   |                                                                |
+| `TG_CONN1_NAME`                      | `tg-connector-1`                                                     | Twingate      | Container name override for connector 1.                                                    |                                                                |
+| `TG_CONN2_NAME`                      | `tg-connector-2`                                                     | Twingate      | Container name override for connector 2.                                                    |                                                                |
+| `TG_REFRESH_TOKEN_1`                 | \`\`                                                                 | Twingate      | Refresh token for first connector.                                                          |                                                                |
+| `TG_REFRESH_TOKEN_2`                 | \`\`                                                                 | Twingate      | Refresh token for second connector.                                                         |                                                                |
+| `TG_TENANT_NAME`                     | `your-tenant`                                                        | Twingate      | Your Twingate tenant (sub‑domain).                                                          |                                                                |
+| `SMTP_IMAGE`                         | `boky/postfix:latest`                                                | SMTP relay    | Postfix image to act as internal SMTP relay.                                                |                                                                |
+| `SMTP_HOST`                          | `smtp`                                                               | SMTP relay    | Container name / hostname for SMTP relay.                                                   |                                                                |
+| `SMTP_PORT`                          | `25`                                                                 | SMTP relay    | Port the SMTP relay listens on.                                                             |                                                                |
+| `SMTP_SSL`                           | `false`                                                              | SMTP relay    | Enable STARTTLS (true/false).                                                               |                                                                |
+| `OPENWEBUI_ADMIN_EMAIL`              | `admin@example.com`                                                  | Open WebUI    | Bootstrapped Open WebUI admin account.                                                      |                                                                |
+| `OPENWEBUI_ADMIN_PASSWORD`           | `changeme`                                                           | Open WebUI    | Password for Open WebUI admin.                                                              |                                                                |
+| `OPENWEBUI_ENABLE_PERSISTENT_CONFIG` | `true`                                                               | Open WebUI    | Keep configuration across container restarts.                                               |                                                                |
+| `OPENWEBUI_ENABLE_SIGNUP`            | `false`                                                              | Open WebUI    | Allow self‑registration (true/false).                                                       |                                                                |
+| `OPENWEBUI_DEFAULT_USER_ROLE`        | `pending`                                                            | Open WebUI    | Role newly signed‑up users get.                                                             |                                                                |
+| `N8N_BASIC_AUTH_ACTIVE`              | `false`                                                              | n8n           | Enable n8n basic auth before the UI loads.                                                  |                                                                |
+| `N8N_USER_MANAGEMENT_DISABLED`       | `true`                                                               | n8n           | Disable n8n built‑in sign‑up pages.                                                         |                                                                |
+| `N8N_ADMIN_EMAIL`                    | `admin@example.com`                                                  | n8n           | n8n owner e‑mail.                                                                           |                                                                |
+| `N8N_EMAIL_MODE`                     | `smtp`                                                               | n8n           | E‑mail mode for n8n notifications.                                                          |                                                                |
+| `N8N_SMTP_HOST`                      | `smtp`                                                               | n8n           | SMTP relay host for n8n e‑mails.                                                            |                                                                |
+| `N8N_SMTP_PORT`                      | `25`                                                                 | n8n           | SMTP relay port.                                                                            |                                                                |
+| `N8N_SMTP_SSL`                       | `false`                                                              | n8n           | Use TLS for SMTP.                                                                           |                                                                |
+| `N8N_SMTP_SENDER`                    | `"n8n <admin@example.com>"`                                          | n8n           | “From:” address used in n8n mails.                                                          |                                                                |
+| `N8N_ADMIN_PASSWORD`                 | `changeme`                                                           | n8n           | n8n owner password.                                                                         |                                                                |
+| `N8N_PERSONALIZATION_ENABLED`        | `false`                                                              | n8n           | Share anonymous telemetry (false recommended).                                              |                                                                |
+| `DOC_ENGINE`                         | `elasticsearch`                                                      | RAGFlow       | Which backend vector/semantic engine RAGFlow uses.                                          |                                                                |
+| `ES_HOST`                            | `es01`                                                               | Elasticsearch | Elasticsearch host for RAGFlow.                                                             |                                                                |
+| `ES_PASSWORD`                        | `changeme`                                                           | Elasticsearch | Elasticsearch super‑user password.                                                          |                                                                |
+| `ES_PORT`                            | `9200`                                                               | Elasticsearch | Elasticsearch HTTP port.                                                                    |                                                                |
+| `HF_ENDPOINT`                        | `https://huggingface.co`                                             | RAGFlow       | HuggingFace API base‑URL.                                                                   |                                                                |
+| `INFINITY_HTTP_PORT`                 | `23820`                                                              | Infinity      | Infinity REST API port.                                                                     |                                                                |
+| `INFINITY_HOST`                      | `infinity`                                                           | Infinity      | Infinity host name.                                                                         |                                                                |
+| `INFINITY_PSQL_PORT`                 | `15432`                                                              | Infinity      | Infinity Postgres compatibility port.                                                       |                                                                |
+| `INFINITY_THRIFT_PORT`               | `23817`                                                              | Infinity      | Infinity Thrift RPC port.                                                                   |                                                                |
+| `MACOS`                              | `false`                                                              | Global        | Set true when building on MacOS (disables some optimisations).                              |                                                                |
+| `MYSQL_DATABASE`                     | `pocket_lab`                                                         | MySQL         | MySQL schema for RAGFlow.                                                                   |                                                                |
+| `MYSQL_HOST`                         | `mysql`                                                              | MySQL         | MySQL host.                                                                                 |                                                                |
+| `MYSQL_PORT`                         | `3306`                                                               | MySQL         | MySQL TCP port.                                                                             |                                                                |
+| `MYSQL_ROOT_HOST`                    | `%`                                                                  | MySQL         | Allowed root origin hosts.                                                                  |                                                                |
+| `MYSQL_ROOT_PASSWORD`                | `changeme`                                                           | MySQL         | MySQL root password.                                                                        |                                                                |
+| `MINIO_CONSOLE_PORT`                 | `9001`                                                               | MinIO         | MinIO web console port.                                                                     |                                                                |
+| `MINIO_PORT`                         | `9000`                                                               | MinIO         | MinIO S3 API port.                                                                          |                                                                |
+| `MINIO_ROOT_PASSWORD`                | `minioadmin`                                                         | MinIO         | MinIO root password.                                                                        |                                                                |
+| `MINIO_ROOT_USER`                    | `minioadmin`                                                         | MinIO         | MinIO root user.                                                                            |                                                                |
+| `REDIS_HOST`                         | `redis`                                                              | Valkey        | Valkey/Redis host.                                                                          |                                                                |
+| `REDIS_PASSWORD`                     | `changeme`                                                           | Valkey        | Valkey password.                                                                            |                                                                |
+| `REDIS_PORT`                         | `6379`                                                               | Valkey        | Valkey port.                                                                                |                                                                |
+| `REDIS_VERSION`                      | `8.1.0`                                                              | Valkey        | Valkey image tag.                                                                           |                                                                |
+| `RAGFLOW_ADMIN_EMAIL`                | `admin@ragflow.io`                                                   | RAGFlow       | Bootstrapped RAGFlow admin account.                                                         |                                                                |
+| `RAGFLOW_ADMIN_PASSWORD`             | `changeme`                                                           | RAGFlow       | RAGFlow admin password.                                                                     |                                                                |
+| `RAGFLOW_EXTRA_PORTS`                | `9382`                                                               | RAGFlow       | Additional exposed ports (MCP).                                                             |                                                                |
+| `RAGFLOW_HISTORY_DIR`                | `./ragflow/history_data_agent`                                       | RAGFlow       | Host path for chat history.                                                                 |                                                                |
+| `RAGFLOW_LOG_DIR`                    | `./ragflow/ragflow-logs`                                             | RAGFlow       | Host path for RAGFlow logs.                                                                 |                                                                |
+| `RAGFLOW_NGINX_CONF_DIR`             | \`\`                                                                 | RAGFlow       | Optional mount to inject custom nginx.conf.                                                 |                                                                |
+| `RAGFLOW_VERSION`                    | `v0.18.0`                                                            | RAGFlow       | RAGFlow image tag.                                                                          |                                                                |
+| `REGISTER_ENABLED`                   | `0`                                                                  | RAGFlow       | Allow public sign‑up in RAGFlow.                                                            |                                                                |
+| `SVR_HTTP_PORT`                      | `9380`                                                               | RAGFlow       | RAGFlow backend HTTP port.                                                                  |                                                                |
+
+For deep‑links and automatic change‑tracking the same table is regenerated in `docs/ENVIRONMENT.md` whenever `scripts/sync_env.py --docs` is executed.
 
 ---
 
