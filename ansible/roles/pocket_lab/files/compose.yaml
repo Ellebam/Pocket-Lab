@@ -208,7 +208,17 @@ services:
   #   - traefik.http.routers.n8n.tls.certresolver=le-dns
   #   - traefik.http.routers.n8n.tls=true
 
-
+  ollama-bootstrap:
+    image: ollama/ollama:${OLLAMA_VERSION}
+    container_name: ollama-bootstrap
+    entrypoint: ["/bin/sh","-c","/bootstrap/ollama-bootstrap.sh"]
+    volumes:
+      - ollama-data:/root/.ollama
+      - ./ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
+    environment:
+      - MODELS=llama3.2 bge-m3
+    networks: [ backend ]
+    restart: "no"
   ollama:
     <<: *common
     image: ollama/ollama:${OLLAMA_VERSION}
