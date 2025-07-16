@@ -14,6 +14,7 @@
   - [n8n](#n8n-)
   - [Open WebUI](#open-webui-)
   - [RAGFlow](#ragflow-)
+  - [Ollama](#ollama-)
   - [MinIO](#minio-)
   - [Provisioning with Ansible](#provisioning-with-ansible)
     - [Task catalogue](#task-catalogue)
@@ -251,6 +252,16 @@ block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
 `LLM_API_KEY` or `LLM_CHAT_MODEL` in your `.env` to point RAGFlow at a
 different provider or model.
 
+### Ollama 🦙
+
+Ollama runs the local language models used by the lab. The service exposes the
+standard API at `https://ollama.${TRAEFIK_DOMAIN}` and acts as the default LLM
+backend for Open WebUI and RAGFlow. On first start a short-lived
+`ollama-bootstrap` companion downloads all models listed in `OLLAMA_MODELS` so
+they are available locally. The variable accepts a space-separated list and
+defaults to `llama3.2 bge-m3`. The helper exits successfully if all models are
+already present so it is safe to rerun.
+
 ---
 
 ### MinIO ☁️
@@ -347,6 +358,10 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `N8N_VERSION`                        | `1.50.0`                                                             | n8n           | n8n automation tool version.                                                                |                                                                |
 | `NODE_EXPORTER_VERSION`              | `v1.9.1`                                                             | Misc          | Prometheus node exporter version.                                                           |                                                                |
 | `OLLAMA_VERSION`                     | `0.1.30`                                                             | Misc          | Ollama model server version.                                                                |                                                                |
+| `OLLAMA_MODELS`                      | `llama3.2 bge-m3`
+                              | Ollama        | Models preloaded by `ollama-bootstrap`.
+                                                            |
+                                             |
 | `OPENWEBUI_VERSION`                  | `0.6.9`                                                              | Open WebUI    | Open WebUI image tag.                                                                       |                                                                |
 | `OPENWEBUI_PORT`                     | `8080`                                                               | Open WebUI    | Internal UI port inside container.                                                          |                                                                |
 | `PORTAINER_VERSION`                  | `2.20.3`                                                             | Misc          | Portainer version.                                                                          |                                                                |

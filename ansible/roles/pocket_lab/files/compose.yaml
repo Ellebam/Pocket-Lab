@@ -216,7 +216,7 @@ services:
       - ollama-data:/root/.ollama
       - ./ollama/ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
     environment:
-      - OLLAMA_MODELS=llama3.2 bge-m3
+      - OLLAMA_MODELS=${OLLAMA_MODELS}
     networks: [ backend ]
     restart: "no"
   ollama:
@@ -231,8 +231,7 @@ services:
     command: >
         /bin/ollama serve &
         until curl -s http://localhost:11434/ > /dev/null; do sleep 1; done
-        ollama pull llama3.2 &&
-        ollama pull bge-m3 &&
+        for m in $OLLAMA_MODELS; do ollama pull "$m" || true; done &&
         fg
     labels:
     - traefik.enable=true
