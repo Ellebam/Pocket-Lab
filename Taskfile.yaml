@@ -56,6 +56,7 @@ tasks:
     cmds:
     - "chmod 775 {{ .AUTHOR_FILES_DIR }}/n8n/initial_admin_setup.sh"
     - "chmod 775 {{ .AUTHOR_FILES_DIR }}/ragflow/entrypoint.sh"
+    - "chmod 755 {{ .AUTHOR_FILES_DR }}/ollama/ollama-bootstrap.sh"
 
   venv:init:
     desc: "Create venv & install Ansible + collections"

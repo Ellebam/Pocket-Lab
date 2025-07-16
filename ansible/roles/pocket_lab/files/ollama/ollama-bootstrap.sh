@@ -13,6 +13,8 @@ have() {             # $1 = model[:tag]
   [ -f "$MANIFEST_ROOT/$_model/$_tag" ]
 }
 
+
+
 # ---------- fast-path ------------------------------------------------------
 missing=""
 for m in $MODELS; do have "$m" || missing="$missing $m"; done
@@ -28,6 +30,7 @@ if ! command -v curl >/dev/null 2>&1; then
 fi
 
 # ---------- pull the gaps --------------------------------------------------
+/bin/ollama serve &
 for m in $missing; do
   echo "→ pulling $m"
   ollama pull "$m" || echo "⚠ pull failed for $m (continuing)"

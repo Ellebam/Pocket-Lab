@@ -214,7 +214,7 @@ services:
     entrypoint: ["/bin/sh","-c","/bootstrap/ollama-bootstrap.sh"]
     volumes:
       - ollama-data:/root/.ollama
-      - ./ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
+      - ./ollama/ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
     environment:
       - MODELS=llama3.2 bge-m3
     networks: [ backend ]
