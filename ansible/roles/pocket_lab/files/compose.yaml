@@ -216,7 +216,7 @@ services:
       - ollama-data:/root/.ollama
       - ./ollama/ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
     environment:
-      - MODELS=llama3.2 bge-m3
+      - OLLAMA_MODELS=llama3.2 bge-m3
     networks: [ backend ]
     restart: "no"
   ollama:
