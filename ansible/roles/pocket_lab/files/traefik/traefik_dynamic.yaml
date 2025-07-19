@@ -1,5 +1,5 @@
 # traefik_dynamic.yaml
 http:
   serversTransports:
-    portainer-transport:
+    insecure-ca-transport:
       insecureSkipVerify: true
