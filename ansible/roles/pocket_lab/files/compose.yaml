@@ -103,7 +103,6 @@ services:
 
     command:
     - --providers.docker.exposedbydefault=false
-    - --providers.file.filename=/traefik_dynamic.yaml
     - --api.dashboard=true
     - --entrypoints.web.address=:80
     - --entrypoints.websecure.address=:443
@@ -114,40 +113,40 @@ services:
     - --log.level=DEBUG
     - --accesslog=true  
 
-  # twingate-1:
-  #   restart: unless-stopped
-  #   env_file: .env
-  #   image: twingate/connector:${TG_CONNECTOR_VERSION}
-  #   network_mode: host
-  #   container_name: ${TG_CONN1_NAME}
-  #   environment:
-  #   - TZ=${TIMEZONE}
+  twingate-1:
+    restart: unless-stopped
+    env_file: .env
+    image: twingate/connector:${TG_CONNECTOR_VERSION}
+    network_mode: host
+    container_name: ${TG_CONN1_NAME}
+    environment:
+    - TZ=${TIMEZONE}
 
-  # twingate-2:
-  #   restart: unless-stopped
-  #   env_file: .env
-  #   image: twingate/connector:${TG_CONNECTOR_VERSION}
-  #   network_mode: host
-  #   container_name: ${TG_CONN2_NAME}
-  #   environment:
-  #   - TZ=${TIMEZONE}
+  twingate-2:
+    restart: unless-stopped
+    env_file: .env
+    image: twingate/connector:${TG_CONNECTOR_VERSION}
+    network_mode: host
+    container_name: ${TG_CONN2_NAME}
+    environment:
+    - TZ=${TIMEZONE}
 
-  # smtp:
-  #   <<: *common
-  #   image: ${SMTP_IMAGE}
-  #   container_name: ${SMTP_HOST}
-  #   # accept mail from stack containers only
-  #   environment:
-  #     - ALLOWED_SENDER_DOMAINS=${TRAEFIK_DOMAIN}
-  #     - POSTFIX_myhostname=${SMTP_HOST}.${TRAEFIK_DOMAIN}
-  #     - POSTFIX_mynetworks=127.0.0.0/8 172.18.0.0/16   # docker subnet
-  #     - POSTFIX_smtp_tls_security_level=may
-  #   expose:
-  #     - "${SMTP_PORT}"
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "echo x | nc -w 2 localhost ${SMTP_PORT}"]
-  #     interval: 30s
-  #     retries: 3
+  smtp:
+    <<: *common
+    image: ${SMTP_IMAGE}
+    container_name: ${SMTP_HOST}
+    # accept mail from stack containers only
+    environment:
+      - ALLOWED_SENDER_DOMAINS=${TRAEFIK_DOMAIN}
+      - POSTFIX_myhostname=${SMTP_HOST}.${TRAEFIK_DOMAIN}
+      - POSTFIX_mynetworks=127.0.0.0/8 172.18.0.0/16   # docker subnet
+      - POSTFIX_smtp_tls_security_level=may
+    expose:
+      - "${SMTP_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "echo x | nc -w 2 localhost ${SMTP_PORT}"]
+      interval: 30s
+      retries: 3
 
   portainer:
     <<: *common
@@ -165,140 +164,139 @@ services:
     - traefik.http.routers.portainer.tls.certresolver=le-dns
     - traefik.http.routers.portainer.middlewares=auth@docker
     - traefik.http.services.portainer.loadbalancer.server.port=${PORTAINER_PORT}
-    - traefik.http.services.portainer.loadbalancer.server.scheme=https
-    - traefik.http.services.portainer.loadbalancer.serversTransport=insecure-ca-transport
+    - traefik.http.services.portainer.loadbalancer.server.scheme=http
 
   ############################
   #            APPS          #
   ############################
-  # n8n-bootstrap:
-  #   <<: *common
-  #   image: n8nio/n8n:${N8N_VERSION}
-  #   container_name: n8n-bootstrap
-  #   restart: 'no'
-  #   depends_on:
-  #     smtp: { condition: service_healthy }
-  #   user: "1000:1000"             # run as the normal node user
-  #   volumes:
-  #     - n8n-data:/home/node/.n8n
-  #     - ./n8n/initial_admin_setup.sh:/home/node/.n8n/init.sh:ro
-  #   entrypoint: []
-  #   command: ["sh", "-c", "/home/node/.n8n/init.sh"]
+  n8n-bootstrap:
+    <<: *common
+    image: n8nio/n8n:${N8N_VERSION}
+    container_name: n8n-bootstrap
+    restart: 'no'
+    depends_on:
+      smtp: { condition: service_healthy }
+    user: "1000:1000"             # run as the normal node user
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./n8n/initial_admin_setup.sh:/home/node/.n8n/init.sh:ro
+    entrypoint: []
+    command: ["sh", "-c", "/home/node/.n8n/init.sh"]
 
-  # n8n:
-  #   <<: *common
-  #   image: n8nio/n8n:${N8N_VERSION}
-  #   container_name: n8n
-  #   depends_on:
-  #     n8n-bootstrap:
-  #       condition: service_completed_successfully
-  #   user: "1000:1000"             # run as the normal node user
-  #   environment:
-  #     - NODE_ENV=production
-  #     - GENERIC_TIMEZONE=${TIMEZONE}
-  #   restart: on-failure
-  #   expose:
-  #   - "5678"
-  #   volumes:
-  #   - n8n-data:/home/node/.n8n
-  #   labels:
-  #   - traefik.enable=true
-  #   - traefik.http.routers.n8n.rule=Host(`n8n.${TRAEFIK_DOMAIN}`)
-  #   - traefik.http.routers.n8n.entrypoints=websecure
-  #   - traefik.http.routers.n8n.tls.certresolver=le-dns
-  #   - traefik.http.routers.n8n.tls=true
+  n8n:
+    <<: *common
+    image: n8nio/n8n:${N8N_VERSION}
+    container_name: n8n
+    depends_on:
+      n8n-bootstrap:
+        condition: service_completed_successfully
+    user: "1000:1000"             # run as the normal node user
+    environment:
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=${TIMEZONE}
+    restart: on-failure
+    expose:
+    - "5678"
+    volumes:
+    - n8n-data:/home/node/.n8n
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.n8n.rule=Host(`n8n.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.n8n.entrypoints=websecure
+    - traefik.http.routers.n8n.tls.certresolver=le-dns
+    - traefik.http.routers.n8n.tls=true
 
-  # ollama-bootstrap:
-  #   image: ollama/ollama:${OLLAMA_VERSION}
-  #   container_name: ollama-bootstrap
-  #   entrypoint: ["/bin/sh","-c","/bootstrap/ollama-bootstrap.sh"]
-  #   volumes:
-  #     - ollama-data:/root/.ollama
-  #     - ./ollama/ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
-  #   environment:
-  #     - OLLAMA_MODELS=${OLLAMA_MODELS}
-  #   networks: [ backend ]
-  #   restart: "no"
-  # ollama:
-  #   <<: *common
-  #   image: ollama/ollama:${OLLAMA_VERSION}
-  #   container_name: ollama
-  #   expose:
-  #   - "11434"
-  #   volumes:
-  #   - ollama-data:/root/.ollama
-  #   labels:
-  #   - traefik.enable=true
-  #   - traefik.http.routers.ollama.rule=Host(`ollama.${TRAEFIK_DOMAIN}`)
-  #   - traefik.http.routers.ollama.entrypoints=websecure
-  #   - traefik.http.routers.ollama.tls.certresolver=le-dns
-  #   - traefik.http.routers.ollama.middlewares=auth@docker
+  ollama-bootstrap:
+    image: ollama/ollama:${OLLAMA_VERSION}
+    container_name: ollama-bootstrap
+    entrypoint: ["/bin/sh","-c","/bootstrap/ollama-bootstrap.sh"]
+    volumes:
+      - ollama-data:/root/.ollama
+      - ./ollama/ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
+    environment:
+      - OLLAMA_MODELS=${OLLAMA_MODELS}
+    networks: [ backend ]
+    restart: "no"
+  ollama:
+    <<: *common
+    image: ollama/ollama:${OLLAMA_VERSION}
+    container_name: ollama
+    expose:
+    - "11434"
+    volumes:
+    - ollama-data:/root/.ollama
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.ollama.rule=Host(`ollama.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.ollama.entrypoints=websecure
+    - traefik.http.routers.ollama.tls.certresolver=le-dns
+    - traefik.http.routers.ollama.middlewares=auth@docker
 
 
-  # openwebui-bootstrap:
-  #   <<: *common
-  #   image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
-  #   container_name: openwebui-bootstrap
-  #   restart: "no"
-  #   user: "0:0"
-  #   volumes:
-  #     - openwebui-data:/app/backend/data
-  #     - ./openwebui/create_admin.py:/app/backend/create_admin.py:ro
-  #   entrypoint: []
-  #   command: ["python3", "/app/backend/create_admin.py"]
-  # openwebui:
-  #   <<: *common
-  #   image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
-  #   container_name: openwebui
-  #   volumes:
-  #     - openwebui-data:/app/backend/data
-  #   expose:
-  #   - "8080"
-  #   depends_on:
-  #     openwebui-bootstrap:
-  #       condition: service_completed_successfully
-  #   labels:
-  #   - traefik.enable=true
-  #   - traefik.http.routers.webui.rule=Host(`chat.${TRAEFIK_DOMAIN}`)
-  #   - traefik.http.routers.webui.entrypoints=websecure
-  #   - traefik.http.routers.webui.tls.certresolver=le-dns
-  #   - traefik.http.services.openwebui.loadbalancer.server.port=${OPENWEBUI_PORT}
-  #   - traefik.http.services.openwebui.loadbalancer.server.scheme=http
+  openwebui-bootstrap:
+    <<: *common
+    image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
+    container_name: openwebui-bootstrap
+    restart: "no"
+    user: "0:0"
+    volumes:
+      - openwebui-data:/app/backend/data
+      - ./openwebui/create_admin.py:/app/backend/create_admin.py:ro
+    entrypoint: []
+    command: ["python3", "/app/backend/create_admin.py"]
+  openwebui:
+    <<: *common
+    image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
+    container_name: openwebui
+    volumes:
+      - openwebui-data:/app/backend/data
+    expose:
+    - "8080"
+    depends_on:
+      openwebui-bootstrap:
+        condition: service_completed_successfully
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.webui.rule=Host(`chat.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.webui.entrypoints=websecure
+    - traefik.http.routers.webui.tls.certresolver=le-dns
+    - traefik.http.services.openwebui.loadbalancer.server.port=${OPENWEBUI_PORT}
+    - traefik.http.services.openwebui.loadbalancer.server.scheme=http
 
-  # ############################
-  # #     DATA / RAG STACK     #
-  # ############################
-  # elasticsearch:
-  #   <<: *common
-  #   image: elasticsearch:${ES_VERSION}
-  #   container_name: es01
-  #   volumes:
-  #   - esdata01:/usr/share/elasticsearch/data
-  #   expose:
-  #   - "${ES_PORT}"
-  #   environment:
-  #   - node.name=es01
-  #   - discovery.type=single-node
-  #   - xpack.security.enabled=true
-  #   - xpack.security.http.ssl.enabled=false
-  #   - xpack.security.transport.ssl.enabled=false
-  #   - ELASTIC_PASSWORD=${ES_PASSWORD}
-  #   - bootstrap.memory_lock=false
-  #   - cluster.routing.allocation.disk.watermark.low=5gb
-  #   - cluster.routing.allocation.disk.watermark.high=3gb
-  #   - cluster.routing.allocation.disk.watermark.flood_stage=2gb
-  #   mem_limit: ${MEM_LIMIT}
-  #   ulimits:
-  #     memlock:
-  #       soft: -1
-  #       hard: -1
-  #   healthcheck:
-  #     test:
-  #     - CMD-SHELL
-  #     - curl -s http://localhost:${ES_PORT}>/dev/null || exit 1
-  #     interval: 10s
-  #     timeout: 10s
-  #     retries: 120
+  ############################
+  #     DATA / RAG STACK     #
+  ############################
+  elasticsearch:
+    <<: *common
+    image: elasticsearch:${ES_VERSION}
+    container_name: es01
+    volumes:
+    - esdata01:/usr/share/elasticsearch/data
+    expose:
+    - "${ES_PORT}"
+    environment:
+    - node.name=es01
+    - discovery.type=single-node
+    - xpack.security.enabled=true
+    - xpack.security.http.ssl.enabled=false
+    - xpack.security.transport.ssl.enabled=false
+    - ELASTIC_PASSWORD=${ES_PASSWORD}
+    - bootstrap.memory_lock=false
+    - cluster.routing.allocation.disk.watermark.low=5gb
+    - cluster.routing.allocation.disk.watermark.high=3gb
+    - cluster.routing.allocation.disk.watermark.flood_stage=2gb
+    mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl -s http://localhost:${ES_PORT}>/dev/null || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 120
 
   infinity:
     <<: *common
@@ -322,121 +320,130 @@ services:
       timeout: 10s
       retries: 120
 
-  # mysql:
-  #   <<: *common
-  #   image: mysql:${MYSQL_VERSION}
-  #   container_name: ${MYSQL_HOST}
-  #   command:
-  #   - --max_connections=1000
-  #   - --character-set-server=utf8mb4
-  #   - --collation-server=utf8mb4_unicode_ci
-  #   - --default-authentication-plugin=mysql_native_password
-  #   - --tls_version=TLSv1.2,TLSv1.3
-  #   - --binlog_expire_logs_seconds=604800
-  #   expose:
-  #   - "${MYSQL_PORT}"
-  #   volumes:
-  #   - mysql_data:/var/lib/mysql
-  #   environment:
-  #   - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-  #   healthcheck:
-  #     test: [ "CMD", "mysqladmin", "ping", "-uroot", "-p${MYSQL_ROOT_PASSWORD}" ]
-  #     interval: 15s
-  #     timeout: 8s
-  #     retries: 5
+  mysql:
+    <<: *common
+    image: mysql:${MYSQL_VERSION}
+    container_name: ${MYSQL_HOST}
+    command:
+    - --max_connections=1000
+    - --character-set-server=utf8mb4
+    - --collation-server=utf8mb4_unicode_ci
+    - --default-authentication-plugin=mysql_native_password
+    - --tls_version=TLSv1.2,TLSv1.3
+    - --binlog_expire_logs_seconds=604800
+    expose:
+    - "${MYSQL_PORT}"
+    volumes:
+    - mysql_data:/var/lib/mysql
+    environment:
+    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-uroot", "-p${MYSQL_ROOT_PASSWORD}" ]
+      interval: 15s
+      timeout: 8s
+      retries: 5
 
-  # minio:
-  #   <<: *common
-  #   restart: on-failure
-  #   image: quay.io/minio/minio:${MINIO_VERSION}
-  #   container_name: minio
-  #   command:
-  #   - server
-  #   - --console-address
-  #   - ":${MINIO_CONSOLE_PORT}"
-  #   - /data
-  #   expose:
-  #   - "${MINIO_PORT}"
-  #   - "${MINIO_CONSOLE_PORT}"
-  #   volumes:
-  #   - minio_data:/data
-  #   environment:
-  #   - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-  #   - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-  #   - MINIO_SERVER_URL=http://minio:${MINIO_PORT}
-  #   - MINIO_BROWSER_REDIRECT_URL=https://minio.${TRAEFIK_DOMAIN}
+  minio:
+    <<: *common
+    restart: on-failure
+    image: quay.io/minio/minio:${MINIO_VERSION}
+    container_name: minio
+    command:
+    - server
+    - --console-address
+    - ":${MINIO_CONSOLE_PORT}"
+    - /data
+    expose:
+    - "${MINIO_PORT}"
+    - "${MINIO_CONSOLE_PORT}"
+    volumes:
+    - minio_data:/data
+    environment:
+    - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+    - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    - MINIO_SERVER_URL=http://minio:${MINIO_PORT}
+    - MINIO_BROWSER_REDIRECT_URL=https://minio.${TRAEFIK_DOMAIN}
 
 
-  #   labels:
-  #   - "traefik.enable=true"
+    labels:
+    - "traefik.enable=true"
 
-  #   - traefik.http.routers.minio-api.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
-  #   - traefik.http.routers.minio-api.entrypoints=websecure
-  #   - traefik.http.routers.minio-api.tls.certresolver=le-dns
-  #   - traefik.http.routers.minio-api.service=minio-api
-  #   - traefik.http.services.minio-api.loadbalancer.server.port=${MINIO_PORT}
-  #   - traefik.http.services.minio-api.loadbalancer.server.scheme=http
+    - traefik.http.routers.minio-api.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.minio-api.entrypoints=websecure
+    - traefik.http.routers.minio-api.tls.certresolver=le-dns
+    - traefik.http.routers.minio-api.service=minio-api
+    - traefik.http.services.minio-api.loadbalancer.server.port=${MINIO_PORT}
+    - traefik.http.services.minio-api.loadbalancer.server.scheme=http
 
-  #   - traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
-  #   - traefik.http.routers.minio.entrypoints=websecure
-  #   - traefik.http.routers.minio.tls.certresolver=le-dns
-  #   - traefik.http.routers.minio.service=minio-console
-  #   - traefik.http.services.minio-console.loadbalancer.server.port=${MINIO_CONSOLE_PORT}
-  #   - traefik.http.services.minio-console.loadbalancer.server.scheme=http
-  # valkey:
-  #   <<: *common
-  #   image: valkey/valkey:${REDIS_VERSION}
-  #   container_name: redis
-  #   restart: on-failure
-  #   command:
-  #   - redis-server
-  #   - --requirepass
-  #   - ${REDIS_PASSWORD}
-  #   - --maxmemory
-  #   - 128mb
-  #   - --maxmemory-policy
-  #   - allkeys-lru
-  #   expose:
-  #   - "${REDIS_PORT}"
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   volumes:
-  #   - redis_data:/data
+    - traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.minio.entrypoints=websecure
+    - traefik.http.routers.minio.tls.certresolver=le-dns
+    - traefik.http.routers.minio.service=minio-console
+    - traefik.http.services.minio-console.loadbalancer.server.port=${MINIO_CONSOLE_PORT}
+    - traefik.http.services.minio-console.loadbalancer.server.scheme=http
+  valkey:
+    <<: *common
+    image: valkey/valkey:${REDIS_VERSION}
+    container_name: redis
+    restart: on-failure
+    command:
+    - redis-server
+    - --requirepass
+    - ${REDIS_PASSWORD}
+    - --maxmemory
+    - 128mb
+    - --maxmemory-policy
+    - allkeys-lru
+    expose:
+    - "${REDIS_PORT}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+    - redis_data:/data
 
-  # ragflow:
-  #   <<: *common
-  #   image: infiniflow/ragflow:${RAGFLOW_VERSION}
-  #   container_name: ragflow-server
-  #   depends_on:
-  #     elasticsearch: { condition: service_started }
-  #     infinity: { condition: service_started }
-  #     mysql: { condition: service_healthy }
-  #     valkey: { condition: service_healthy}
-  #   expose:
-  #   - "${SVR_HTTP_PORT}"
-  #   - "9382" # MCP port 
-  #   volumes:
-  #   - ${RAGFLOW_LOG_DIR}:/ragflow/logs
-  #   - ${RAGFLOW_HISTORY_DIR}:/ragflow/history_data_agent
-  #   - ./ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
-  #   - ./ragflow/entrypoint.sh:/ragflow/entrypoint.sh:ro
-  #   - ./ragflow/create_admin.py:/ragflow/create_admin.py:ro
-  #   - ./ragflow/nginx/ragflow.conf:/etc/nginx/conf.d/ragflow.conf
-  #   - ./ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf
-  #   - ./ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf
-  #   extra_hosts:
-  #   - "host.docker.internal:host-gateway"
-  #   restart: on-failure
-  #   labels:
-  #   - traefik.enable=true
-  #   - traefik.http.routers.ragflow.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
-  #   - traefik.http.routers.ragflow.entrypoints=websecure
-  #   - traefik.http.routers.ragflow.tls.certresolver=le-dns
-  #   - traefik.http.routers.ragflow.service=ragflow-service
-  #   - traefik.http.services.ragflow-service.loadbalancer.server.port=80
+  ragflow:
+    <<: *common
+    image: infiniflow/ragflow:${RAGFLOW_VERSION}
+    container_name: ragflow-server
+    depends_on:
+      elasticsearch: { condition: service_started }
+      infinity: { condition: service_started }
+      mysql: { condition: service_healthy }
+      valkey: { condition: service_healthy}
+    expose:
+    - "${SVR_HTTP_PORT}"
+    - "9382" # MCP port 
+    volumes:
+    - ${RAGFLOW_LOG_DIR}:/ragflow/logs
+    - ${RAGFLOW_HISTORY_DIR}:/ragflow/history_data_agent
+    - ./ragflow/service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template:ro
+    - ./ragflow/entrypoint.sh:/ragflow/entrypoint.sh:ro
+    - ./ragflow/create_admin.py:/ragflow/create_admin.py:ro
+    - ./ragflow/nginx/ragflow.conf:/etc/nginx/conf.d/ragflow.conf
+    - ./ragflow/nginx/proxy.conf:/etc/nginx/proxy.conf
+    - ./ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+    restart: on-failure
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.ragflow.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.ragflow.entrypoints=websecure
+    - traefik.http.routers.ragflow.tls.certresolver=le-dns
+    - traefik.http.routers.ragflow.service=ragflow-service
+    - traefik.http.services.ragflow-service.loadbalancer.server.port=80
+
+############################
+#         UTILITY          #
+############################
+  debug:
+    image: nicolaka/netshoot:latest
+    command: ["sleep", "infinity"]
+    networks: [backend]
+
 
 ############################
 #         VOLUMES          #

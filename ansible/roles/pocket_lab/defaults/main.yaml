@@ -28,7 +28,7 @@ grafana_admin_user: "admin"
 grafana_admin_password: "admin"
 node_exporter_version: "v1.9.1"
 portainer_version: "2.20.3"
-portainer_port: "9443"
+portainer_port: "9000"
 
 # ---------- n8n ----------
 n8n_version: "1.50.0"
