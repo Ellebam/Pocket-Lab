@@ -38,7 +38,7 @@ Everything – from host hardening over reverse‑proxy, observability, vector a
 | Retrieval & RAG | RAGFlow, Elasticsearch, Infinity          |
 | Data plane      | MySQL, MinIO (S3), Valkey (Redis)         |
 | Observability   | Prometheus + Node‑Exporter, Grafana, Loki |
-| Secure access   | two Twingate connectors                   |
+| Secure access   | Tailscale subnet router                   |
 | Dev UX          | Portainer                                 |
 
 ---
@@ -176,10 +176,18 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 ---
 
+### Secure-access layer 🔐
 
+Pocket‑Lab now uses a small [Tailscale](https://tailscale.com) container as a subnet router.
+Set `TS_AUTHKEY` in your environment file to connect it automatically. Once online you can reach all services across your tailnet and even expose ports temporarily:
 
+```bash
+# SSH into the MySQL container via Tailscale
+tailscale ssh root@mysql.lab-tailnet
 
-
+# Serve a local port over HTTPS
+tailscale serve https://localhost:8080
+```
 
 ---
 
@@ -322,7 +330,7 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | --- | --- | --- |
 | `stack_domain`, `stack_email` | `ai.lab.example.com`, `admin@example.com` | Traefik host and ACME mail |
 | `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
-| `tg_tenant_name`, `*_TOKEN*` | – | Twingate connector |
+| `ts_authkey` | – | Tailscale subnet router auth key |
 | `n8n_admin_email`, `n8n_admin_password` | `admin@example.com` / `changeme` | n8n owner account |
 | `openwebui_admin_email`, `openwebui_admin_password` | `admin@example.com` / `changeme` | Open WebUI admin |
 | `es_password`, `mysql_password`, `minio_root_password`, … | `changeme` | Service credentials |
@@ -365,19 +373,8 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `OPENWEBUI_VERSION`                  | `0.6.9`                                                              | Open WebUI    | Open WebUI image tag.                                                                       |                                                                |
 | `OPENWEBUI_PORT`                     | `8080`                                                               | Open WebUI    | Internal UI port inside container.                                                          |                                                                |
 | `PORTAINER_VERSION`                  | `2.20.3`                                                             | Misc          | Portainer version.                                                                          |                                                                |
-| `PROMETHEUS_VERSION`                 | `v3.3.1`                                                             | Misc          | Prometheus version.                                                                         |                                                                |
-| `TG_CONNECTOR_VERSION`               | `1.68.0`                                                             | Twingate      | Twingate connector version.                                                                 |                                                                |
-| `GRAFANA_ADMIN_PASSWORD`             | `admin`                                                              | Misc          | Initial Grafana admin password.                                                             |                                                                |
+| `PROMETHEUS_VERSION`                 | `v3.3.1`                                                             | Misc          | Prometheus version.                                                                         |                                                                || `GRAFANA_ADMIN_PASSWORD`             | `admin`                                                              | Misc          | Initial Grafana admin password.                                                             |                                                                |
 | `GRAFANA_ADMIN_USER`                 | `admin`                                                              | Misc          | Initial Grafana admin user.                                                                 |                                                                |
-| `PORTAINER_PORT`                     | `9443`                                                               | Misc          | HTTPS port of Portainer inside container.                                                   |                                                                |
-| `TG_ACCESS_TOKEN_1`                  | \`\`                                                                 | Twingate      | Auth token for first Twingate connector.                                                    |                                                                |
-| `TG_ACCESS_TOKEN_2`                  | \`\`                                                                 | Twingate      | Auth token for second Twingate connector.                                                   |                                                                |
-| `TG_CONN1_NAME`                      | `tg-connector-1`                                                     | Twingate      | Container name override for connector 1.                                                    |                                                                |
-| `TG_CONN2_NAME`                      | `tg-connector-2`                                                     | Twingate      | Container name override for connector 2.                                                    |                                                                |
-| `TG_REFRESH_TOKEN_1`                 | \`\`                                                                 | Twingate      | Refresh token for first connector.                                                          |                                                                |
-| `TG_REFRESH_TOKEN_2`                 | \`\`                                                                 | Twingate      | Refresh token for second connector.                                                         |                                                                |
-| `TG_TENANT_NAME`                     | `your-tenant`                                                        | Twingate      | Your Twingate tenant (sub‑domain).                                                          |                                                                |
-| `SMTP_IMAGE`                         | `boky/postfix:latest`                                                | SMTP relay    | Postfix image to act as internal SMTP relay.                                                |                                                                |
 | `SMTP_HOST`                          | `smtp`                                                               | SMTP relay    | Container name / hostname for SMTP relay.                                                   |                                                                |
 | `SMTP_PORT`                          | `25`                                                                 | SMTP relay    | Port the SMTP relay listens on.                                                             |                                                                |
 | `SMTP_SSL`                           | `false`                                                              | SMTP relay    | Enable STARTTLS (true/false).                                                               |                                                                |

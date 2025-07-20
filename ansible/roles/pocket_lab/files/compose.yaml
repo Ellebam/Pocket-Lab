@@ -113,23 +113,19 @@ services:
     - --log.level=DEBUG
     - --accesslog=true  
 
-  twingate-1:
-    restart: unless-stopped
-    env_file: .env
-    image: twingate/connector:${TG_CONNECTOR_VERSION}
+  tailscale:
+    <<: *common
+    image: tailscale/tailscale:latest
+    container_name: tailscale
     network_mode: host
-    container_name: ${TG_CONN1_NAME}
+    volumes:
+    - tailscale-state:/var/lib/tailscale
     environment:
-    - TZ=${TIMEZONE}
-
-  twingate-2:
-    restart: unless-stopped
-    env_file: .env
-    image: twingate/connector:${TG_CONNECTOR_VERSION}
-    network_mode: host
-    container_name: ${TG_CONN2_NAME}
-    environment:
-    - TZ=${TIMEZONE}
+    - TS_AUTHKEY=${TS_AUTHKEY}
+    cap_add:
+    - NET_ADMIN
+    - NET_RAW
+    command: tailscaled
 
   smtp:
     <<: *common
@@ -464,6 +460,7 @@ volumes:
   ragflow-history:
   le-data:
   openwebui-data:
+  tailscale-state:
 
     ############################
     #         NETWORKS         #
