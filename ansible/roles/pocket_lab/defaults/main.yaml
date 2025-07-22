@@ -110,14 +110,9 @@ llm_rerank_model: ""
 llm_asr_model: ""
 llm_image2text_model: ""
 
-# ---------- Twingate ----------
-tg_tenant_name: "your-tenant"
-tg_container_name1: "tg-connector-1"
-tg_container_name2: "tg-connector-2"
-tg_access_token1: ""
-tg_refresh_token1: ""
-tg_access_token2: ""
-tg_refresh_token2: ""
+# ---------- Tailscale ----------
+ts_authkey: ""
+ts_routes: "172.20.0.0/16"
 
 # ---------- smtp relay ----------
 smtp_image: "boky/postfix:latest"
