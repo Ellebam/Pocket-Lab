@@ -2,26 +2,28 @@
 
 **Contents**
 
-- [Stack overview](#stack-overview)
-- [Key features](#key-features)
-- [Repository map](#repository-map)
-- [Requirements](#requirements)
-- [Quick start (Ansible path)](#quick-start-ansible-path-)
-  - [Developer workflow (Taskfile)](#developer-workflow-taskfile-)
-  - [Plain Docker Compose](#plain-docker-compose-)
-- [Configuration Reference](#configuration-reference-)
-  - [Traefik Basic-Auth](#traefik-basic-auth-)
-  - [n8n](#n8n-)
-  - [Open WebUI](#open-webui-)
-  - [RAGFlow](#ragflow-)
-  - [Ollama](#ollama-)
-  - [MinIO](#minio-)
-  - [Provisioning with Ansible](#provisioning-with-ansible)
-    - [Task catalogue](#task-catalogue)
-    - [Variables you will likely change](#variables-you-will-likely-change)
-    - [Role overview](#role-overview)
-  - [Table of all Variables](#table-of-all-variables)
-- [Contributing & CI hints](#contributing--ci-hints)
+- [Pocket-Lab 🧪](#pocket-lab-)
+  - [Stack overview](#stack-overview)
+  - [Key features](#key-features)
+  - [Repository map](#repository-map)
+  - [Requirements](#requirements)
+  - [Quick start (Ansible path) 🚀](#quick-start-ansible-path-)
+    - [Developer workflow (Taskfile) 🛠️](#developer-workflow-taskfile-️)
+    - [Plain Docker Compose 🐳](#plain-dockercompose-)
+    - [Secure-access layer 🔐](#secure-access-layer-)
+    - [Typical workflows](#typical-workflows)
+    - [Tailscale](#tailscale)
+    - [n8n 🔁](#n8n-)
+    - [Open WebUI 🌐](#open-webui-)
+    - [RAGFlow 📚](#ragflow-)
+    - [Ollama 🦙](#ollama-)
+    - [MinIO ☁️](#minio-️)
+    - [Provisioning with Ansible](#provisioning-with-ansible)
+      - [Task catalogue](#task-catalogue)
+      - [Variables you will likely change](#variables-you-will-likely-change)
+      - [Role overview](#role-overview)
+    - [Table of all Variables](#table-of-all-variables)
+  - [Contributing \& CI hints](#contributing--ci-hints)
 
 **Pocket‑Lab** provisions a full‑stack, self‑hosted AI laboratory on any fresh Linux host.\
 Everything – from host hardening over reverse‑proxy, observability, vector and relational stores up to LLM tooling is bootstrapped with repeatable automation.
@@ -178,19 +180,38 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 ### Secure-access layer 🔐
 
-Pocket‑Lab now uses a small [Tailscale](https://tailscale.com) container as a subnet router.
-Set `TS_AUTHKEY` in your environment file to connect it automatically. Once online you can reach all services across your tailnet and even expose ports temporarily:
+Pocket‑Lab ships with a lightweight **[Tailscale](https://tailscale.com)** container that runs in host‑network mode, advertises the Docker bridge subnet **and** enables [Tailscale SSH](https://tailscale.com/kb/1191/tailscale-ssh/).
 
-```bash
-# SSH into the MySQL container via Tailscale
-tailscale ssh root@mysql.lab-tailnet
+1. **Create an Auth Key** in the Tailscale admin console → _Keys_ → “Reusable, pre‑authorized”.  
+2. Put it in `.env` as `TS_AUTHKEY`.  
+3. (Optional) change `DOCKER_BRIDGE_SUBNET` if you run multiple labs or the default ‑ `172.20.0.0/16` – collides with an existing network.
 
-# Serve a local port over HTTPS
-tailscale serve https://localhost:8080
+```env
+# .env (excerpt)
+TS_AUTHKEY   = tskey-auth-ABC123...
+DOCKER_BRIDGE_SUBNET = 172.20.0.0/16
 ```
 
----
+When the stack comes up the **tailscale** service automatically:
+* joins your tailnet and appears as _pocket‑lab.tail<NNNN>.ts.net_
+* advertises the subnet defined by `DOCKER_BRIDGE_SUBNET`
+* enables Tailscale SSH on the host and every container (via `--ssh`)
 
+### Typical workflows
+```bash
+# list all lab containers – works from any device in the tailnet
+tailscale status
+
+# SSH into the host (root)
+tailscale ssh root@pocket-lab
+
+# SSH into a container by name
+tailscale ssh root@mysql
+
+# Expose a local dev port to the tailnet for 30 min
+tailscale funnel 4040 --timeout 30m
+
+---
 
 
 ## Configuration Reference 📝
@@ -213,6 +234,16 @@ htpasswd -nbB admin 'myStrongP@ssw0rd'
   - **Ansible** → set `basic_auth: 'admin:$2y$…'` in either
     - `ansible/roles/pocket_lab/defaults/main.yaml`, **or**
     - a dedicated `group_vars/<group>.yaml` or `host_vars/<host>.yaml` file.
+
+---
+
+### Tailscale
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TS_AUTHKEY` |   | Auth key created in the TS admin console |
+| `DOCKER_BRIDGE_SUBNET` | `172.20.0.0/16` | CIDR routed into the tailnet |
+
+_No other Tailscale options need tweaking – advanced users can set `TS_EXTRA_ARGS` in `docker-compose.yaml`._
 
 ---
   
@@ -331,6 +362,7 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `stack_domain`, `stack_email` | `ai.lab.example.com`, `admin@example.com` | Traefik host and ACME mail |
 | `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
 | `ts_authkey` | – | Tailscale subnet router auth key |
+| `docker_bridge_subnet` | `172.20.0.0/16` | Subnet advertised to the tailnet |
 | `n8n_admin_email`, `n8n_admin_password` | `admin@example.com` / `changeme` | n8n owner account |
 | `openwebui_admin_email`, `openwebui_admin_password` | `admin@example.com` / `changeme` | Open WebUI admin |
 | `es_password`, `mysql_password`, `minio_root_password`, … | `changeme` | Service credentials |
