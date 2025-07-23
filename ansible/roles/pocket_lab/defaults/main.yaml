@@ -112,7 +112,7 @@ llm_image2text_model: ""
 
 # ---------- Tailscale ----------
 ts_authkey: ""
-ts_routes: "172.20.0.0/16"
+docker_bridge_subnet: "172.20.0.0/16"
 
 # ---------- smtp relay ----------
 smtp_image: "boky/postfix:latest"
