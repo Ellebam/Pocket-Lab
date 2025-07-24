@@ -10,15 +10,15 @@
   - [Quick start (Ansible path) 🚀](#quick-start-ansible-path-)
     - [Developer workflow (Taskfile) 🛠️](#developer-workflow-taskfile-️)
     - [Plain Docker Compose 🐳](#plain-dockercompose-)
-    - [Secure-access layer - Tailscale 🔐](#secure-access-layer---tailscale-)
-    - [Typical workflows](#typical-workflows)
-  - [Configuration Reference 📝](#configuration-reference-)
+  - [Services \& Configuration Reference 📝](#services--configuration-reference-)
     - [Traefik Basic‑Auth 🔒](#traefik-basicauth-)
     - [n8n 🔁](#n8n-)
     - [Open WebUI 🌐](#open-webui-)
     - [RAGFlow 📚](#ragflow-)
     - [Ollama 🦙](#ollama-)
     - [MinIO ☁️](#minio-️)
+    - [Secure-access layer - Tailscale 🔐](#secure-access-layer---tailscale-)
+    - [Typical workflows](#typical-workflows)
     - [Provisioning with Ansible](#provisioning-with-ansible)
       - [Task catalogue](#task-catalogue)
       - [Variables you will likely change](#variables-you-will-likely-change)
@@ -179,51 +179,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 ---
 
-### Secure-access layer - Tailscale 🔐
-
-Pocket‑Lab ships with a lightweight **[Tailscale](https://tailscale.com)** container that runs in host‑network mode, advertises the Docker bridge subnet **and** enables [Tailscale SSH](https://tailscale.com/kb/1191/tailscale-ssh/).
-
-1. **Create an Auth Key** in the Tailscale admin console → _Keys_ → “Reusable, pre‑authorized”.  
-2. Put it in `.env` as `TS_AUTHKEY`.  
-3. (Optional) change `DOCKER_BRIDGE_SUBNET` if you run multiple labs or the default ‑ `172.20.0.0/16` – collides with an existing network.
-
-```env
-# .env (excerpt)
-TS_AUTHKEY   = tskey-auth-ABC123...
-DOCKER_BRIDGE_SUBNET = 172.20.0.0/16
-```
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `TS_AUTHKEY` |   | Auth key created in the TS admin console |
-| `DOCKER_BRIDGE_SUBNET` | `172.20.0.0/16` | CIDR routed into the tailnet |
-
-_No other Tailscale options need tweaking – advanced users can set `TS_EXTRA_ARGS` in `docker-compose.yaml`._
-
-
-When the stack comes up the **tailscale** service automatically:
-* joins your tailnet and appears as _pocket‑lab.tail<NNNN>.ts.net_
-* advertises the subnet defined by `DOCKER_BRIDGE_SUBNET`
-* enables Tailscale SSH on the host and every container (via `--ssh`)
-
-### Typical workflows
-```bash
-# list all lab containers – works from any device in the tailnet
-tailscale status
-
-# SSH into the host (root)
-tailscale ssh root@pocket-lab
-
-# SSH into a container by name
-tailscale ssh root@mysql
-
-# Expose a local dev port to the tailnet for 30 min
-tailscale funnel 4040 --timeout 30m
-```
----
-
-
-## Configuration Reference 📝
+## Services & Configuration Reference 📝
 
 ### Traefik Basic‑Auth 🔒
 
@@ -324,6 +280,49 @@ Full variable reference lives in:
 - `ansible/roles/ensure_conn_user/defaults/main.yaml`
    
 
+---
+
+### Secure-access layer - Tailscale 🔐
+
+Pocket‑Lab ships with a lightweight **[Tailscale](https://tailscale.com)** container that runs in host‑network mode, advertises the Docker bridge subnet **and** enables [Tailscale SSH](https://tailscale.com/kb/1191/tailscale-ssh/).
+
+1. **Create an Auth Key** in the Tailscale admin console → _Keys_ → “Reusable, pre‑authorized”.  
+2. Put it in `.env` as `TS_AUTHKEY`.  
+3. (Optional) change `DOCKER_BRIDGE_SUBNET` if you run multiple labs or the default ‑ `172.20.0.0/16` – collides with an existing network.
+
+```env
+# .env (excerpt)
+TS_AUTHKEY   = tskey-auth-ABC123...
+DOCKER_BRIDGE_SUBNET = 172.20.0.0/16
+```
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TS_AUTHKEY` |   | Auth key created in the TS admin console |
+| `DOCKER_BRIDGE_SUBNET` | `172.20.0.0/16` | CIDR routed into the tailnet |
+
+_No other Tailscale options need tweaking – advanced users can set `TS_EXTRA_ARGS` in `docker-compose.yaml`._
+
+
+When the stack comes up the **tailscale** service automatically:
+* joins your tailnet and appears as _pocket‑lab.tail<NNNN>.ts.net_
+* advertises the subnet defined by `DOCKER_BRIDGE_SUBNET`
+* enables Tailscale SSH on the host and every container (via `--ssh`)
+
+### Typical workflows
+```bash
+# list all lab containers – works from any device in the tailnet
+tailscale status
+
+# SSH into the host (root)
+tailscale ssh root@pocket-lab
+
+# SSH into a container by name
+tailscale ssh root@mysql
+
+# Expose a local dev port to the tailnet for 30 min
+tailscale funnel 4040 --timeout 30m
+```
 ---
 
 ### Provisioning with Ansible
