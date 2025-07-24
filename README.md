@@ -3,7 +3,7 @@
 **Pocket‑Lab** provisions a full‑stack, self‑hosted AI laboratory on any fresh Linux host.\
 Everything – from host hardening over reverse‑proxy, observability, vector and relational stores up to LLM tooling is bootstrapped with repeatable automation.
 
-[<img src="./docs/assets/pocket_lab.gif" style=" width: 360%"/>](./docs/assets/pocket_lab.gif)
+[<img src="./docs/assets/pocket_lab.png" style="margin: auto; width: 75%"/>](./docs/assets/pocket_lab.png)
 
 
 
