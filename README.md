@@ -10,9 +10,10 @@
   - [Quick start (Ansible path) 🚀](#quick-start-ansible-path-)
     - [Developer workflow (Taskfile) 🛠️](#developer-workflow-taskfile-️)
     - [Plain Docker Compose 🐳](#plain-dockercompose-)
-    - [Secure-access layer 🔐](#secure-access-layer-)
+    - [Secure-access layer - Tailscale 🔐](#secure-access-layer---tailscale-)
     - [Typical workflows](#typical-workflows)
-    - [Tailscale](#tailscale)
+  - [Configuration Reference 📝](#configuration-reference-)
+    - [Traefik Basic‑Auth 🔒](#traefik-basicauth-)
     - [n8n 🔁](#n8n-)
     - [Open WebUI 🌐](#open-webui-)
     - [RAGFlow 📚](#ragflow-)
@@ -178,7 +179,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 ---
 
-### Secure-access layer 🔐
+### Secure-access layer - Tailscale 🔐
 
 Pocket‑Lab ships with a lightweight **[Tailscale](https://tailscale.com)** container that runs in host‑network mode, advertises the Docker bridge subnet **and** enables [Tailscale SSH](https://tailscale.com/kb/1191/tailscale-ssh/).
 
@@ -191,6 +192,14 @@ Pocket‑Lab ships with a lightweight **[Tailscale](https://tailscale.com)** con
 TS_AUTHKEY   = tskey-auth-ABC123...
 DOCKER_BRIDGE_SUBNET = 172.20.0.0/16
 ```
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TS_AUTHKEY` |   | Auth key created in the TS admin console |
+| `DOCKER_BRIDGE_SUBNET` | `172.20.0.0/16` | CIDR routed into the tailnet |
+
+_No other Tailscale options need tweaking – advanced users can set `TS_EXTRA_ARGS` in `docker-compose.yaml`._
+
 
 When the stack comes up the **tailscale** service automatically:
 * joins your tailnet and appears as _pocket‑lab.tail<NNNN>.ts.net_
@@ -210,7 +219,7 @@ tailscale ssh root@mysql
 
 # Expose a local dev port to the tailnet for 30 min
 tailscale funnel 4040 --timeout 30m
-
+```
 ---
 
 
@@ -237,15 +246,6 @@ htpasswd -nbB admin 'myStrongP@ssw0rd'
 
 ---
 
-### Tailscale
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `TS_AUTHKEY` |   | Auth key created in the TS admin console |
-| `DOCKER_BRIDGE_SUBNET` | `172.20.0.0/16` | CIDR routed into the tailnet |
-
-_No other Tailscale options need tweaking – advanced users can set `TS_EXTRA_ARGS` in `docker-compose.yaml`._
-
----
   
 ### n8n 🔁
 
@@ -382,9 +382,8 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 
 ### Table of all Variables
 
-| Variable                             |  Default             value                                        |       Service        |                                           Description                                                  |                                                                |
+| Variable                             |  Default             value                                           |  Service      |                                           Description                                       |                       Comments                                 |
 | ------------------------------------ | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-|                                                                |
 | `TRAEFIK_BASIC_AUTH`                 | `admin:$2y$12$Kz0IUpZjbNkS7N0S2E5qeOeJ8V4aH.E4W2KIiMzFxLpy0X58F3Riq` | Traefik       | htpasswd‑style `user:hash`.  Demo credentials = **admin / admin** – replace for production. | user\:hash used by Traefik basic-auth middleware for most UIs. |
 | `TRAEFIK_DOMAIN`                     | `ai.lab.example.com`                                                 | Traefik       | Apex domain under which all sub‑services are published.                                     |                                                                |
 | `TRAEFIK_LE_EMAIL`                   | `admin@example.com`                                                  | Traefik       | Contact e‑mail for Let’s Encrypt.                                                           |                                                                |
@@ -398,14 +397,11 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `N8N_VERSION`                        | `1.50.0`                                                             | n8n           | n8n automation tool version.                                                                |                                                                |
 | `NODE_EXPORTER_VERSION`              | `v1.9.1`                                                             | Misc          | Prometheus node exporter version.                                                           |                                                                |
 | `OLLAMA_VERSION`                     | `0.1.30`                                                             | Misc          | Ollama model server version.                                                                |                                                                |
-| `OLLAMA_MODELS`                      | `llama3.2 bge-m3`
-                              | Ollama        | Models preloaded by `ollama-bootstrap`.
-                                                            |
-                                             |
+| `OLLAMA_MODELS`                      | `llama3.2 bge-m3`                                                    | Ollama        | Models preloaded by `ollama-bootstrap`                                                      |                                                                |
 | `OPENWEBUI_VERSION`                  | `0.6.9`                                                              | Open WebUI    | Open WebUI image tag.                                                                       |                                                                |
 | `OPENWEBUI_PORT`                     | `8080`                                                               | Open WebUI    | Internal UI port inside container.                                                          |                                                                |
 | `PORTAINER_VERSION`                  | `2.20.3`                                                             | Misc          | Portainer version.                                                                          |                                                                |
-| `PROMETHEUS_VERSION`                 | `v3.3.1`                                                             | Misc          | Prometheus version.                                                                         |                                                                || `GRAFANA_ADMIN_PASSWORD`             | `admin`                                                              | Misc          | Initial Grafana admin password.                                                             |                                                                |
+| `GRAFANA_ADMIN_PASSWORD`             | `admin`                                                              | Misc          | Initial Grafana admin password.                                                             |                                                                |
 | `GRAFANA_ADMIN_USER`                 | `admin`                                                              | Misc          | Initial Grafana admin user.                                                                 |                                                                |
 | `SMTP_HOST`                          | `smtp`                                                               | SMTP relay    | Container name / hostname for SMTP relay.                                                   |                                                                |
 | `SMTP_PORT`                          | `25`                                                                 | SMTP relay    | Port the SMTP relay listens on.                                                             |                                                                |
@@ -457,6 +453,8 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `RAGFLOW_VERSION`                    | `v0.18.0`                                                            | RAGFlow       | RAGFlow image tag.                                                                          |                                                                |
 | `REGISTER_ENABLED`                   | `0`                                                                  | RAGFlow       | Allow public sign‑up in RAGFlow.                                                            |                                                                |
 | `SVR_HTTP_PORT`                      | `9380`                                                               | RAGFlow       | RAGFlow backend HTTP port.                                                                  |                                                                |
+| `TS_AUTHKEY`                         | -                                                                    | Tailscale     | Authentication key used to connect to your personal Tailscale tenant                        |                                                                |
+| `DOCKER_BRIDGE_SUBNET`               | `172.20.0.0/16`                                                      | Tailscale     | Definition of the Subnet used by the Docker Compose Setup. This variable is used by Tailscale to determine to which subnet to route private traffic to        | Variable has implication for the complete setup since all IPs of the services are dependent on it. It is currently only used by Tailscale for actively.                                                          |
 
 For deep‑links and automatic change‑tracking the same table is regenerated in `docs/ENVIRONMENT.md` whenever `scripts/sync_env.py --docs` is executed.
 
