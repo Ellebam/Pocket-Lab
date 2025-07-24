@@ -38,15 +38,6 @@ Everything – from host hardening over reverse‑proxy, observability, vector a
       - [Variables you will likely change](#variables-you-will-likely-change)
       - [Role overview](#role-overview)
     - [Table of all Variables](#table-of-all-variables)
-    - [MySQL 🐬](#mysql--1)
-    - [Infinity ♾️](#infinity-️-1)
-    - [Valkey (Redis drop-in) 🐏](#valkey-redis-drop-in--1)
-    - [Elasticsearch 🔍](#elasticsearch--1)
-    - [Portainer 🛠️](#portainer-️-1)
-    - [Prometheus 📊](#prometheus--1)
-    - [Grafana 📈](#grafana--1)
-    - [Loki 📜](#loki--1)
-    - [SMTP relay ✉️](#smtp-relay-️-1)
   - [Contributing \& CI hints](#contributing--ci-hints)
 
 
@@ -481,82 +472,6 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 ### Table of all Variables
 
 | Variable                             |  Default             value                                           |  Service      |                                           Description                                       |                       Comments                                 |
-| ------------------------------------ | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-### MySQL 🐬
-
-RAGFlow stores its relational data in a standalone MySQL container. Set
-`MYSQL_ROOT_PASSWORD` for the root account and adjust `MYSQL_DATABASE`
-to change the default schema. `MYSQL_PORT` and `MYSQL_HOST` control the
-exposed port and container name.
-
----
-
-### Infinity ♾️
-
-Infinity provides the vector index used by RAGFlow. The included
-`infinity_conf.toml` configures storage paths while the ports are
-customisable through `INFINITY_THRIFT_PORT`, `INFINITY_HTTP_PORT` and
-`INFINITY_PSQL_PORT`. The service registers under
-`INFINITY_HOST`.
-
----
-
-### Valkey (Redis drop-in) 🐏
-
-Valkey offers a Redis-compatible key–value store. Protect it with
-`REDIS_PASSWORD` and change the image or port via `REDIS_VERSION` and
-`REDIS_PORT`.
-
----
-
-### Elasticsearch 🔍
-
-Elasticsearch indexes all documents for RAGFlow. Modify
-`ES_PASSWORD` for the elastic user and `ES_PORT` for the HTTP API.
-`ES_HOST` chooses the hostname while `MEM_LIMIT` limits container
-memory usage.
-
----
-
-### Portainer 🛠️
-
-Portainer exposes a small Docker dashboard at
-`https://portainer.${TRAEFIK_DOMAIN}` protected by Traefik basic-auth.
-Update `PORTAINER_VERSION` or change the UI port with `PORTAINER_PORT`.
-
----
-
-### Prometheus 📊
-
-Prometheus collects metrics from node-exporter and the stack. The image
-tag is set via `PROMETHEUS_VERSION`. Additional scrape targets can be
-defined in `prometheus/prometheus.yaml`.
-
----
-
-### Grafana 📈
-
-Grafana visualises metrics at `https://grafana.${TRAEFIK_DOMAIN}`.
-Initial credentials come from `GRAFANA_ADMIN_USER` and
-`GRAFANA_ADMIN_PASSWORD`. Use `GRAFANA_VERSION` to upgrade.
-
----
-
-### Loki 📜
-
-Loki stores container logs that Grafana can query. Change
-`LOKI_VERSION` if you need a different release.
-
----
-
-### SMTP relay ✉️
-
-A lightweight Postfix relay lets services send mail. Set `SMTP_IMAGE`
-to choose the container, `SMTP_PORT` for the listening port and
-`SMTP_SSL` to toggle TLS. The hostname is derived from `SMTP_HOST`.
-
----
-| Variable         |  Default value                                           |  Service      |                                           Description                                       |                       Comments                                 |
 | ------------------------------------ | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | `TRAEFIK_BASIC_AUTH`                 | `admin:$2y$12$Kz0IUpZjbNkS7N0S2E5qe <br>OeJ8V4aH.E4W2KIiMzFxLpy0X58F3Riq` | Traefik       | htpasswd‑style `user:hash`.  Demo credentials = **admin / admin** – replace for production. | user\:hash used by Traefik basic-auth middleware for most UIs. |
 | `TRAEFIK_DOMAIN`                     | `ai.lab.example.com`                                                 | Traefik       | Apex domain under which all sub‑services are published.                                     |                                                                |
