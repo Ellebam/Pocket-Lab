@@ -1,30 +1,49 @@
 # Pocket-Lab 🧪
 
-**Contents**
-
-- [Stack overview](#stack-overview)
-- [Key features](#key-features)
-- [Repository map](#repository-map)
-- [Requirements](#requirements)
-- [Quick start (Ansible path)](#quick-start-ansible-path-)
-  - [Developer workflow (Taskfile)](#developer-workflow-taskfile-)
-  - [Plain Docker Compose](#plain-docker-compose-)
-- [Configuration Reference](#configuration-reference-)
-  - [Traefik Basic-Auth](#traefik-basic-auth-)
-  - [n8n](#n8n-)
-  - [Open WebUI](#open-webui-)
-  - [RAGFlow](#ragflow-)
-  - [Ollama](#ollama-)
-  - [MinIO](#minio-)
-  - [Provisioning with Ansible](#provisioning-with-ansible)
-    - [Task catalogue](#task-catalogue)
-    - [Variables you will likely change](#variables-you-will-likely-change)
-    - [Role overview](#role-overview)
-  - [Table of all Variables](#table-of-all-variables)
-- [Contributing & CI hints](#contributing--ci-hints)
-
 **Pocket‑Lab** provisions a full‑stack, self‑hosted AI laboratory on any fresh Linux host.\
 Everything – from host hardening over reverse‑proxy, observability, vector and relational stores up to LLM tooling is bootstrapped with repeatable automation.
+
+[<img src="./docs/assets/pocket_lab.png" style="margin: auto; width: 75%"/>](./docs/assets/pocket_lab.png)
+
+
+
+--- 
+
+**Contents**
+
+- [Pocket-Lab 🧪](#pocket-lab-)
+  - [Stack overview](#stack-overview)
+  - [Key features](#key-features)
+  - [Repository map](#repository-map)
+  - [Requirements](#requirements)
+  - [Quick start (Ansible path) 🚀](#quick-start-ansible-path-)
+    - [Developer workflow (Taskfile) 🛠️](#developer-workflow-taskfile-️)
+    - [Plain Docker Compose 🐳](#plain-dockercompose-)
+  - [Services \& Configuration Reference 📝](#services--configuration-reference-)
+    - [Traefik Basic‑Auth 🔒](#traefik-basicauth-)
+    - [n8n 🔁](#n8n-)
+    - [Open WebUI 🌐](#open-webui-)
+    - [RAGFlow 📚](#ragflow-)
+    - [Ollama 🦙](#ollama-)
+    - [MinIO ☁️](#minio-️)
+    - [Secure-access layer - Tailscale 🔐](#secure-access-layer---tailscale-)
+    - [MySQL 🐬](#mysql-)
+    - [Infinity ♾️](#infinity-️)
+    - [Valkey (Redis drop-in) 🐏](#valkey-redis-drop-in-)
+    - [Elasticsearch 🔍](#elasticsearch-)
+    - [Portainer 🛠️](#portainer-️)
+    - [Prometheus 📊](#prometheus-)
+    - [Grafana 📈](#grafana-)
+    - [Loki 📜](#loki-)
+    - [SMTP relay ✉️](#smtp-relay-️)
+    - [Typical workflows](#typical-workflows)
+    - [Provisioning with Ansible](#provisioning-with-ansible)
+      - [Task catalogue](#task-catalogue)
+      - [Variables you will likely change](#variables-you-will-likely-change)
+      - [Role overview](#role-overview)
+    - [Table of all Variables](#table-of-all-variables)
+  - [Contributing \& CI hints](#contributing--ci-hints)
+
 
 ---
 
@@ -38,7 +57,7 @@ Everything – from host hardening over reverse‑proxy, observability, vector a
 | Retrieval & RAG | RAGFlow, Elasticsearch, Infinity          |
 | Data plane      | MySQL, MinIO (S3), Valkey (Redis)         |
 | Observability   | Prometheus + Node‑Exporter, Grafana, Loki |
-| Secure access   | two Twingate connectors                   |
+| Secure access   | Tailscale subnet router                   |
 | Dev UX          | Portainer                                 |
 
 ---
@@ -176,16 +195,7 @@ Follow the five commands below in order. Each snippet is **copy‑safe** (no in
 
 ---
 
-
-
-
-
-
----
-
-
-
-## Configuration Reference 📝
+## Services & Configuration Reference 📝
 
 ### Traefik Basic‑Auth 🔒
 
@@ -207,6 +217,7 @@ htpasswd -nbB admin 'myStrongP@ssw0rd'
     - a dedicated `group_vars/<group>.yaml` or `host_vars/<host>.yaml` file.
 
 ---
+
   
 ### n8n 🔁
 
@@ -252,6 +263,9 @@ block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
 `LLM_API_KEY` or `LLM_CHAT_MODEL` in your `.env` to point RAGFlow at a
 different provider or model.
 
+---
+
+
 ### Ollama 🦙
 
 Ollama runs the local language models used by the lab. The service exposes the
@@ -283,8 +297,126 @@ dashboard can reach the backend.
 Full variable reference lives in:
     
 - `ansible/roles/ensure_conn_user/defaults/main.yaml`
-   
 
+
+---
+
+
+### Secure-access layer - Tailscale 🔐
+
+Pocket‑Lab ships with a lightweight **[Tailscale](https://tailscale.com)** container that runs in host‑network mode, advertises the Docker bridge subnet **and** enables [Tailscale SSH](https://tailscale.com/kb/1191/tailscale-ssh/).
+
+1. **Create an Auth Key** in the Tailscale admin console → _Keys_ → “Reusable, pre‑authorized”.  
+2. Put it in `.env` as `TS_AUTHKEY`.  
+3. (Optional) change `DOCKER_BRIDGE_SUBNET` if you run multiple labs or the default ‑ `172.20.0.0/16` – collides with an existing network.
+
+```env
+# .env (excerpt)
+TS_AUTHKEY   = tskey-auth-ABC123...
+DOCKER_BRIDGE_SUBNET = 172.20.0.0/16
+```
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TS_AUTHKEY` |   | Auth key created in the TS admin console |
+| `DOCKER_BRIDGE_SUBNET` | `172.20.0.0/16` | CIDR routed into the tailnet |
+
+_No other Tailscale options need tweaking – advanced users can set `TS_EXTRA_ARGS` in `docker-compose.yaml`._
+
+
+When the stack comes up the **tailscale** service automatically:
+* joins your tailnet and appears as _pocket‑lab.tail<NNNN>.ts.net_
+* advertises the subnet defined by `DOCKER_BRIDGE_SUBNET`
+* enables Tailscale SSH on the host and every container (via `--ssh`)
+
+### MySQL 🐬
+
+RAGFlow stores its relational data in a standalone MySQL container. Set
+`MYSQL_ROOT_PASSWORD` for the root account and adjust `MYSQL_DATABASE`
+to change the default schema. `MYSQL_PORT` and `MYSQL_HOST` control the
+exposed port and container name.
+
+---
+
+### Infinity ♾️
+
+Infinity provides the vector index used by RAGFlow. The included
+`infinity_conf.toml` configures storage paths while the ports are
+customisable through `INFINITY_THRIFT_PORT`, `INFINITY_HTTP_PORT` and
+`INFINITY_PSQL_PORT`. The service registers under
+`INFINITY_HOST`.
+
+---
+
+### Valkey (Redis drop-in) 🐏
+
+Valkey offers a Redis-compatible key–value store. Protect it with
+`REDIS_PASSWORD` and change the image or port via `REDIS_VERSION` and
+`REDIS_PORT`.
+
+---
+
+### Elasticsearch 🔍
+
+Elasticsearch indexes all documents for RAGFlow. Modify
+`ES_PASSWORD` for the elastic user and `ES_PORT` for the HTTP API.
+`ES_HOST` chooses the hostname while `MEM_LIMIT` limits container
+memory usage.
+
+---
+
+### Portainer 🛠️
+
+Portainer exposes a small Docker dashboard at
+`https://portainer.${TRAEFIK_DOMAIN}` protected by Traefik basic-auth.
+Update `PORTAINER_VERSION` or change the UI port with `PORTAINER_PORT`.
+
+---
+
+### Prometheus 📊
+
+Prometheus collects metrics from node-exporter and the stack. The image
+tag is set via `PROMETHEUS_VERSION`. Additional scrape targets can be
+defined in `prometheus/prometheus.yaml`.
+
+---
+
+### Grafana 📈
+
+Grafana visualises metrics at `https://grafana.${TRAEFIK_DOMAIN}`.
+Initial credentials come from `GRAFANA_ADMIN_USER` and
+`GRAFANA_ADMIN_PASSWORD`. Use `GRAFANA_VERSION` to upgrade.
+
+---
+
+### Loki 📜
+
+Loki stores container logs that Grafana can query. Change
+`LOKI_VERSION` if you need a different release.
+
+---
+
+### SMTP relay ✉️
+
+A lightweight Postfix relay lets services send mail. Set `SMTP_IMAGE`
+to choose the container, `SMTP_PORT` for the listening port and
+`SMTP_SSL` to toggle TLS. The hostname is derived from `SMTP_HOST`.
+
+---
+### Typical workflows
+```bash
+# list all lab containers – works from any device in the tailnet
+tailscale status
+
+# SSH into the host (root)
+tailscale ssh root@pocket-lab
+
+# SSH into a container by name
+tailscale ssh root@mysql
+
+# Expose a local dev port to the tailnet for 30 min
+tailscale funnel 4040 --timeout 30m
+```
 ---
 
 ### Provisioning with Ansible
@@ -322,7 +454,8 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | --- | --- | --- |
 | `stack_domain`, `stack_email` | `ai.lab.example.com`, `admin@example.com` | Traefik host and ACME mail |
 | `basic_auth` | bcrypt hash | Use `htpasswd -nbB` to generate |
-| `tg_tenant_name`, `*_TOKEN*` | – | Twingate connector |
+| `ts_authkey` | – | Tailscale subnet router auth key |
+| `docker_bridge_subnet` | `172.20.0.0/16` | Subnet advertised to the tailnet |
 | `n8n_admin_email`, `n8n_admin_password` | `admin@example.com` / `changeme` | n8n owner account |
 | `openwebui_admin_email`, `openwebui_admin_password` | `admin@example.com` / `changeme` | Open WebUI admin |
 | `es_password`, `mysql_password`, `minio_root_password`, … | `changeme` | Service credentials |
@@ -342,10 +475,9 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 
 ### Table of all Variables
 
-| Variable                             |  Default             value                                        |       Service        |                                           Description                                                  |                                                                |
+| Variable                             |  Default             value                                           |  Service      |                                           Description                                       |                       Comments                                 |
 | ------------------------------------ | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-|                                                                |
-| `TRAEFIK_BASIC_AUTH`                 | `admin:$2y$12$Kz0IUpZjbNkS7N0S2E5qeOeJ8V4aH.E4W2KIiMzFxLpy0X58F3Riq` | Traefik       | htpasswd‑style `user:hash`.  Demo credentials = **admin / admin** – replace for production. | user\:hash used by Traefik basic-auth middleware for most UIs. |
+| `TRAEFIK_BASIC_AUTH`                 | `admin:$2y$12$Kz0IUpZjbNkS7N0S2E5qe <br>OeJ8V4aH.E4W2KIiMzFxLpy0X58F3Riq` | Traefik       | htpasswd‑style `user:hash`.  Demo credentials = **admin / admin** – replace for production. | user\:hash used by Traefik basic-auth middleware for most UIs. |
 | `TRAEFIK_DOMAIN`                     | `ai.lab.example.com`                                                 | Traefik       | Apex domain under which all sub‑services are published.                                     |                                                                |
 | `TRAEFIK_LE_EMAIL`                   | `admin@example.com`                                                  | Traefik       | Contact e‑mail for Let’s Encrypt.                                                           |                                                                |
 | `TRAEFIK_VERSION`                    | `3.4.1`                                                              | Traefik       | Traefik docker image tag.                                                                   |                                                                |
@@ -358,26 +490,12 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `N8N_VERSION`                        | `1.50.0`                                                             | n8n           | n8n automation tool version.                                                                |                                                                |
 | `NODE_EXPORTER_VERSION`              | `v1.9.1`                                                             | Misc          | Prometheus node exporter version.                                                           |                                                                |
 | `OLLAMA_VERSION`                     | `0.1.30`                                                             | Misc          | Ollama model server version.                                                                |                                                                |
-| `OLLAMA_MODELS`                      | `llama3.2 bge-m3`
-                              | Ollama        | Models preloaded by `ollama-bootstrap`.
-                                                            |
-                                             |
+| `OLLAMA_MODELS`                      | `llama3.2 bge-m3`                                                    | Ollama        | Models preloaded by `ollama-bootstrap`                                                      |                                                                |
 | `OPENWEBUI_VERSION`                  | `0.6.9`                                                              | Open WebUI    | Open WebUI image tag.                                                                       |                                                                |
 | `OPENWEBUI_PORT`                     | `8080`                                                               | Open WebUI    | Internal UI port inside container.                                                          |                                                                |
 | `PORTAINER_VERSION`                  | `2.20.3`                                                             | Misc          | Portainer version.                                                                          |                                                                |
-| `PROMETHEUS_VERSION`                 | `v3.3.1`                                                             | Misc          | Prometheus version.                                                                         |                                                                |
-| `TG_CONNECTOR_VERSION`               | `1.68.0`                                                             | Twingate      | Twingate connector version.                                                                 |                                                                |
 | `GRAFANA_ADMIN_PASSWORD`             | `admin`                                                              | Misc          | Initial Grafana admin password.                                                             |                                                                |
 | `GRAFANA_ADMIN_USER`                 | `admin`                                                              | Misc          | Initial Grafana admin user.                                                                 |                                                                |
-| `PORTAINER_PORT`                     | `9443`                                                               | Misc          | HTTPS port of Portainer inside container.                                                   |                                                                |
-| `TG_ACCESS_TOKEN_1`                  | \`\`                                                                 | Twingate      | Auth token for first Twingate connector.                                                    |                                                                |
-| `TG_ACCESS_TOKEN_2`                  | \`\`                                                                 | Twingate      | Auth token for second Twingate connector.                                                   |                                                                |
-| `TG_CONN1_NAME`                      | `tg-connector-1`                                                     | Twingate      | Container name override for connector 1.                                                    |                                                                |
-| `TG_CONN2_NAME`                      | `tg-connector-2`                                                     | Twingate      | Container name override for connector 2.                                                    |                                                                |
-| `TG_REFRESH_TOKEN_1`                 | \`\`                                                                 | Twingate      | Refresh token for first connector.                                                          |                                                                |
-| `TG_REFRESH_TOKEN_2`                 | \`\`                                                                 | Twingate      | Refresh token for second connector.                                                         |                                                                |
-| `TG_TENANT_NAME`                     | `your-tenant`                                                        | Twingate      | Your Twingate tenant (sub‑domain).                                                          |                                                                |
-| `SMTP_IMAGE`                         | `boky/postfix:latest`                                                | SMTP relay    | Postfix image to act as internal SMTP relay.                                                |                                                                |
 | `SMTP_HOST`                          | `smtp`                                                               | SMTP relay    | Container name / hostname for SMTP relay.                                                   |                                                                |
 | `SMTP_PORT`                          | `25`                                                                 | SMTP relay    | Port the SMTP relay listens on.                                                             |                                                                |
 | `SMTP_SSL`                           | `false`                                                              | SMTP relay    | Enable STARTTLS (true/false).                                                               |                                                                |
@@ -428,6 +546,8 @@ The individual phases live in `ansible/plays/00-30-*.yaml` and can be run via
 | `RAGFLOW_VERSION`                    | `v0.18.0`                                                            | RAGFlow       | RAGFlow image tag.                                                                          |                                                                |
 | `REGISTER_ENABLED`                   | `0`                                                                  | RAGFlow       | Allow public sign‑up in RAGFlow.                                                            |                                                                |
 | `SVR_HTTP_PORT`                      | `9380`                                                               | RAGFlow       | RAGFlow backend HTTP port.                                                                  |                                                                |
+| `TS_AUTHKEY`                         | -                                                                    | Tailscale     | Authentication key used to connect to your personal Tailscale tenant                        |                                                                |
+| `DOCKER_BRIDGE_SUBNET`               | `172.20.0.0/16`                                                      | Tailscale     | Definition of the Subnet used by the Docker Compose Setup. This variable is used by Tailscale to determine to which subnet to route private traffic to        | Variable has implication for the complete setup since all IPs of the services are dependent on it. It is currently only used by Tailscale for actively.                                                          |
 
 For deep‑links and automatic change‑tracking the same table is regenerated in `docs/ENVIRONMENT.md` whenever `scripts/sync_env.py --docs` is executed.
 

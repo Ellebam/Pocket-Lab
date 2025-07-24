@@ -113,23 +113,20 @@ services:
     - --log.level=DEBUG
     - --accesslog=true  
 
-  twingate-1:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
     restart: unless-stopped
     env_file: .env
-    image: twingate/connector:${TG_CONNECTOR_VERSION}
     network_mode: host
-    container_name: ${TG_CONN1_NAME}
+    privileged: true
+    volumes:
+      - tailscale-state:/var/lib/tailscale
     environment:
-    - TZ=${TIMEZONE}
-
-  twingate-2:
-    restart: unless-stopped
-    env_file: .env
-    image: twingate/connector:${TG_CONNECTOR_VERSION}
-    network_mode: host
-    container_name: ${TG_CONN2_NAME}
-    environment:
-    - TZ=${TIMEZONE}
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TZ=${TIMEZONE}
+      - TS_ROUTES=${DOCKER_BRIDGE_SUBNET}
+      - TS_EXTRA_ARGS=--ssh --accept-routes --accept-dns=false --hostname=pocket-lab
 
   smtp:
     <<: *common
@@ -464,6 +461,7 @@ volumes:
   ragflow-history:
   le-data:
   openwebui-data:
+  tailscale-state:
 
     ############################
     #         NETWORKS         #
@@ -471,3 +469,6 @@ volumes:
 networks:
   backend:
     driver: bridge
+    ipam:
+      config:
+        - subnet: ${DOCKER_BRIDGE_SUBNET}
