@@ -363,7 +363,7 @@ services:
 
 
     labels:
-    - "traefik.enable=true"
+    - traefik.enable=true
 
     - traefik.http.routers.minio-api.rule=Host(`minio.${TRAEFIK_DOMAIN}`)
     - traefik.http.routers.minio-api.entrypoints=websecure
