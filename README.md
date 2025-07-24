@@ -1,5 +1,10 @@
 # Pocket-Lab 🧪
 
+**Pocket‑Lab** provisions a full‑stack, self‑hosted AI laboratory on any fresh Linux host.\
+Everything – from host hardening over reverse‑proxy, observability, vector and relational stores up to LLM tooling is bootstrapped with repeatable automation.
+
+--- 
+
 **Contents**
 
 - [Pocket-Lab 🧪](#pocket-lab-)
@@ -19,24 +24,31 @@
     - [MinIO ☁️](#minio-️)
     - [Secure-access layer - Tailscale 🔐](#secure-access-layer---tailscale-)
     - [MySQL 🐬](#mysql-)
-    - [Infinity ♾️](#infinity-)
+    - [Infinity ♾️](#infinity-️)
     - [Valkey (Redis drop-in) 🐏](#valkey-redis-drop-in-)
     - [Elasticsearch 🔍](#elasticsearch-)
-    - [Portainer 🛠️](#portainer-)
+    - [Portainer 🛠️](#portainer-️)
     - [Prometheus 📊](#prometheus-)
     - [Grafana 📈](#grafana-)
     - [Loki 📜](#loki-)
-    - [SMTP relay ✉️](#smtp-relay-)
+    - [SMTP relay ✉️](#smtp-relay-️)
     - [Typical workflows](#typical-workflows)
     - [Provisioning with Ansible](#provisioning-with-ansible)
       - [Task catalogue](#task-catalogue)
       - [Variables you will likely change](#variables-you-will-likely-change)
       - [Role overview](#role-overview)
     - [Table of all Variables](#table-of-all-variables)
+    - [MySQL 🐬](#mysql--1)
+    - [Infinity ♾️](#infinity-️-1)
+    - [Valkey (Redis drop-in) 🐏](#valkey-redis-drop-in--1)
+    - [Elasticsearch 🔍](#elasticsearch--1)
+    - [Portainer 🛠️](#portainer-️-1)
+    - [Prometheus 📊](#prometheus--1)
+    - [Grafana 📈](#grafana--1)
+    - [Loki 📜](#loki--1)
+    - [SMTP relay ✉️](#smtp-relay-️-1)
   - [Contributing \& CI hints](#contributing--ci-hints)
 
-**Pocket‑Lab** provisions a full‑stack, self‑hosted AI laboratory on any fresh Linux host.\
-Everything – from host hardening over reverse‑proxy, observability, vector and relational stores up to LLM tooling is bootstrapped with repeatable automation.
 
 ---
 
@@ -544,6 +556,8 @@ to choose the container, `SMTP_PORT` for the listening port and
 `SMTP_SSL` to toggle TLS. The hostname is derived from `SMTP_HOST`.
 
 ---
+| Variable         |  Default value                                           |  Service      |                                           Description                                       |                       Comments                                 |
+| ------------------------------------ | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | `TRAEFIK_BASIC_AUTH`                 | `admin:$2y$12$Kz0IUpZjbNkS7N0S2E5qe <br>OeJ8V4aH.E4W2KIiMzFxLpy0X58F3Riq` | Traefik       | htpasswd‑style `user:hash`.  Demo credentials = **admin / admin** – replace for production. | user\:hash used by Traefik basic-auth middleware for most UIs. |
 | `TRAEFIK_DOMAIN`                     | `ai.lab.example.com`                                                 | Traefik       | Apex domain under which all sub‑services are published.                                     |                                                                |
 | `TRAEFIK_LE_EMAIL`                   | `admin@example.com`                                                  | Traefik       | Contact e‑mail for Let’s Encrypt.                                                           |                                                                |
