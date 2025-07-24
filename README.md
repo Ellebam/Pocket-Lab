@@ -247,6 +247,9 @@ block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
 `LLM_API_KEY` or `LLM_CHAT_MODEL` in your `.env` to point RAGFlow at a
 different provider or model.
 
+---
+
+
 ### Ollama 🦙
 
 Ollama runs the local language models used by the lab. The service exposes the
