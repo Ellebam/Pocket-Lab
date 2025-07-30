@@ -2,7 +2,7 @@
 # Ensure baseline models are present; safe to run multiple times.
 set -eu
 
-MODELS="${OLLAMA_MODELS:-llama3.2 bge-m3}"          # override via env
+MODELS="${OLLAMA_PULL_MODELS:-llama3.2 bge-m3}"          # override via env
 OLLAMA_HOME="${OLLAMA_HOME:-/root/.ollama}"
 MANIFEST_ROOT="$OLLAMA_HOME/models/manifests/registry.ollama.ai/library"
 
