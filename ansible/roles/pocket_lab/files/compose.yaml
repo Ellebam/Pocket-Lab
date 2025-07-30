@@ -211,13 +211,18 @@ services:
       - ollama-data:/root/.ollama
       - ./ollama/ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
     environment:
-      - OLLAMA_MODELS=${OLLAMA_MODELS}
+      - OLLAMA_MODELS=/root/.ollama/models
     networks: [ backend ]
     restart: "no"
   ollama:
     <<: *common
     image: ollama/ollama:${OLLAMA_VERSION}
+    environment:
+      - OLLAMA_MODELS=/root/.ollama/models
     container_name: ollama
+    depends_on:
+      ollama-bootstrap:
+        condition: service_completed_successfully
     expose:
     - "11434"
     volumes:
