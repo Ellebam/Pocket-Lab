@@ -38,8 +38,14 @@ n8n_basic_auth_active: false
 n8n_personalization_enabled: false
 
 # ---------- ollama ----------
-ollama_version: "0.4.3"
+ollama_version: "0.10.0"
 ollama_pull_models: "llama3.2 bge-m3 mistral:7b-instruct-q4_K_M"
+ollama_mmap: true
+ollama_max_replicas: 4
+ollama_idle_timeout: 120s
+ollama_num_parallel: 8
+ollama_context_size: 4096
+
 
 # ---------- openwebui ----------
 openwebui_version: "v0.6.9"

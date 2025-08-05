@@ -284,6 +284,7 @@ services:
     - xpack.security.transport.ssl.enabled=false
     - ELASTIC_PASSWORD=${ES_PASSWORD}
     - bootstrap.memory_lock=false
+    - ES_JAVA_OPTS=-Xms2g -Xmx2g
     - cluster.routing.allocation.disk.watermark.low=5gb
     - cluster.routing.allocation.disk.watermark.high=3gb
     - cluster.routing.allocation.disk.watermark.flood_stage=2gb
