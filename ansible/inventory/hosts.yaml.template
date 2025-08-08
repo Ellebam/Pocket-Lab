@@ -1,3 +1,4 @@
+# Make sure the listed user already exists & can sudo without password.
 genai_servers:
   hosts:
     genai-vm:
