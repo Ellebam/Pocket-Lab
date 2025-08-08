@@ -126,25 +126,3 @@ smtp_host: "smtp"
 smtp_port: 25
 smtp_ssl: false
 
-# ---------- Security ----------
-ssh_harden: true
-sshd_max_auth_tries: 10
-sshd_max_startups: "10:30:100"
-firewall_open_tcp: [80, 443, 22]
-auto_updates: true
-sshd_priv_separation_path: >-
-  {{ (ansible_service_mgr == 'systemd')
-       | ternary('/run/sshd', '/var/empty/sshd') }}
-
-
-# ---------- Users ----------
-l3d_users__local_users:
-- name: ansible
-  state: present
-  shell: /bin/bash
-  create_home: true
-  admin: true
-  admin_commands: 'ALL'
-  admin_nopassword: true
-  pubkeys: |
-    <YOUR_SSH_PUBLIC_KEY>
