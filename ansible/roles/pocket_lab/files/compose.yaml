@@ -18,7 +18,7 @@ services:
     image: prom/prometheus:${PROMETHEUS_VERSION}
     container_name: prometheus
     volumes:
-    - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+    - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
     - prometheus-data:/prometheus
     expose:
     - "9090"
@@ -136,7 +136,7 @@ services:
     environment:
       - ALLOWED_SENDER_DOMAINS=${TRAEFIK_DOMAIN}
       - POSTFIX_myhostname=${SMTP_HOST}.${TRAEFIK_DOMAIN}
-      - POSTFIX_mynetworks=127.0.0.0/8 172.18.0.0/16   # docker subnet
+      - POSTFIX_mynetworks=127.0.0.0/8 ${DOCKER_BRIDGE_SUBNET}
       - POSTFIX_smtp_tls_security_level=may
     expose:
       - "${SMTP_PORT}"
@@ -284,6 +284,7 @@ services:
     - xpack.security.transport.ssl.enabled=false
     - ELASTIC_PASSWORD=${ES_PASSWORD}
     - bootstrap.memory_lock=false
+    - ES_JAVA_OPTS=-Xms2g -Xmx2g
     - cluster.routing.allocation.disk.watermark.low=5gb
     - cluster.routing.allocation.disk.watermark.high=3gb
     - cluster.routing.allocation.disk.watermark.flood_stage=2gb

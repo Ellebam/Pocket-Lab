@@ -1,0 +1,12 @@
+# 00-deploy.yaml – install Docker & deploy Pocket-Lab
+- name: Install Docker and deploy the lab
+  hosts: genai_servers
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: geerlingguy.docker
+      vars:
+        docker_install_compose: true
+
+    - role: pocket_lab

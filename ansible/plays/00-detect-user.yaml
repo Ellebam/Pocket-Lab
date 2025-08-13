@@ -1,7 +1,0 @@
-# ansible/plays/00-detect-user.yaml
-- name: Detect a working SSH user
-  hosts: genai_servers
-  gather_facts: false
-  roles:
-    - ensure_conn_user
-
