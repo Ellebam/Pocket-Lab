@@ -191,6 +191,9 @@ htpasswd -nbB admin 'myStrongP@ssw0rd'
 - Copy the full `user:$2y$…` string **exactly as printed**.
 - In all deployment modes place it in **single quotes** to preserve the `$` signs:
   - **Docker Compose / Taskfile** → in `docker/.env`:
+
+> **Auth exceptions:** UIs that already have their own authentication (e.g. **Grafana**, Open WebUI) are **not** protected by Traefik Basic-Auth. Grafana remains reachable without the middleware and uses its own login page.
+
     ```env
     TRAEFIK_BASIC_AUTH='admin:$2y$…'
     ```
@@ -412,6 +415,79 @@ task ansible_full  # deploy the stack
 ```
 
 Run `task ansible_deploy` to execute the play directly.
+
+#### First-time setup (day-0 guide)
+
+**You can deploy with almost all defaults.** The only values you typically *must* provide are:
+* `cloudflare_api_token` (for automatic TLS via DNS-01), and/or
+* `ts_authkey` (if you want private tailnet access).
+
+For **full control** over passwords/users/ports, copy the role defaults into host-specific vars and override only what you need:
+```bash
+mkdir -p ansible/host_vars
+cp ansible/roles/pocket_lab/defaults/main.yaml ansible/host_vars/genai-vm.yaml
+# edit ansible/host_vars/genai-vm.yaml and change only the vars you care about
+```
+> You can also use `group_vars/<group>.yaml` if you target multiple machines.
+
+**1) Inventory**
+```bash
+cp ansible/inventory/hosts.yaml.template ansible/inventory/hosts.yaml
+# set ansible_host and ansible_user
+```
+**2) Install Ansible toolchain**
+```bash
+task venv:init
+```
+**3) Deploy**
+```bash
+task ansible_full
+```
+**4) Local/self-deploy (no SSH)**
+If you run Ansible on the target itself:
+```yaml
+# ansible/inventory/hosts.yaml
+genai_servers:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3
+      ansible_user: root
+```
+Then `task ansible_full`.
+
+**Idempotent helpers**
+```bash
+task ansible_check   # dry-run
+task ansible_deploy  # re-run deploy play
+```
+
+### Private / no-public-IP deployments (localhost or tailnet)
+
+You can run Pocket-Lab on a host with **no public IP** and still get HTTPS + Traefik routing.
+
+**A) DNS-01 + /etc/hosts (recommended)**
+1. Set a Cloudflare token (`CLOUDFLARE_DNS_API_TOKEN` / `cloudflare_api_token`).
+2. Deploy the stack.
+3. On the *client* you browse from (or on the server itself), add host entries mapping service names to the server IP (use `127.0.0.1` when browsing on the server):
+```
+127.0.0.1  traefik.${TRAEFIK_DOMAIN} grafana.${TRAEFIK_DOMAIN} \
+           prometheus.${TRAEFIK_DOMAIN} portainer.${TRAEFIK_DOMAIN} \
+           n8n.${TRAEFIK_DOMAIN} chat.${TRAEFIK_DOMAIN} \
+           ragflow.${TRAEFIK_DOMAIN} minio.${TRAEFIK_DOMAIN} \
+           ollama.${TRAEFIK_DOMAIN}
+```
+> ACME DNS-01 only checks TXT records, so you don’t need public A/AAAA records.
+
+**B) Tailscale-only access**
+1. Set `TS_AUTHKEY` / `ts_authkey` and deploy.
+2. Find the host’s tailnet IP or MagicDNS name (`tailscale status` / `tailscale ip`).
+3. Add `/etc/hosts` on your client mapping the same service names to that tailnet IP.
+
+**Sanity checks**
+```bash
+curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
+```
 
 ---
 
