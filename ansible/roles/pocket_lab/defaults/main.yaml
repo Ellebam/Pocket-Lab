@@ -67,14 +67,14 @@ openwebui_enable_web_search: true
 openwebui_web_search_engine: "duckduckgo"
 openwebui_web_search_result_count: 3
 openwebui_web_search_concurrent_requests: 8
-openwebui_default_models: "llama3.1:8b"
-openwebui_default_prompt_suggestions: >-
-  [
-    {"title":"Code review","content":"Review the following code and point out bugs, security issues, and style problems."},
-    {"title":"Explain a snippet","content":"Explain what this code does and how to improve it."},
-    {"title":"Research topic","content":"Summarize recent developments on <topic> with citations and links."},
-    {"title":"Write tests","content":"Generate unit tests for this function with edge cases."}
-  ]
+openwebui_default_models: "llama3.1:8b deepseek-r1:7b qwen2.5-coder:7b"
+openwebui_default_prompt_suggestions:
+  - { title: "Code review",        content: "Review the following code and point out bugs, security issues, and style problems." }
+  - { title: "Explain a snippet",  content: "Explain what this code does and how to improve it." }
+  - { title: "Research topic",     content: "Summarize recent developments on <topic> with citations and links." }
+  - { title: "Write tests",        content: "Generate unit tests for this function with edge cases." }
+ollama_base_url: "http://ollama:11434"
+
 
 # ----------  Elasticsearch ----------
 es_version: "8.13.4"
