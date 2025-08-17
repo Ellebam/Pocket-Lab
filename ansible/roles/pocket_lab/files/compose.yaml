@@ -35,6 +35,7 @@ services:
     image: grafana/loki:${LOKI_VERSION}
     container_name: loki
     volumes:
+    - ./loki/local-config.yaml:/etc/loki/local-config.yaml:ro
     - loki-data:/loki
     command:
     - -config.file=/etc/loki/local-config.yaml
@@ -111,7 +112,9 @@ services:
     - --certificatesresolvers.le-dns.acme.dnschallenge.provider=cloudflare
     - --certificatesresolvers.le-dns.acme.dnschallenge.delaybeforecheck=0
     - --log.level=DEBUG
-    - --accesslog=true  
+    - --accesslog=true
+    - --global.sendanonymoususage=false
+    - --global.checknewversion=false
 
   tailscale:
     image: tailscale/tailscale:latest

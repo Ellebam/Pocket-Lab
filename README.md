@@ -224,6 +224,8 @@ behaviour is controlled through `ENABLE_SIGNUP`, the default role via
 `DEFAULT_USER_ROLE` and configuration persistence via
 `ENABLE_PERSISTENT_CONFIG`.
 
+- Open WebUI is wired to Ollama via `OLLAMA_BASE_URL` (defaults to internal `http://ollama:11434`), `OFFLINE_MODE=true` by default (no version pings/online features), but Web Search is enabled using DuckDuckGo (no API key required).
+
 ---
 
 ### RAGFlow 📚
@@ -258,8 +260,10 @@ standard API at `https://ollama.${TRAEFIK_DOMAIN}` and acts as the default LLM
 backend for Open WebUI and RAGFlow. On first start a short-lived
 `ollama-bootstrap` companion downloads all models listed in `OLLAMA_PULL_MODELS` so
 they are available locally. The variable accepts a space-separated list and
-defaults to `llama3.2 bge-m3`. The helper exits successfully if all models are
+defaults to `llama3.1:8b deepseek-r1:7b qwen2.5-coder:7b bge-m3`. The helper exits successfully if all models are
 already present so it is safe to rerun.
+
+- Default pre-pulled models on first run: `llama3.1:8b` (general), `deepseek-r1:7b` (reasoning), `qwen2.5-coder:7b` (coding), plus `bge-m3` embeddings.
 
 ---
 
