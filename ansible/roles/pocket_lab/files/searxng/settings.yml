@@ -1,0 +1,10 @@
+use_default_settings: true
+server:
+  bind_address: 0.0.0.0
+  secret_key: "change-me"
+  public_instance: false
+  # Private, first-party use: disable rate limiting & bot detection
+  limiter: false
+search:
+  # Ensure JSON API responses are available
+  formats: [html, json]

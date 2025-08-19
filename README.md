@@ -36,6 +36,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
     - [Grafana 📈](#grafana-)
     - [Loki 📜](#loki-)
     - [SMTP relay ✉️](#smtp-relay-️)
+    - [Web search (Open WebUI + SearXNG) 🔎](#web-search-open-webui--searxng-)
     - [Typical workflows](#typical-workflows)
     - [Provisioning with Ansible](#provisioning-with-ansible)
       - [Task catalogue](#task-catalogue)
@@ -390,6 +391,31 @@ Loki stores container logs that Grafana can query. Change
 A lightweight Postfix relay lets services send mail. Set `SMTP_IMAGE`
 to choose the container, `SMTP_PORT` for the listening port and
 `SMTP_SSL` to toggle TLS. The hostname is derived from `SMTP_HOST`.
+
+---
+### Web search (Open WebUI + SearXNG) 🔎
+
+Pocket-Lab ships a private [SearXNG](https://docs.searxng.org) instance (internal-only) and wires it into **Open WebUI** as the default web search backend. JSON output is enabled and rate limiting is disabled for private use.
+
+**Defaults (override in `.env` / Ansible vars):**
+
+```env
+# endpoints & privacy
+WEBUI_URL=https://chat.<your-domain>
+OFFLINE_MODE=false
+ENABLE_VERSION_UPDATE_CHECK=false
+OLLAMA_BASE_URL=http://ollama:11434
+
+# web search
+ENABLE_WEB_SEARCH=true
+WEB_SEARCH_ENGINE=searxng
+SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>&format=json
+WEB_SEARCH_RESULT_COUNT=5
+WEB_SEARCH_CONCURRENT_REQUESTS=2
+ENABLE_SEARCH_QUERY_GENERATION=false
+```
+
+> Why SearXNG? It avoids public-instance rate limits and API blocks while keeping search local to your stack. Open WebUI discovers it through `WEB_SEARCH_ENGINE=searxng` + `SEARXNG_QUERY_URL`. See Open WebUI env config & tutorial. Also ensure SearXNG exposes JSON (`search.formats: [html, json]`). :contentReference[oaicite:2]{index=2}
 
 ---
 ### Typical workflows
