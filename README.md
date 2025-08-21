@@ -39,6 +39,8 @@ Everything – from reverse‑proxy, observability, vector and relational stores
     - [Web search (Open WebUI + SearXNG) 🔎](#web-search-open-webui--searxng-)
     - [Typical workflows](#typical-workflows)
     - [Provisioning with Ansible](#provisioning-with-ansible)
+      - [First-time setup (day-0 guide)](#first-time-setup-day-0-guide)
+    - [Private / no-public-IP deployments (localhost or tailnet)](#private--no-public-ip-deployments-localhost-or-tailnet)
       - [Task catalogue](#task-catalogue)
       - [Variables you will likely change](#variables-you-will-likely-change)
       - [Role overview](#role-overview)
@@ -225,7 +227,7 @@ behaviour is controlled through `ENABLE_SIGNUP`, the default role via
 `DEFAULT_USER_ROLE` and configuration persistence via
 `ENABLE_PERSISTENT_CONFIG`.
 
-- Open WebUI is wired to Ollama via `OLLAMA_BASE_URL` (defaults to internal `http://ollama:11434`), `OFFLINE_MODE=true` by default (no version pings/online features), but Web Search is enabled using DuckDuckGo (no API key required).
+- Open WebUI is wired to Ollama via `OLLAMA_BASE_URL` (defaults to internal `http://ollama:11434`), `OFFLINE_MODE=true` by default (no version pings/online features), but Web Search is enabled out-of-the-box and points to the bundled SearXNG instance.
 
 ---
 
