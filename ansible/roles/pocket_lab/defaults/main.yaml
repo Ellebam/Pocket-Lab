@@ -36,25 +36,50 @@ n8n_admin_email: "admin@example.com"
 n8n_admin_password: "changeme"
 n8n_basic_auth_active: false
 n8n_personalization_enabled: false
+n8n_diagnostics_enabled: false
+n8n_version_notifications_enabled: false
+n8n_templates_enabled: false
 
 # ---------- ollama ----------
 ollama_version: "0.10.0"
-ollama_pull_models: "llama3.2 bge-m3 mistral:7b-instruct-q4_K_M"
+ollama_pull_models: "llama3.1:8b deepseek-r1:7b qwen2.5-coder:7b bge-m3"
 ollama_mmap: true
 ollama_max_replicas: 4
 ollama_idle_timeout: 120s
 ollama_num_parallel: 8
 ollama_context_size: 4096
+ollama_keep_alive: 5m
+ollama_max_loaded_models: 3
+ollama_max_queue: 512
 
 
 # ---------- openwebui ----------
-openwebui_version: "v0.6.9"
+openwebui_version: "v0.6.22"
 openwebui_port: "8080"
 openwebui_admin_email: "admin@example.com"
 openwebui_admin_password: "changeme"
 openwebui_enable_signup: false
 openwebui_default_user_role: "pending"
 openwebui_enable_persistent_config: true
+# ---------- openwebui: endpoints & web search ----------
+# Derived URL used by Open WebUI for building absolute links (set in template)
+webui_url: ""
+openwebui_offline_mode: false
+openwebui_enable_version_update_check: false
+openwebui_enable_web_search: true
+openwebui_web_search_engine: "searxng"
+openwebui_enable_search_query_generation: true
+openwebui_web_search_result_count: 5
+openwebui_web_search_concurrent_requests: 2
+searxng_query_url: "http://searxng:8080/search?q=<query>&format=json"
+ollama_base_url: "http://ollama:11434"
+openwebui_default_models: "llama3.1:8b deepseek-r1:7b qwen2.5-coder:7b"
+openwebui_default_prompt_suggestions:
+  - { title: "Code review",        content: "Review the following code and point out bugs, security issues, and style problems." }
+  - { title: "Explain a snippet",  content: "Explain what this code does and how to improve it." }
+  - { title: "Research topic",     content: "Summarize recent developments on <topic> with citations and links." }
+  - { title: "Write tests",        content: "Generate unit tests for this function with edge cases." }
+
 
 # ----------  Elasticsearch ----------
 es_version: "8.13.4"
