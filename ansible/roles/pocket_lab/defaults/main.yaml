@@ -54,7 +54,7 @@ ollama_max_queue: 512
 
 
 # ---------- openwebui ----------
-openwebui_version: "v0.6.9"
+openwebui_version: "v0.6.22"
 openwebui_port: "8080"
 openwebui_admin_email: "admin@example.com"
 openwebui_admin_password: "changeme"
@@ -68,7 +68,7 @@ openwebui_offline_mode: false
 openwebui_enable_version_update_check: false
 openwebui_enable_web_search: true
 openwebui_web_search_engine: "searxng"
-openwebui_enable_search_query_generation: false
+openwebui_enable_search_query_generation: true
 openwebui_web_search_result_count: 5
 openwebui_web_search_concurrent_requests: 2
 searxng_query_url: "http://searxng:8080/search?q=<query>&format=json"
