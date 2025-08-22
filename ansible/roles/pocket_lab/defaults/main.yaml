@@ -32,9 +32,14 @@ portainer_port: "9000"
 
 # ---------- n8n ----------
 n8n_version: "1.50.0"
+webhook_url: "https://n8n.{{ stack_domain }}/"
+n8n_host: "n8n.{{ stack_domain }}"
+n8n_protocol: "https"
+n8n_editor_base_url: "https://n8n.{{ stack_domain }}/"
 n8n_admin_email: "admin@example.com"
 n8n_admin_password: "changeme"
 n8n_basic_auth_active: false
+n8n_user_management_disabled: true
 n8n_personalization_enabled: false
 n8n_diagnostics_enabled: false
 n8n_version_notifications_enabled: false
