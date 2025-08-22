@@ -216,6 +216,11 @@ service starts. The script resets user management once and uses
 global owner account. It marks the database so this runs only once. If the
 bootstrap fails the stack still starts but no owner will exist.
 
+n8n is served through Traefik at `https://n8n.${TRAEFIK_DOMAIN}`. The env
+file wires this domain into `WEBHOOK_URL`, `N8N_HOST` and `N8N_PROTOCOL`
+(optionally `N8N_EDITOR_BASE_URL`) so OAuth callbacks use the correct HTTPS
+origin.
+
 ---
 
 ### Open WebUI 🌐
@@ -602,8 +607,11 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `N8N_ADMIN_PASSWORD` | `changeme` | n8n | n8n owner password. |  |
 | `N8N_BASIC_AUTH_ACTIVE` | `false` | n8n | Enable n8n basic auth before the UI loads. |  |
 | `N8N_DIAGNOSTICS_ENABLED` | `false` | n8n | Share diagnostic data. |  |
+| `N8N_EDITOR_BASE_URL` | `https://n8n.ai.lab.example.com/` | n8n | Base URL for the n8n editor. |  |
 | `N8N_EMAIL_MODE` | `smtp` | n8n | E‑mail mode for n8n notifications. |  |
+| `N8N_HOST` | `n8n.ai.lab.example.com` | n8n | Domain used by n8n. |  |
 | `N8N_PERSONALIZATION_ENABLED` | `false` | n8n | Share anonymous telemetry (false recommended). |  |
+| `N8N_PROTOCOL` | `https` | n8n | Protocol for building callback URLs. |  |
 | `N8N_SMTP_HOST` | `smtp` | n8n | SMTP relay host for n8n e‑mails. |  |
 | `N8N_SMTP_PORT` | `25` | n8n | SMTP relay port. |  |
 | `N8N_SMTP_SENDER` | `"n8n <admin@example.com>"` | n8n | “From:” address used in n8n mails. |  |
@@ -659,6 +667,7 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `TRAEFIK_LE_EMAIL` | `admin@example.com` | Traefik | Contact e‑mail for Let’s Encrypt. |  |
 | `TRAEFIK_VERSION` | `3.4.1` | Traefik | Traefik docker image tag. |  |
 | `TS_AUTHKEY` | `-` | Tailscale | Authentication key used to connect to your personal Tailscale tenant |  |
+| `WEBHOOK_URL` | `https://n8n.ai.lab.example.com/` | n8n | External webhook base URL for n8n. |  |
 | `WEBUI_URL` | `` | Open WebUI | External URL for the WebUI. |  |
 | `WEB_SEARCH_CONCURRENT_REQUESTS` | `2` | Web search | Parallel search requests. |  |
 | `WEB_SEARCH_ENGINE` | `searxng` | Web search | Search engine to use. |  |
