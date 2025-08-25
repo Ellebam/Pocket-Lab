@@ -363,15 +363,13 @@ services:
 
   minio-bootstrap:
     <<: *common
-    image: quay.io/minio/mc:${MINIO_VERSION}
+    image: quay.io/minio/mc:latest
     container_name: minio-bootstrap
     depends_on:
       minio:
         condition: service_started
-    entrypoint:
-      - sh
-      - -c
-      - mc alias set local http://minio:${MINIO_PORT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && mc mb --ignore-existing local/${NCA_S3_BUCKET}
+    entrypoint: []
+    command: ["sh", "-c", "mc alias set local http://minio:$${MINIO_PORT} $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} && mc mb --ignore-existing local/$${NCA_S3_BUCKET}"]
     restart: "no"
 
   minio:

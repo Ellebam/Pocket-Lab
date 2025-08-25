@@ -147,9 +147,9 @@ llm_image2text_model: ""
 
 # ---------- no-code architects toolkit ----------
 nca_toolkit_version: "latest"
-nca_api_key: ""
+nca_api_key: "replace_me"
 nca_s3_endpoint: "http://minio:{{ minio_port }}"
-nca_s3_bucket: "pocket_lab"
+nca_s3_bucket: "pocket-lab"
 nca_s3_access_key: "{{ minio_root_user }}"
 nca_s3_secret_key: "{{ minio_root_password }}"
 
