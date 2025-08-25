@@ -37,6 +37,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
     - [Loki 📜](#loki-)
     - [SMTP relay ✉️](#smtp-relay-️)
     - [Web search (Open WebUI + SearXNG) 🔎](#web-search-open-webui--searxng-)
+    - [No-Code Architects Toolkit 🧰](#no-code-architects-toolkit-)
     - [Typical workflows](#typical-workflows)
     - [Provisioning with Ansible](#provisioning-with-ansible)
       - [First-time setup (day-0 guide)](#first-time-setup-day-0-guide)
@@ -423,6 +424,10 @@ ENABLE_SEARCH_QUERY_GENERATION=false
 ```
 
 > Why SearXNG? It avoids public-instance rate limits and API blocks while keeping search local to your stack. Open WebUI discovers it through `WEB_SEARCH_ENGINE=searxng` + `SEARXNG_QUERY_URL`. See Open WebUI env config & tutorial. Also ensure SearXNG exposes JSON (`search.formats: [html, json]`). :contentReference[oaicite:2]{index=2}
+
+### No-Code Architects Toolkit 🧰
+
+Internal toolkit service available on the private network at `http://ncat:8080`. It targets the bundled MinIO (`http://minio:9000`) and stores data in the `pocket_lab` bucket by default. Configure it with `NCA_VERSION`, `NCA_API_KEY`, `NCA_S3_ENDPOINT`, `NCA_S3_BUCKET`, `NCA_S3_ACCESS_KEY` and `NCA_S3_SECRET_KEY`.
 
 ---
 ### Typical workflows
