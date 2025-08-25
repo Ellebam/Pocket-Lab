@@ -145,6 +145,14 @@ llm_rerank_model: ""
 llm_asr_model: ""
 llm_image2text_model: ""
 
+# ---------- no-code architects toolkit ----------
+nca_toolkit_version: "latest"
+nca_api_key: ""
+nca_s3_endpoint: ""
+nca_s3_bucket: ""
+nca_s3_access_key: ""
+nca_s3_secret_key: ""
+
 # ---------- Tailscale ----------
 ts_authkey: ""
 docker_bridge_subnet: "172.20.0.0/16"
