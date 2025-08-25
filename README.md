@@ -427,7 +427,7 @@ ENABLE_SEARCH_QUERY_GENERATION=false
 
 ### No-Code Architects Toolkit 🧰
 
-Internal toolkit service available on the private network at `http://ncat:8080`. Configure it with `NCA_VERSION`, `NCA_API_KEY`, `NCA_S3_ENDPOINT`, `NCA_S3_BUCKET`, `NCA_S3_ACCESS_KEY` and `NCA_S3_SECRET_KEY`.
+Internal toolkit service available on the private network at `http://ncat:8080`. It targets the bundled MinIO (`http://minio:9000`) and stores data in the `pocket_lab` bucket by default. Configure it with `NCA_VERSION`, `NCA_API_KEY`, `NCA_S3_ENDPOINT`, `NCA_S3_BUCKET`, `NCA_S3_ACCESS_KEY` and `NCA_S3_SECRET_KEY`.
 
 ---
 ### Typical workflows

@@ -361,6 +361,19 @@ services:
       timeout: 8s
       retries: 5
 
+  minio-bootstrap:
+    <<: *common
+    image: quay.io/minio/mc:${MINIO_VERSION}
+    container_name: minio-bootstrap
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint:
+      - sh
+      - -c
+      - mc alias set local http://minio:${MINIO_PORT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && mc mb --ignore-existing local/${NCA_S3_BUCKET}
+    restart: "no"
+
   minio:
     <<: *common
     restart: on-failure
@@ -461,14 +474,17 @@ services:
     <<: *common
     image: stephengpope/no-code-architects-toolkit:${NCA_VERSION}
     container_name: ncat
+    depends_on:
+      minio-bootstrap:
+        condition: service_completed_successfully
     environment:
-    - APP_NAME=PocketLab
-    - APP_URL=http://ncat:8080
-    - API_KEY=${NCA_API_KEY}
-    - S3_ENDPOINT=${NCA_S3_ENDPOINT}
-    - S3_BUCKET=${NCA_S3_BUCKET}
-    - S3_ACCESS_KEY=${NCA_S3_ACCESS_KEY}
-    - S3_SECRET_KEY=${NCA_S3_SECRET_KEY}
+      - APP_NAME=PocketLab
+      - APP_URL=http://ncat:8080
+      - API_KEY=${NCA_API_KEY}
+      - S3_ENDPOINT=${NCA_S3_ENDPOINT}
+      - S3_BUCKET=${NCA_S3_BUCKET}
+      - S3_ACCESS_KEY=${NCA_S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${NCA_S3_SECRET_KEY}
     volumes:
     - ncat-storage:/var/www/html/storage/app
     - ncat-logs:/var/www/html/storage/logs
