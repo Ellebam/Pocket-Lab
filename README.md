@@ -24,6 +24,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
     - [n8n 🔁](#n8n-)
     - [Open WebUI 🌐](#open-webui-)
     - [RAGFlow 📚](#ragflow-)
+    - [Stirling PDF 📄](#stirling-pdf-)
     - [Ollama 🦙](#ollama-)
     - [MinIO ☁️](#minio-️)
     - [Secure-access layer - Tailscale 🔐](#secure-access-layer---tailscale-)
@@ -58,6 +59,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
 | Reverse‑proxy   | Traefik                                   |
 | LLMs & chat     | Ollama, Open WebUI                        |
 | Workflow        | n8n                                       |
+| Document tools  | Stirling PDF                              |
 | Retrieval & RAG | RAGFlow, Elasticsearch, Infinity          |
 | Data plane      | MySQL, MinIO (S3), Valkey (Redis)         |
 | Observability   | Prometheus + Node‑Exporter, Grafana, Loki |
@@ -260,7 +262,11 @@ block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
 different provider or model.
 
 ---
+### Stirling PDF 📄
 
+Stirling PDF offers browser-based PDF manipulation at `https://pdf.${TRAEFIK_DOMAIN}`. Its own login is disabled by default (`STIRLING_PDF_ENABLE_LOGIN=false`) and access is protected through Traefik's Basic-Auth middleware. Set `STIRLING_PDF_ENABLE_LOGIN=true` to enable the application's sign-in page. Configuration and data persist in dedicated volumes.
+
+---
 
 ### Ollama 🦙
 
