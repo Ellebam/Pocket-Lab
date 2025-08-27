@@ -466,6 +466,29 @@ services:
     - traefik.http.services.ragflow-service.loadbalancer.server.port=80
 
   ############################
+  #        PDF TOOLS        #
+  ############################
+  stirling-pdf:
+    <<: *common
+    image: stirlingtools/stirling-pdf:${STIRLING_PDF_VERSION}
+    container_name: stirling-pdf
+    volumes:
+    - stirling-pdf-data:/usr/share/tessdata
+    - stirling-pdf-config:/configs
+    - stirling-pdf-logs:/logs
+    expose:
+    - "${STIRLING_PDF_PORT}"
+    environment:
+    - SECURITY_ENABLELOGIN=${STIRLING_PDF_ENABLE_LOGIN}
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.stirlingpdf.rule=Host(`pdf.${TRAEFIK_DOMAIN}`)
+    - traefik.http.routers.stirlingpdf.entrypoints=websecure
+    - traefik.http.routers.stirlingpdf.tls.certresolver=le-dns
+    - traefik.http.routers.stirlingpdf.middlewares=auth@docker
+    - traefik.http.services.stirlingpdf.loadbalancer.server.port=${STIRLING_PDF_PORT}
+
+  ############################
   # NO-CODE ARCHITECTS TOOLKIT
   ############################
   ncat:
@@ -518,6 +541,9 @@ volumes:
   le-data:
   openwebui-data:
   tailscale-state:
+  stirling-pdf-data:
+  stirling-pdf-config:
+  stirling-pdf-logs:
   ncat-storage:
   ncat-logs:
 

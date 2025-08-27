@@ -120,6 +120,12 @@ redis_port: 6379
 redis_host: "redis"
 
 
+# ---------- stirling pdf ----------
+stirling_pdf_version: "latest"
+stirling_pdf_port: "8080"
+stirling_pdf_enable_login: false
+
+
 # -------------- ragflow ------------
 svr_http_port: 9380
 
