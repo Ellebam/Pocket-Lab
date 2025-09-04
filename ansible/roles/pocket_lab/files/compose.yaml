@@ -433,6 +433,48 @@ services:
     volumes:
     - redis_data:/data
 
+  tei:
+    <<: *common
+    image: ghcr.io/huggingface/text-embeddings-inference:${TEI_VERSION}
+    container_name: tei
+    environment:
+    - MODEL_ID=${LLM_RERANK_MODEL}
+    - HUGGINGFACE_HUB_CACHE=/data
+    - HF_HOME=/data
+    - OMP_NUM_THREADS=1
+    - TOKENIZERS_PARALLELISM=false
+    - HF_HUB_ENABLE_HF_TRANSFER=1
+    volumes:
+    - tei:/data
+    expose:
+    - "80"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:80/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+
+  rerank-bridge:
+    <<: *common
+    image: python:3.11-slim
+    container_name: rerank-bridge
+    depends_on:
+      tei: { condition: service_healthy }
+    environment:
+    - TEI_BASE_URL=http://tei:80
+    - MODEL_NAME=${LLM_RERANK_MODEL}
+    working_dir: /app
+    volumes:
+    - ./rerank-bridge/app.py:/app/app.py:ro
+    command: bash -lc "pip install --no-cache-dir fastapi uvicorn[standard] httpx && uvicorn app:app --host 0.0.0.0 --port 8000"
+    expose:
+    - "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+
   ragflow:
     <<: *common
     image: infiniflow/ragflow:${RAGFLOW_VERSION}
@@ -442,6 +484,7 @@ services:
       infinity: { condition: service_started }
       mysql: { condition: service_healthy }
       valkey: { condition: service_healthy}
+      rerank-bridge: { condition: service_healthy }
     expose:
     - "${SVR_HTTP_PORT}"
     - "9382" # MCP port 
@@ -540,6 +583,7 @@ volumes:
   ragflow-history:
   le-data:
   openwebui-data:
+  tei:
   tailscale-state:
   stirling-pdf-data:
   stirling-pdf-config:

@@ -71,7 +71,7 @@ user_default_llm:
   default_models:
     chat_model: '${LLM_CHAT_MODEL:-llama3.1:8b}'
     embedding_model: '${LLM_EMBEDDING_MODEL:-bge-m3}'
-    rerank_model: '${LLM_RERANK_MODEL:-}'
+    rerank_model: '${LLM_RERANK_MODEL:-onnx-community/bge-reranker-v2-m3-ONNX}'
     asr_model: '${LLM_ASR_MODEL:-}'
     image2text_model: '${LLM_IMAGE2TEXT_MODEL:-}'
 # oauth:
