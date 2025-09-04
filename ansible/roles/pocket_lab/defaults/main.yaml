@@ -125,6 +125,9 @@ stirling_pdf_version: "latest"
 stirling_pdf_port: "8080"
 stirling_pdf_enable_login: false
 
+# ---------- rerank tei ----------
+tei_version: "cpu-1.8"
+
 
 # -------------- ragflow ------------
 svr_http_port: 9380
@@ -147,7 +150,7 @@ llm_api_key: ""
 llm_api_base: "http://ollama:11434"
 llm_chat_model: "llama3.1:8b"
 llm_embedding_model: "bge-m3"
-llm_rerank_model: ""
+llm_rerank_model: "onnx-community/bge-reranker-v2-m3-ONNX"
 llm_asr_model: ""
 llm_image2text_model: ""
 

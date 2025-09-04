@@ -60,7 +60,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
 | LLMs & chat     | Ollama, Open WebUI                        |
 | Workflow        | n8n                                       |
 | Document tools  | Stirling PDF                              |
-| Retrieval & RAG | RAGFlow, Elasticsearch, Infinity          |
+| Retrieval & RAG | RAGFlow, Elasticsearch, Infinity, TEI reranker |
 | Data plane      | MySQL, MinIO (S3), Valkey (Redis)         |
 | Observability   | Prometheus + Node‑Exporter, Grafana, Loki |
 | Secure access   | Tailscale subnet router                   |
@@ -260,6 +260,13 @@ The default language model backend is controlled via the `user_default_llm`
 block in `service_conf.yaml`. Override values such as `LLM_FACTORY`,
 `LLM_API_KEY` or `LLM_CHAT_MODEL` in your `.env` to point RAGFlow at a
 different provider or model.
+
+### TEI reranker 🔍
+
+A lightweight bridge forwards OpenAI‑style rerank requests to a dedicated
+HuggingFace Text Embeddings Inference container. The default model is
+`onnx-community/bge-reranker-v2-m3-ONNX` and can be changed via
+`LLM_RERANK_MODEL`.
 
 ---
 ### Stirling PDF 📄
@@ -601,6 +608,14 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `INFINITY_THRIFT_PORT` | `23817` | Infinity | Infinity Thrift RPC port. |  |
 | `INFINITY_VERSION` | `v0.6.0-dev3` | Infinity | Infinity vector database image tag. |  |
 | `LOKI_VERSION` | `3.0.0` | Misc | Grafana Loki log aggregator version. |  |
+| `LLM_API_BASE` | `http://ollama:11434` | RAGFlow | Base URL for the language model API. |  |
+| `LLM_API_KEY` | `` | RAGFlow | API key for external LLM providers. |  |
+| `LLM_ASR_MODEL` | `` | RAGFlow | Default automatic speech recognition model. |  |
+| `LLM_CHAT_MODEL` | `llama3.1:8b` | RAGFlow | Default chat model. |  |
+| `LLM_EMBEDDING_MODEL` | `bge-m3` | RAGFlow | Default embedding model. |  |
+| `LLM_FACTORY` | `Ollama` | RAGFlow | Provider factory for language models. |  |
+| `LLM_IMAGE2TEXT_MODEL` | `` | RAGFlow | Default image-to-text model. |  |
+| `LLM_RERANK_MODEL` | `onnx-community/bge-reranker-v2-m3-ONNX` | RAGFlow | Default cross-encoder rerank model. |  |
 | `MACOS` | `false` | Global | Set true when building on MacOS (disables some optimisations). |  |
 | `MEM_LIMIT` | `4g` | Global | Memory limit for Elasticsearch and Infinity. |  |
 | `MINIO_CONSOLE_PORT` | `9001` | MinIO | MinIO web console port. |  |
@@ -672,6 +687,7 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `SMTP_PORT` | `25` | SMTP relay | Port the SMTP relay listens on. |  |
 | `SMTP_SSL` | `false` | SMTP relay | Enable STARTTLS (true/false). |  |
 | `SVR_HTTP_PORT` | `9380` | RAGFlow | RAGFlow backend HTTP port. |  |
+| `TEI_VERSION` | `cpu-1.8` | RAGFlow | HuggingFace TEI image tag for reranker. |  |
 | `TIMEZONE` | `Europe/Berlin` | Global | Container timezone. |  |
 | `TRAEFIK_BASIC_AUTH` | `admin:$2y$05$F6KSt6mnvnqqPhQ3VTLIAugnQuhhtJAhdi09Qf0oxBysbbZacqbXK` | Traefik | htpasswd‑style `user:hash`.  Demo credentials = **admin / admin** – replace for production. | user\:hash used by Traefik basic-auth middleware for most UIs. |
 | `TRAEFIK_DOMAIN` | `ai.lab.example.com` | Traefik | Apex domain under which all sub‑services are published. |  |
