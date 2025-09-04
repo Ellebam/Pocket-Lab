@@ -445,7 +445,8 @@ services:
       - TOKENIZERS_PARALLELISM=false
       - HF_HUB_ENABLE_HF_TRANSFER=1
       - MAX_CONCURRENT_REQUESTS=16
-      - MAX_CLIENT_BATCH_SIZE=4
+      - MAX_CLIENT_BATCH_SIZE=64
+      - MAX_BATCH_TOKENS=16384
       - AUTO_TRUNCATE=true
     command: [ "--port", "80", "--payload-limit", "52428800" ]
     volumes:
@@ -467,6 +468,7 @@ services:
     environment:
       - TEI_BASE_URL=http://tei:80
       - MODEL_NAME=${LLM_RERANK_MODEL}
+      - TEI_CLIENT_BATCH_MAX=64
       - RERANK_MAX_DOCS_PER_CALL=256
       - TEI_PAYLOAD_SOFT_LIMIT=1800000
     working_dir: /app
