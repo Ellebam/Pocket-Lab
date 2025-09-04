@@ -438,12 +438,16 @@ services:
     image: ghcr.io/huggingface/text-embeddings-inference:${TEI_VERSION}
     container_name: tei
     environment:
-    - MODEL_ID=${LLM_RERANK_MODEL}
-    - HUGGINGFACE_HUB_CACHE=/data
-    - HF_HOME=/data
-    - OMP_NUM_THREADS=1
-    - TOKENIZERS_PARALLELISM=false
-    - HF_HUB_ENABLE_HF_TRANSFER=1
+      - MODEL_ID=${LLM_RERANK_MODEL}
+      - HUGGINGFACE_HUB_CACHE=/data
+      - HF_HOME=/data
+      - OMP_NUM_THREADS=1
+      - TOKENIZERS_PARALLELISM=false
+      - HF_HUB_ENABLE_HF_TRANSFER=1
+      - MAX_CONCURRENT_REQUESTS=16
+      - MAX_CLIENT_BATCH_SIZE=4
+      - AUTO_TRUNCATE=true
+    command: [ "--port", "80", "--payload-limit", "52428800" ]
     volumes:
     - tei:/data
     expose:
@@ -461,19 +465,36 @@ services:
     depends_on:
       tei: { condition: service_healthy }
     environment:
-    - TEI_BASE_URL=http://tei:80
-    - MODEL_NAME=${LLM_RERANK_MODEL}
+      - TEI_BASE_URL=http://tei:80
+      - MODEL_NAME=${LLM_RERANK_MODEL}
+      - RERANK_MAX_DOCS_PER_CALL=256
+      - TEI_PAYLOAD_SOFT_LIMIT=1800000
     working_dir: /app
     volumes:
-    - ./rerank-bridge/app.py:/app/app.py:ro
-    command: bash -lc "pip install --no-cache-dir fastapi uvicorn[standard] httpx && uvicorn app:app --host 0.0.0.0 --port 8000"
-    expose:
-    - "8000"
+      - ./rerank-bridge/app.py:/app/app.py:ro
+    command: >
+      bash -lc "pip install --no-cache-dir fastapi uvicorn[standard] httpx &&
+                uvicorn app:app --host 0.0.0.0 --port 8000
+                --h11-max-incomplete-event-size 52428800
+                --timeout-keep-alive 5"
+    expose: ["8000"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      test:
+        - CMD-SHELL
+        - |
+          python - <<'PY'
+          import urllib.request,sys
+          try:
+              r=urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=2)
+              sys.exit(0 if r.status==200 else 1)
+          except Exception:
+              sys.exit(1)
+          PY
       interval: 15s
       timeout: 3s
       retries: 10
+
+
 
   ragflow:
     <<: *common
