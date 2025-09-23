@@ -1,0 +1,54 @@
+---
+name: pocket-lab-ci
+
+'on':
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linters
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-lint yamllint
+
+      - name: Run yamllint (tolerant)
+        run: |
+          if command -v yamllint >/dev/null; then
+            yamllint -s . || (echo "yamllint found issues" && exit 1)
+          fi
+
+      - name: Run ansible-lint if ansible dir exists
+        run: |
+          if [ -d "ansible" ]; then
+            ansible-lint ansible || (echo "ansible-lint found issues" && exit 1)
+          fi
+
+      - name: Validate Docker Compose config
+        run: |
+          FILE="ansible/roles/pocket_lab/files/compose.yaml"
+          if [ -f "$FILE" ]; then
+            docker compose -f "$FILE" config >/dev/null
+          else
+            echo "Compose file not found at $FILE"
+            exit 1
+          fi
+
+      - name: Ensure docs/ENVIRONMENT.md exists (soft check)
+        run: |
+          if [ -f docs/ENVIRONMENT.md ]; then
+            echo "ENVIRONMENT.md present"
+          else
+            echo "ENVIRONMENT.md missing (not fatal)"
+          fi

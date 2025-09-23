@@ -416,7 +416,7 @@ Pocket-Lab ships a private [SearXNG](https://docs.searxng.org) instance (interna
 ```env
 # endpoints & privacy
 WEBUI_URL=https://chat.<your-domain>
-OFFLINE_MODE=false
+OFFLINE_MODE=true
 ENABLE_VERSION_UPDATE_CHECK=false
 OLLAMA_BASE_URL=http://ollama:11434
 
@@ -632,7 +632,7 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `N8N_VERSION` | `1.50.0` | n8n | n8n automation tool version. |  |
 | `N8N_VERSION_NOTIFICATIONS_ENABLED` | `false` | n8n | Allow update notifications. |  |
 | `NODE_EXPORTER_VERSION` | `v1.9.1` | Misc | Prometheus node exporter version. |  |
-| `OFFLINE_MODE` | `false` | Open WebUI | Disable network access. |  |
+| `OFFLINE_MODE` | `true` | Open WebUI | Disable network access. |  |
 | `OLLAMA_BASE_URL` | `http://ollama:11434` | Open WebUI | Base URL for the Ollama API. |  |
 | `OLLAMA_CONTEXT_SIZE` | `4096` | Ollama | Default context window. |  |
 | `OLLAMA_IDLE_TIMEOUT` | `120s` | Ollama | Time before idle models unload. |  |
@@ -694,3 +694,12 @@ For deep‑links and automatic change‑tracking the same table is regenerated i
 - Run a quick syntax check before committing:\
   `ansible-playbook --syntax-check ansible/site.yaml && docker compose -f ansible/roles/pocket_lab/files/compose.yaml config`
 - Keep this README and `docs/ENVIRONMENT.md` up‑to‑date when touching variables or behaviour.
+
+## Release Process
+
+We follow SemVer. Tag releases and publish notes.
+
+```bash
+git tag -a v0.1.0 -m "Pocket-Lab v0.1.0 — first public release"
+git push origin v0.1.0
+```
