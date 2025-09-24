@@ -1,1 +1,3 @@
-- import_playbook: plays/00-deploy.yaml
+---
+- name: Run Pocket-Lab deployment playbook
+  import_playbook: plays/00-deploy.yaml

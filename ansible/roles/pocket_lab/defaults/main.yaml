@@ -1,3 +1,4 @@
+---
 stack_state: present
 # ---------- Paths / versions ----------
 docker_version: "latest"
@@ -18,7 +19,6 @@ traefik_version: "v3.4.1"
 # create with:  htpasswd -nbB user "yourpassword"
 # Current set Defaults - User: admin | Password: admin
 basic_auth: 'admin:$2y$05$F6KSt6mnvnqqPhQ3VTLIAugnQuhhtJAhdi09Qf0oxBysbbZacqbXK'
-
 
 # ───── Observability  ────
 prometheus_version: "v3.3.1"
@@ -56,7 +56,6 @@ ollama_keep_alive: 5m
 ollama_max_loaded_models: 3
 ollama_max_queue: 512
 
-
 # ---------- openwebui ----------
 openwebui_version: "v0.6.22"
 openwebui_port: "8080"
@@ -79,11 +78,19 @@ searxng_query_url: "http://searxng:8080/search?q=<query>&format=json"
 ollama_base_url: "http://ollama:11434"
 openwebui_default_models: "llama3.1:8b deepseek-r1:7b qwen2.5-coder:7b"
 openwebui_default_prompt_suggestions:
-  - { title: "Code review",        content: "Review the following code and point out bugs, security issues, and style problems." }
-  - { title: "Explain a snippet",  content: "Explain what this code does and how to improve it." }
-  - { title: "Research topic",     content: "Summarize recent developments on <topic> with citations and links." }
-  - { title: "Write tests",        content: "Generate unit tests for this function with edge cases." }
-
+  - title: "Code review"
+    content: >-
+      Review the following code and point out bugs, security issues,
+      and style problems.
+  - title: "Explain a snippet"
+    content: >-
+      Explain what this code does and how to improve it.
+  - title: "Research topic"
+    content: >-
+      Summarize recent developments on <topic> with citations and links.
+  - title: "Write tests"
+    content: >-
+      Generate unit tests for this function with edge cases.
 
 # ----------  Elasticsearch ----------
 es_version: "8.13.4"
@@ -105,7 +112,6 @@ mysql_port: 3306
 mysql_host: "mysql"
 mysql_dbname: "pocket_lab"
 
-
 # --------- minio -------------
 minio_version: "RELEASE.2025-04-22T22-12-26Z"
 minio_port: 9000
@@ -119,12 +125,10 @@ redis_password: "changeme"
 redis_port: 6379
 redis_host: "redis"
 
-
 # ---------- stirling pdf ----------
 stirling_pdf_version: "latest"
 stirling_pdf_port: "8080"
 stirling_pdf_enable_login: false
-
 
 # -------------- ragflow ------------
 svr_http_port: 9380
@@ -168,4 +172,3 @@ smtp_image: "boky/postfix:latest"
 smtp_host: "smtp"
 smtp_port: 25
 smtp_ssl: false
-

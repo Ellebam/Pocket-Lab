@@ -1,3 +1,4 @@
+---
 - name: Ensure compose directory exists
   ansible.builtin.file:
     path: "{{ compose_repo }}"
@@ -9,11 +10,12 @@
     src: "{{ role_path }}/files/"
     dest: "{{ compose_repo }}/"
     recursive: true
-    delete: true # remove files no longer under version control
+    delete: true  # remove files no longer under version control
     rsync_opts:
-    - "--chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r"
-    _ssh_args: >
-      -o IdentitiesOnly=yes {% if ansible_ssh_private_key_file is defined %} -i {{ ansible_ssh_private_key_file }} {% endif %}
+      - "--chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r"
+    _ssh_args: >-
+      -o IdentitiesOnly=yes {% if ansible_ssh_private_key_file is defined %}
+      -i {{ ansible_ssh_private_key_file }} {% endif %}
   notify: Restart compose stack
 
 - name: Render environment file
