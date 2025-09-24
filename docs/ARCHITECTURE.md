@@ -13,6 +13,7 @@ flowchart LR
 
   T --> OWUI[Open WebUI]
   T --> RAG[RAGFlow]
+  T --> N8N[n8n]
   T --> PDF[Stirling PDF]
   T --> Port[Portainer]
   T --> Sear[SearXNG]
@@ -24,6 +25,11 @@ flowchart LR
     RAG --> MY[(MySQL)]
     RAG --> MINIO[(MinIO / S3)]
     RAG --> VK[(Valkey)]
+    N8N --> OL
+    N8N --> ES
+    N8N --> MY
+    N8N --> MINIO
+    N8N --> VK
   end
 
   subgraph Observability
@@ -36,5 +42,6 @@ flowchart LR
 
 **Notes**
 - Traefik terminates TLS (ACME DNS-01). UIs behind basic auth where needed.
-- Open WebUI talks to Ollama. RAGFlow uses Infinity/Elasticsearch, MySQL, MinIO, Valkey.
+- Open WebUI, RAGFlow, and n8n share Ollama as the default LLM backend.
+- RAGFlow and n8n use Infinity/Elasticsearch, MySQL, MinIO, and Valkey for pipelines and automations.
 - Prometheus/Grafana/Loki provide metrics/logs.
