@@ -1,12 +1,13 @@
 # compose.yaml
 ---
+x-common-environment: &common-environment
+  TZ: ${TIMEZONE}
+
+x-common-networks: &common-networks
+  - backend
+
 x-common: &common
-  restart: unless-stopped
   env_file: .env
-  environment:
-    - TZ=${TIMEZONE}
-  networks:
-    - backend
 
 ############################
 #        OBSERVABILITY     #
@@ -15,6 +16,9 @@ services:
 
   prometheus:
     <<: *common
+    restart: unless-stopped
+    environment: *common-environment
+    networks: *common-networks
     image: prom/prometheus:${PROMETHEUS_VERSION}
     container_name: prometheus
     volumes:
@@ -32,6 +36,9 @@ services:
 
   loki:
     <<: *common
+    restart: unless-stopped
+    environment: *common-environment
+    networks: *common-networks
     image: grafana/loki:${LOKI_VERSION}
     container_name: loki
     volumes:
@@ -42,6 +49,8 @@ services:
 
   grafana:
     <<: *common
+    restart: unless-stopped
+    networks: *common-networks
     image: grafana/grafana:${GRAFANA_VERSION}
     container_name: grafana
     volumes:
@@ -49,7 +58,8 @@ services:
     expose:
       - "3000"
     environment:
-      - GF_INSTALL_PLUGINS=grafana-clock-panel
+      <<: *common-environment
+      GF_INSTALL_PLUGINS: grafana-clock-panel
     labels:
       - traefik.enable=true
       - traefik.http.routers.grafana.rule=Host(`grafana.${TRAEFIK_DOMAIN}`)
@@ -75,6 +85,9 @@ services:
   ############################
   traefik:
     <<: *common
+    restart: unless-stopped
+    environment: *common-environment
+    networks: *common-networks
     image: traefik:${TRAEFIK_VERSION}
     container_name: traefik
     ports:
@@ -136,14 +149,17 @@ services:
 
   smtp:
     <<: *common
+    restart: unless-stopped
+    networks: *common-networks
     image: ${SMTP_IMAGE}
     container_name: ${SMTP_HOST}
     # accept mail from stack containers only
     environment:
-      - ALLOWED_SENDER_DOMAINS=${TRAEFIK_DOMAIN}
-      - POSTFIX_myhostname=${SMTP_HOST}.${TRAEFIK_DOMAIN}
-      - POSTFIX_mynetworks=127.0.0.0/8 ${DOCKER_BRIDGE_SUBNET}
-      - POSTFIX_smtp_tls_security_level=may
+      <<: *common-environment
+      ALLOWED_SENDER_DOMAINS: ${TRAEFIK_DOMAIN}
+      POSTFIX_myhostname: ${SMTP_HOST}.${TRAEFIK_DOMAIN}
+      POSTFIX_mynetworks: "127.0.0.0/8 ${DOCKER_BRIDGE_SUBNET}"
+      POSTFIX_smtp_tls_security_level: may
     expose:
       - "${SMTP_PORT}"
     healthcheck:
@@ -153,6 +169,9 @@ services:
 
   portainer:
     <<: *common
+    restart: unless-stopped
+    environment: *common-environment
+    networks: *common-networks
     image: portainer/portainer-ce:${PORTAINER_VERSION}
     container_name: portainer
     expose:
@@ -174,6 +193,8 @@ services:
   ############################
   n8n-bootstrap:
     <<: *common
+    environment: *common-environment
+    networks: *common-networks
     image: n8nio/n8n:${N8N_VERSION}
     container_name: n8n-bootstrap
     restart: 'no'
@@ -188,6 +209,7 @@ services:
 
   n8n:
     <<: *common
+    networks: *common-networks
     image: n8nio/n8n:${N8N_VERSION}
     container_name: n8n
     depends_on:
@@ -195,8 +217,9 @@ services:
         condition: service_completed_successfully
     user: "1000:1000"             # run as the normal node user
     environment:
-      - NODE_ENV=production
-      - GENERIC_TIMEZONE=${TIMEZONE}
+      <<: *common-environment
+      NODE_ENV: production
+      GENERIC_TIMEZONE: ${TIMEZONE}
     restart: on-failure
     expose:
       - "5678"
@@ -222,9 +245,12 @@ services:
     restart: "no"
   ollama:
     <<: *common
+    restart: unless-stopped
+    networks: *common-networks
     image: ollama/ollama:${OLLAMA_VERSION}
     environment:
-      - OLLAMA_MODELS=/root/.ollama/models
+      <<: *common-environment
+      OLLAMA_MODELS: /root/.ollama/models
     container_name: ollama
     depends_on:
       ollama-bootstrap:
@@ -243,6 +269,8 @@ services:
 
   openwebui-bootstrap:
     <<: *common
+    environment: *common-environment
+    networks: *common-networks
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
     container_name: openwebui-bootstrap
     restart: "no"
@@ -254,6 +282,9 @@ services:
     command: ["python3", "/app/backend/create_admin.py"]
   openwebui:
     <<: *common
+    restart: unless-stopped
+    environment: *common-environment
+    networks: *common-networks
     image: ghcr.io/open-webui/open-webui:${OPENWEBUI_VERSION}
     container_name: openwebui
     volumes:
@@ -274,6 +305,8 @@ services:
   # --------------------------- WEB SEARCH ---------------------------
   searxng:
     <<: *common
+    restart: unless-stopped
+    environment: *common-environment
     image: searxng/searxng:latest
     container_name: searxng
     expose:
@@ -288,6 +321,8 @@ services:
   ############################
   elasticsearch:
     <<: *common
+    restart: unless-stopped
+    networks: *common-networks
     image: elasticsearch:${ES_VERSION}
     container_name: es01
     volumes:
@@ -295,17 +330,18 @@ services:
     expose:
       - "${ES_PORT}"
     environment:
-      - node.name=es01
-      - discovery.type=single-node
-      - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-      - ELASTIC_PASSWORD=${ES_PASSWORD}
-      - bootstrap.memory_lock=false
-      - ES_JAVA_OPTS=-Xms2g -Xmx2g
-      - cluster.routing.allocation.disk.watermark.low=5gb
-      - cluster.routing.allocation.disk.watermark.high=3gb
-      - cluster.routing.allocation.disk.watermark.flood_stage=2gb
+      <<: *common-environment
+      node.name: es01
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
+      ELASTIC_PASSWORD: ${ES_PASSWORD}
+      bootstrap.memory_lock: "false"
+      ES_JAVA_OPTS: -Xms2g -Xmx2g
+      cluster.routing.allocation.disk.watermark.low: 5gb
+      cluster.routing.allocation.disk.watermark.high: 3gb
+      cluster.routing.allocation.disk.watermark.flood_stage: 2gb
     mem_limit: ${MEM_LIMIT}
     ulimits:
       memlock:
@@ -321,6 +357,9 @@ services:
 
   infinity:
     <<: *common
+    restart: unless-stopped
+    environment: *common-environment
+    networks: *common-networks
     image: infiniflow/infinity:${INFINITY_VERSION}
     container_name: infinity
     volumes:
@@ -343,6 +382,8 @@ services:
 
   mysql:
     <<: *common
+    restart: unless-stopped
+    networks: *common-networks
     image: mysql:${MYSQL_VERSION}
     container_name: ${MYSQL_HOST}
     command:
@@ -357,7 +398,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      <<: *common-environment
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 15s
@@ -366,6 +408,8 @@ services:
 
   minio-bootstrap:
     <<: *common
+    environment: *common-environment
+    networks: *common-networks
     image: quay.io/minio/mc:latest
     container_name: minio-bootstrap
     depends_on:
@@ -384,6 +428,7 @@ services:
   minio:
     <<: *common
     restart: on-failure
+    networks: *common-networks
     image: quay.io/minio/minio:${MINIO_VERSION}
     container_name: minio
     command:
@@ -397,10 +442,11 @@ services:
     volumes:
       - minio_data:/data
     environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_SERVER_URL=http://minio:${MINIO_PORT}
-      - MINIO_BROWSER_REDIRECT_URL=https://minio.${TRAEFIK_DOMAIN}
+      <<: *common-environment
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_SERVER_URL: http://minio:${MINIO_PORT}
+      MINIO_BROWSER_REDIRECT_URL: https://minio.${TRAEFIK_DOMAIN}
 
 
     labels:
@@ -424,6 +470,8 @@ services:
     image: valkey/valkey:${REDIS_VERSION}
     container_name: redis
     restart: on-failure
+    environment: *common-environment
+    networks: *common-networks
     command:
       - redis-server
       - --requirepass
@@ -446,6 +494,9 @@ services:
     <<: *common
     image: infiniflow/ragflow:${RAGFLOW_VERSION}
     container_name: ragflow-server
+    restart: on-failure
+    environment: *common-environment
+    networks: *common-networks
     depends_on:
       elasticsearch: {condition: service_started}
       infinity: {condition: service_started}
@@ -465,7 +516,6 @@ services:
       - ./ragflow/nginx/nginx.conf:/etc/nginx/nginx.conf
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    restart: on-failure
     labels:
       - traefik.enable=true
       - traefik.http.routers.ragflow.rule=Host(`ragflow.${TRAEFIK_DOMAIN}`)
@@ -479,6 +529,8 @@ services:
   ############################
   stirling-pdf:
     <<: *common
+    restart: unless-stopped
+    networks: *common-networks
     image: stirlingtools/stirling-pdf:${STIRLING_PDF_VERSION}
     container_name: stirling-pdf
     volumes:
@@ -488,7 +540,8 @@ services:
     expose:
       - "${STIRLING_PDF_PORT}"
     environment:
-      - SECURITY_ENABLELOGIN=${STIRLING_PDF_ENABLE_LOGIN}
+      <<: *common-environment
+      SECURITY_ENABLELOGIN: ${STIRLING_PDF_ENABLE_LOGIN}
     labels:
       - traefik.enable=true
       - traefik.http.routers.stirlingpdf.rule=Host(`pdf.${TRAEFIK_DOMAIN}`)
@@ -502,19 +555,22 @@ services:
   ############################
   ncat:
     <<: *common
+    restart: unless-stopped
+    networks: *common-networks
     image: stephengpope/no-code-architects-toolkit:${NCA_VERSION}
     container_name: ncat
     depends_on:
       minio-bootstrap:
         condition: service_completed_successfully
     environment:
-      - APP_NAME=PocketLab
-      - APP_URL=http://ncat:8080
-      - API_KEY=${NCA_API_KEY}
-      - S3_ENDPOINT=${NCA_S3_ENDPOINT}
-      - S3_BUCKET=${NCA_S3_BUCKET}
-      - S3_ACCESS_KEY=${NCA_S3_ACCESS_KEY}
-      - S3_SECRET_KEY=${NCA_S3_SECRET_KEY}
+      <<: *common-environment
+      APP_NAME: PocketLab
+      APP_URL: http://ncat:8080
+      API_KEY: ${NCA_API_KEY}
+      S3_ENDPOINT: ${NCA_S3_ENDPOINT}
+      S3_BUCKET: ${NCA_S3_BUCKET}
+      S3_ACCESS_KEY: ${NCA_S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${NCA_S3_SECRET_KEY}
     volumes:
       - ncat-storage:/var/www/html/storage/app
       - ncat-logs:/var/www/html/storage/logs

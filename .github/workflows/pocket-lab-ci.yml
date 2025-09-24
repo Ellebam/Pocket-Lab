@@ -18,10 +18,23 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install linters
+      - name: Install Ansible tooling and linters
         run: |
           python -m pip install --upgrade pip
-          pip install ansible-lint yamllint
+          pip install ansible-core ansible-lint yamllint
+
+      - name: Install Ansible dependencies
+        run: |
+          if [ -f "ansible/requirements.yaml" ]; then
+            ansible-galaxy collection install \
+              --collections-path ~/.ansible/collections \
+              -r ansible/requirements.yaml \
+              --force
+            ansible-galaxy role install \
+              --roles-path ~/.ansible/roles \
+              -r ansible/requirements.yaml \
+              --force
+          fi
 
       - name: Run yamllint (tolerant)
         run: |
@@ -33,6 +46,13 @@ jobs:
         run: |
           if [ -d "ansible" ]; then
             ansible-lint ansible || (echo "ansible-lint found issues" && exit 1)
+          fi
+
+      - name: Prepare Compose environment file
+        run: |
+          if [ -f ".env.template" ]; then
+            cp .env.template .env
+            cp .env.template ansible/roles/pocket_lab/files/.env
           fi
 
       - name: Validate Docker Compose config
