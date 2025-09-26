@@ -48,6 +48,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
       - [Role overview](#role-overview)
     - [Table of all Variables](#table-of-all-variables)
   - [Contributing \& CI hints](#contributing--ci-hints)
+  - [Release Process](#release-process)
 
 
 ---
@@ -509,6 +510,12 @@ Then `task ansible_full`.
 task ansible_check   # dry-run
 task ansible_deploy  # re-run deploy play
 ```
+> [!IMPORTANT]  
+> The very first run of the ansible playbook will trigger the pulling of all needed container images for the setup of this AI lab. Since many images are very large this can take a considerable amount of time, based on your machines network connection specifics. You might run into timeout errors resulting in the ansible run to fail. Either rerun the ansible playbook or connect to your machine and do a `docker compose up -d` in the `/opt/pocket_lab` directory (or the path you have specified for the deployment of the lab) to finish the initial installation.
+
+
+> [!WARNING]
+> Sometimes one of the docker containers might not come up correctly because of initial errors since the initial certificate creation might take some minutes. Either rerun the ansible automation or perform a `docker compose down && docker compose up -d` in the folder with the `compose.yaml` and `.env` files. If only some of the containers did not start you can also just do a `docker compose up -d`, this will never break your setup.
 
 ### Private / no-public-IP deployments (localhost or tailnet)
 
