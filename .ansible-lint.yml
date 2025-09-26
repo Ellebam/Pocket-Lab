@@ -1,6 +1,8 @@
 ---
 use_default_rules: true
 skip_list:
-- var-naming[no-role-prefix]
-- yaml[brackets]
-- yaml[indentation]
+  - var-naming[no-role-prefix]
+  - yaml[brackets]
+  - yaml[indentation]
+exclude_paths:
+  - ansible/roles/geerlingguy.docker

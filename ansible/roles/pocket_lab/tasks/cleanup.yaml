@@ -1,9 +1,10 @@
+---
 - name: Stop & remove compose stack
   community.docker.docker_compose_v2:
     project_src: "{{ compose_repo }}"
     state: absent
     files:
-    - compose.yaml
+      - compose.yaml
 
 - name: Remove compose directory entirely
   ansible.builtin.file:

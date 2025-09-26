@@ -48,6 +48,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
       - [Role overview](#role-overview)
     - [Table of all Variables](#table-of-all-variables)
   - [Contributing \& CI hints](#contributing--ci-hints)
+  - [Release Process](#release-process)
 
 
 ---
@@ -416,7 +417,7 @@ Pocket-Lab ships a private [SearXNG](https://docs.searxng.org) instance (interna
 ```env
 # endpoints & privacy
 WEBUI_URL=https://chat.<your-domain>
-OFFLINE_MODE=false
+OFFLINE_MODE=true
 ENABLE_VERSION_UPDATE_CHECK=false
 OLLAMA_BASE_URL=http://ollama:11434
 
@@ -509,6 +510,12 @@ Then `task ansible_full`.
 task ansible_check   # dry-run
 task ansible_deploy  # re-run deploy play
 ```
+> [!IMPORTANT]  
+> The very first run of the ansible playbook will trigger the pulling of all needed container images for the setup of this AI lab. Since many images are very large this can take a considerable amount of time, based on your machines network connection specifics. You might run into timeout errors resulting in the ansible run to fail. Either rerun the ansible playbook or connect to your machine and do a `docker compose up -d` in the `/opt/pocket_lab` directory (or the path you have specified for the deployment of the lab) to finish the initial installation.
+
+
+> [!WARNING]
+> Sometimes one of the docker containers might not come up correctly because of initial errors since the initial certificate creation might take some minutes. Either rerun the ansible automation or perform a `docker compose down && docker compose up -d` in the folder with the `compose.yaml` and `.env` files. If only some of the containers did not start you can also just do a `docker compose up -d`, this will never break your setup.
 
 ### Private / no-public-IP deployments (localhost or tailnet)
 
@@ -632,7 +639,7 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `N8N_VERSION` | `1.50.0` | n8n | n8n automation tool version. |  |
 | `N8N_VERSION_NOTIFICATIONS_ENABLED` | `false` | n8n | Allow update notifications. |  |
 | `NODE_EXPORTER_VERSION` | `v1.9.1` | Misc | Prometheus node exporter version. |  |
-| `OFFLINE_MODE` | `false` | Open WebUI | Disable network access. |  |
+| `OFFLINE_MODE` | `true` | Open WebUI | Disable network access. |  |
 | `OLLAMA_BASE_URL` | `http://ollama:11434` | Open WebUI | Base URL for the Ollama API. |  |
 | `OLLAMA_CONTEXT_SIZE` | `4096` | Ollama | Default context window. |  |
 | `OLLAMA_IDLE_TIMEOUT` | `120s` | Ollama | Time before idle models unload. |  |
@@ -694,3 +701,12 @@ For deep‑links and automatic change‑tracking the same table is regenerated i
 - Run a quick syntax check before committing:\
   `ansible-playbook --syntax-check ansible/site.yaml && docker compose -f ansible/roles/pocket_lab/files/compose.yaml config`
 - Keep this README and `docs/ENVIRONMENT.md` up‑to‑date when touching variables or behaviour.
+
+## Release Process
+
+We follow SemVer. Tag releases and publish notes.
+
+```bash
+git tag -a v0.1.0 -m "Pocket-Lab v0.1.0 — first public release"
+git push origin v0.1.0
+```
