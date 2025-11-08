@@ -1,7 +1,7 @@
 ---
 # 00-deploy.yaml – install Docker & deploy Pocket-Lab
 - name: Install Docker and deploy the lab
-  hosts: genai_servers
+  hosts: all
   become: true
   gather_facts: true
 
