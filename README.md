@@ -42,6 +42,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
     - [Typical workflows](#typical-workflows)
     - [Provisioning with Ansible](#provisioning-with-ansible)
       - [First-time setup (day-0 guide)](#first-time-setup-day-0-guide)
+      - [Hosting multiple AI labs](#hosting-multiple-ai-labs)
     - [Private / no-public-IP deployments (localhost or tailnet)](#private--no-public-ip-deployments-localhost-or-tailnet)
       - [Task catalogue](#task-catalogue)
       - [Variables you will likely change](#variables-you-will-likely-change)
@@ -512,10 +513,36 @@ task ansible_deploy  # re-run deploy play
 ```
 > [!IMPORTANT]  
 > The very first run of the ansible playbook will trigger the pulling of all needed container images for the setup of this AI lab. Since many images are very large this can take a considerable amount of time, based on your machines network connection specifics. You might run into timeout errors resulting in the ansible run to fail. Either rerun the ansible playbook or connect to your machine and do a `docker compose up -d` in the `/opt/pocket_lab` directory (or the path you have specified for the deployment of the lab) to finish the initial installation.
+> The same is true if you use the `ollama bootstrap` service for preloading many models. The LLM backend will be blocked until all models could be successfully pulled.
 
 
 > [!WARNING]
 > Sometimes one of the docker containers might not come up correctly because of initial errors since the initial certificate creation might take some minutes. Either rerun the ansible automation or perform a `docker compose down && docker compose up -d` in the folder with the `compose.yaml` and `.env` files. If only some of the containers did not start you can also just do a `docker compose up -d`, this will never break your setup.
+
+
+#### Hosting multiple AI labs
+If you happen to want to host this setup on multiple machines you can do so by adding either multiple hosts to your default inventory group or add multiple groups with distinct hosts, e.g.:
+
+```yaml
+genai_servers:
+  hosts:
+    genai_vm_1:
+      ansible_host: 180.240.210.10
+      ansible_user: admin
+      ansible_ssh_private_key_file: ~/.ssh/admin_key
+local_genai_servers:
+  hosts:
+    local_genai_vm_1:
+      ansible_host: 192.168.178.80
+      ansible_user: admin
+      ansible_ssh_private_key_file: ~/.ssh/admin_key
+```
+
+For targeting ansible on a single server you can the builtin function `--limit` of ansible and passing the desired hostname. It also works through the Taskfile commands since we evaluate CLI arguments:
+
+```
+task ansible_full -- --limit local_genai_vm_1
+```
 
 ### Private / no-public-IP deployments (localhost or tailnet)
 

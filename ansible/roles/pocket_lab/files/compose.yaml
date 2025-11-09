@@ -233,6 +233,7 @@ services:
       - traefik.http.routers.n8n.tls=true
 
   ollama-bootstrap:
+    <<: *common
     image: ollama/ollama:${OLLAMA_VERSION}
     container_name: ollama-bootstrap
     entrypoint: ["/bin/sh", "-c", "/bootstrap/ollama-bootstrap.sh"]
@@ -240,8 +241,9 @@ services:
       - ollama-data:/root/.ollama
       - ./ollama/ollama-bootstrap.sh:/bootstrap/ollama-bootstrap.sh:ro
     environment:
-      - OLLAMA_MODELS=/root/.ollama/models
-    networks: [backend]
+      <<: *common-environment
+      OLLAMA_MODELS: /root/.ollama/models
+    networks: *common-networks
     restart: "no"
   ollama:
     <<: *common
