@@ -55,6 +55,8 @@ ollama_context_size: 4096
 ollama_keep_alive: 5m
 ollama_max_loaded_models: 3
 ollama_max_queue: 512
+ollama_enable_rocm: false
+ollama_use_rocm_overlay: false
 
 # ---------- openwebui ----------
 openwebui_version: "v0.6.22"

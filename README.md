@@ -282,6 +282,28 @@ already present so it is safe to rerun.
 
 - Default pre-pulled models on first run: `llama3.1:8b` (general), `deepseek-r1:7b` (reasoning), `qwen2.5-coder:7b` (coding), plus `bge-m3` embeddings.
 
+#### Optional ROCm acceleration
+
+To run the `ollama/ollama:rocm` image set `OLLAMA_VERSION` to the desired ROCm tag (for example `0.3.12-rocm`) or toggle `OLLAMA_ROCM_ENABLED=true`. Taskfile targets and the Ansible role automatically include the `compose.rocm.yaml` overlay whenever either condition is met, so `task compose-up` and `ansible-playbook` will deploy the GPU-enabled stack without extra flags. When invoking Compose manually add the overlay yourself:
+
+```bash
+docker compose -f compose.yaml -f compose.rocm.yaml up -d
+```
+
+Run the command from the directory that contains your stack files (for example the generated `./docker` folder or the remote deploy path managed by Ansible).
+
+The override grants `/dev/kfd` and `/dev/dri` to both Ollama containers and relaxes the seccomp profile (defaults to `seccomp=unconfined`). Adjust the following knobs in `.env` if your host requires different device paths or permissions:
+
+| Variable | Purpose |
+|----------|---------|
+| `OLLAMA_ROCM_ENABLED` | `true` to force the ROCm overlay even if `OLLAMA_VERSION` does not contain `rocm`. |
+| `OLLAMA_ROCM_DEVICE_KFD` | Host path passed through to `/dev/kfd` (defaults to `/dev/kfd`). |
+| `OLLAMA_ROCM_DEVICE_DRI` | Host DRM device tree exposed at `/dev/dri` (defaults to `/dev/dri`). |
+| `OLLAMA_ROCM_SECCOMP` | Value used for `seccomp=…`; leave as `unconfined` on hosts that require it. |
+| `OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION` | Optional override for RDNA2 Navi 23 GPUs (set to `10.3.0` when needed). |
+
+Leave `OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION` empty unless you need to work around Navi 23 detection quirks. The override file is only required when launching ROCm images; CPU-only deployments can ignore it.
+
 ---
 
 ### MinIO ☁️

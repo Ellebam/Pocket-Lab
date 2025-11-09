@@ -1,4 +1,8 @@
 ---
+- name: Determine ROCm overlay usage
+  ansible.builtin.set_fact:
+    ollama_use_rocm_overlay: "{{ ((ollama_enable_rocm | bool) or ('rocm' in (ollama_version | string | lower))) | ternary(true, false) }}"
+
 - name: Import prerequisite tasks
   ansible.builtin.import_tasks: prereqs.yaml
 

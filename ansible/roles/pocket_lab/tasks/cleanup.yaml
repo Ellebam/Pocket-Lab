@@ -5,6 +5,9 @@
     state: absent
     files:
       - compose.yaml
+      {% if ollama_use_rocm_overlay | bool %}
+      - compose.rocm.yaml
+      {% endif %}
 
 - name: Remove compose directory entirely
   ansible.builtin.file:

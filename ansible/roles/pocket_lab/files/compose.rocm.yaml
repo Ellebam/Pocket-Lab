@@ -1,0 +1,21 @@
+# compose.rocm.yaml – optional ROCm tweaks for Ollama containers
+---
+services:
+
+  ollama-bootstrap:
+    devices:
+      - ${OLLAMA_ROCM_DEVICE_KFD:-/dev/kfd}:/dev/kfd
+      - ${OLLAMA_ROCM_DEVICE_DRI:-/dev/dri}:/dev/dri
+    security_opt:
+      - seccomp=${OLLAMA_ROCM_SECCOMP:-unconfined}
+    environment:
+      HSA_OVERRIDE_GFX_VERSION: ${OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION:-}
+
+  ollama:
+    devices:
+      - ${OLLAMA_ROCM_DEVICE_KFD:-/dev/kfd}:/dev/kfd
+      - ${OLLAMA_ROCM_DEVICE_DRI:-/dev/dri}:/dev/dri
+    security_opt:
+      - seccomp=${OLLAMA_ROCM_SECCOMP:-unconfined}
+    environment:
+      HSA_OVERRIDE_GFX_VERSION: ${OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION:-}
