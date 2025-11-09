@@ -2,11 +2,7 @@
 - name: Restart compose stack
   community.docker.docker_compose_v2:
     project_src: "{{ compose_repo }}"
-    files:
-      - compose.yaml
-      {% if ollama_use_rocm_overlay | bool %}
-      - compose.rocm.yaml
-      {% endif %}
+    files: "{{ ollama_compose_files }}"
     pull: always
     recreate: always
     remove_orphans: true
