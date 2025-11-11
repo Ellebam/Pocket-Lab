@@ -1,0 +1,31 @@
+# compose.rocm.yaml – optional ROCm tweaks for Ollama containers
+---
+services:
+
+  ollama-bootstrap:
+    devices:
+      - ${OLLAMA_ROCM_DEVICE_KFD:-/dev/kfd}:/dev/kfd
+      - ${OLLAMA_ROCM_DEVICE_DRI:-/dev/dri}:/dev/dri
+    security_opt:
+      - seccomp=${OLLAMA_ROCM_SECCOMP:-unconfined}
+    environment:
+      HSA_OVERRIDE_GFX_VERSION: ${OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION:-}
+      HSA_ENABLE_SDMA: ${OLLAMA_ROCM_HSA_ENABLE_SDMA:-0}
+      HSA_NO_SCRATCH_RECLAIM: ${OLLAMA_ROCM_HSA_NO_SCRATCH_RECLAIM:-1}
+      ROCR_VISIBLE_DEVICES: "${OLLAMA_ROCM_ROCR_VISIBLE_DEVICES:-0}"
+      HIP_VISIBLE_DEVICES: "${OLLAMA_ROCM_HIP_VISIBLE_DEVICES:-0}"
+      HSA_VISIBLE_DEVICES: "${OLLAMA_ROCM_HSA_VISIBLE_DEVICES:-0}"
+
+  ollama:
+    devices:
+      - ${OLLAMA_ROCM_DEVICE_KFD:-/dev/kfd}:/dev/kfd
+      - ${OLLAMA_ROCM_DEVICE_DRI:-/dev/dri}:/dev/dri
+    security_opt:
+      - seccomp=${OLLAMA_ROCM_SECCOMP:-unconfined}
+    environment:
+      HSA_OVERRIDE_GFX_VERSION: ${OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION:-}
+      HSA_ENABLE_SDMA: ${OLLAMA_ROCM_HSA_ENABLE_SDMA:-0}
+      HSA_NO_SCRATCH_RECLAIM: ${OLLAMA_ROCM_HSA_NO_SCRATCH_RECLAIM:-1}
+      ROCR_VISIBLE_DEVICES: "${OLLAMA_ROCM_ROCR_VISIBLE_DEVICES:-0}"
+      HIP_VISIBLE_DEVICES: "${OLLAMA_ROCM_HIP_VISIBLE_DEVICES:-0}"
+      HSA_VISIBLE_DEVICES: "${OLLAMA_ROCM_HSA_VISIBLE_DEVICES:-0}"
