@@ -179,6 +179,7 @@ nca_s3_secret_key: "{{ minio_root_password }}"
 
 # ---------- Tailscale ----------
 ts_authkey: ""
+ts_hostname:
 docker_bridge_subnet: "172.20.0.0/16"
 
 # ---------- smtp relay ----------

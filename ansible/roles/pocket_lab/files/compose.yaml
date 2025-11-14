@@ -136,16 +136,23 @@ services:
     env_file: .env
     network_mode: host
     privileged: true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
     volumes:
       - tailscale-state:/var/lib/tailscale
     environment:
-      - TS_AUTHKEY=${TS_AUTHKEY}
-      - TZ=${TIMEZONE}
-      - TS_ROUTES=${DOCKER_BRIDGE_SUBNET}
-      - >-
-        TS_EXTRA_ARGS=--ssh --accept-routes
+      TS_AUTHKEY: ${TS_AUTHKEY}          
+      TS_ROUTES: ${DOCKER_BRIDGE_SUBNET} 
+      TS_TUN: tailscale                  
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_HOSTNAME: ${TS_HOSTNAME}           
+      TS_EXTRA_ARGS: >-
+        --ssh
         --accept-dns=false
-        --hostname=pocket-lab
+        --advertise-tags=tag:pocket-lab
+        --accept-routes
 
   smtp:
     <<: *common
@@ -613,6 +620,7 @@ volumes:
   stirling-pdf-logs:
   ncat-storage:
   ncat-logs:
+
 
 ############################
 #         NETWORKS         #
