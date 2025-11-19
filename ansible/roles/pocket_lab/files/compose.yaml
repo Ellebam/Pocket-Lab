@@ -143,11 +143,11 @@ services:
     volumes:
       - tailscale-state:/var/lib/tailscale
     environment:
-      TS_AUTHKEY: ${TS_AUTHKEY}     
+      TS_AUTHKEY: ${TS_AUTHKEY}
       TS_ROUTES: ${DOCKER_BRIDGE_SUBNET}
       TS_TUN: tailscale
       TS_STATE_DIR: /var/lib/tailscale
-      TS_HOSTNAME: ${TS_HOSTNAME}  
+      TS_HOSTNAME: ${TS_HOSTNAME}
       TS_EXTRA_ARGS: >-
         --ssh
         --accept-dns=false
