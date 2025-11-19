@@ -1,0 +1,16 @@
+# .github/workflows/md-guard.yml
+name: Markdown table guard
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "docs/ENVIRONMENT.md"
+  push:
+    branches: [ ** ]
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate ENVIRONMENT.md
+        run: bash scripts/check_environment_md.sh
