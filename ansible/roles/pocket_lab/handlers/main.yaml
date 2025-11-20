@@ -2,8 +2,7 @@
 - name: Restart compose stack
   community.docker.docker_compose_v2:
     project_src: "{{ compose_repo }}"
-    files:
-      - compose.yaml
+    files: "{{ ollama_compose_files }}"
     pull: always
     recreate: always
     remove_orphans: true

@@ -26,6 +26,7 @@ Everything – from reverse‑proxy, observability, vector and relational stores
     - [RAGFlow 📚](#ragflow-)
     - [Stirling PDF 📄](#stirling-pdf-)
     - [Ollama 🦙](#ollama-)
+      - [Optional ROCm acceleration](#optional-rocm-acceleration)
     - [MinIO ☁️](#minio-️)
     - [Secure-access layer - Tailscale 🔐](#secure-access-layer---tailscale-)
     - [MySQL 🐬](#mysql-)
@@ -281,6 +282,36 @@ defaults to `llama3.1:8b deepseek-r1:7b qwen2.5-coder:7b bge-m3`. The helper exi
 already present so it is safe to rerun.
 
 - Default pre-pulled models on first run: `llama3.1:8b` (general), `deepseek-r1:7b` (reasoning), `qwen2.5-coder:7b` (coding), plus `bge-m3` embeddings.
+- `OLLAMA_KV_CACHE_TYPE` can be set to a quantized cache format such as `q8_0` when
+  optimising GPU memory use; leave it empty to let Ollama pick its default.
+
+#### Optional ROCm acceleration
+
+To run the `ollama/ollama:rocm` image set `OLLAMA_VERSION` to the desired ROCm tag (for example `0.3.12-rocm`) or toggle `OLLAMA_ROCM_ENABLED=true`. Taskfile targets and the Ansible role automatically include the `compose.rocm.yaml` overlay whenever either condition is met, so `task compose-up` and `ansible-playbook` will deploy the GPU-enabled stack without extra flags. When invoking Compose manually add the overlay yourself:
+
+```bash
+docker compose -f compose.yaml -f compose.rocm.yaml up -d
+```
+
+Run the command from the directory that contains your stack files (for example the generated `./docker` folder or the remote deploy path managed by Ansible).
+
+The override grants `/dev/kfd` and `/dev/dri` to both Ollama containers and relaxes the seccomp profile (defaults to `seccomp=unconfined`). Adjust the following knobs in `.env` if your host requires different device paths or permissions:
+
+| Variable | Purpose |
+|----------|---------|
+| `OLLAMA_ROCM_ENABLED` | `true` to force the ROCm overlay even if `OLLAMA_VERSION` does not contain `rocm`. |
+| `OLLAMA_ROCM_DEVICE_KFD` | Host path passed through to `/dev/kfd` (defaults to `/dev/kfd`). |
+| `OLLAMA_ROCM_DEVICE_DRI` | Host DRM device tree exposed at `/dev/dri` (defaults to `/dev/dri`). |
+| `OLLAMA_ROCM_SECCOMP` | Value used for `seccomp=…`; leave as `unconfined` on hosts that require it. |
+| `OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION` | Optional override for RDNA2 Navi 23 GPUs (set to `10.3.0` when needed). |
+| `OLLAMA_ROCM_HSA_ENABLE_SDMA` | Set to `0` to disable SDMA engines on GPUs that hang or reset (defaults to `0`). |
+| `OLLAMA_ROCM_HSA_NO_SCRATCH_RECLAIM` | Leave at `1` to work around scratch memory reclaim bugs in some drivers. |
+| `OLLAMA_ROCM_ROCR_VISIBLE_DEVICES` | GPU index mask passed to the ROCm runtime (defaults to `0`). |
+| `OLLAMA_ROCM_HIP_VISIBLE_DEVICES` | HIP runtime equivalent of the ROCr mask (defaults to `0`). |
+| `OLLAMA_ROCM_HSA_VISIBLE_DEVICES` | HSA runtime mask (defaults to `0`). |
+
+Leave `OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION` empty unless you need to work around Navi 23 detection quirks. The override file is only required when launching ROCm images; CPU-only deployments can ignore it.
+
 
 ---
 
@@ -663,7 +694,7 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `N8N_SMTP_SSL` | `false` | n8n | Use TLS for SMTP. |  |
 | `N8N_TEMPLATES_ENABLED` | `false` | n8n | Enable community workflow templates. |  |
 | `N8N_USER_MANAGEMENT_DISABLED` | `true` | n8n | Disable n8n built‑in sign‑up pages. |  |
-| `N8N_VERSION` | `1.50.0` | n8n | n8n automation tool version. |  |
+| `N8N_VERSION` | `1.107.4` | n8n | n8n automation tool version. |  |
 | `N8N_VERSION_NOTIFICATIONS_ENABLED` | `false` | n8n | Allow update notifications. |  |
 | `NODE_EXPORTER_VERSION` | `v1.9.1` | Misc | Prometheus node exporter version. |  |
 | `OFFLINE_MODE` | `true` | Open WebUI | Disable network access. |  |
@@ -678,6 +709,16 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `OLLAMA_NUM_PARALLEL` | `8` | Ollama | Concurrent requests limit. |  |
 | `OLLAMA_PULL_MODELS` | `llama3.1:8b deepseek-r1:7b qwen2.5-coder:7b bge-m3` | Ollama | Models preloaded by `ollama-bootstrap` |  |
 | `OLLAMA_VERSION` | `0.10.0` | Misc | Ollama model server version. |  |
+| `OLLAMA_ROCM_ENABLED` | `false` | Ollama | Forces the ROCm overlay even if `OLLAMA_VERSION` lacks a `-rocm` tag. | Toggle to `true` for GPU hosts running custom builds. |
+| `OLLAMA_ROCM_DEVICE_KFD` | `/dev/kfd` | Ollama | Host path exposed as `/dev/kfd` inside ROCm containers. | Override when the GPU runtime uses non-standard device nodes. |
+| `OLLAMA_ROCM_DEVICE_DRI` | `/dev/dri` | Ollama | Host DRM tree mapped to `/dev/dri`. | Adjust if your system exposes GPUs elsewhere. |
+| `OLLAMA_ROCM_SECCOMP` | `unconfined` | Ollama | Seccomp profile used when running ROCm containers. | Keep `unconfined` on hosts that require relaxed syscall filters. |
+| `OLLAMA_ROCM_HSA_OVERRIDE_GFX_VERSION` | `-` | Ollama | Optional override for RDNA2 Navi 23 GPUs. | Set to `10.3.0` only when the kernel misdetects GPU capabilities. |
+| `OLLAMA_ROCM_HSA_ENABLE_SDMA` | `0` | Ollama | Enables (`1`) or disables (`0`) SDMA engines. | Leave at `0` to avoid GPU lockups on sensitive cards. |
+| `OLLAMA_ROCM_HSA_NO_SCRATCH_RECLAIM` | `1` | Ollama | Workaround for scratch memory reclaim bugs. | Leave enabled unless AMD documents a fix for your driver. |
+| `OLLAMA_ROCM_ROCR_VISIBLE_DEVICES` | `0` | Ollama | GPU index mask passed to ROCr. | Use comma-separated indices for multi-GPU nodes. |
+| `OLLAMA_ROCM_HIP_VISIBLE_DEVICES` | `0` | Ollama | HIP runtime equivalent of ROCr mask. | Mirrors `ROCR_VISIBLE_DEVICES` in most setups. |
+| `OLLAMA_ROCM_HSA_VISIBLE_DEVICES` | `0` | Ollama | HSA runtime visible devices mask. | Usually matches the ROCr mask. |
 | `OPENWEBUI_ADMIN_EMAIL` | `admin@example.com` | Open WebUI | Bootstrapped Open WebUI admin account. |  |
 | `OPENWEBUI_ADMIN_PASSWORD` | `changeme` | Open WebUI | Password for Open WebUI admin. |  |
 | `OPENWEBUI_DEFAULT_USER_ROLE` | `pending` | Open WebUI | Role newly signed‑up users get. |  |
@@ -712,6 +753,7 @@ curl -I -k -H "Host: grafana.${TRAEFIK_DOMAIN}" https://127.0.0.1
 | `TRAEFIK_LE_EMAIL` | `admin@example.com` | Traefik | Contact e‑mail for Let’s Encrypt. |  |
 | `TRAEFIK_VERSION` | `3.4.1` | Traefik | Traefik docker image tag. |  |
 | `TS_AUTHKEY` | `-` | Tailscale | Authentication key used to connect to your personal Tailscale tenant |  |
+| `TS_HOSTNAME` | `-` | Tailscale | Label used to identify connected docker subnet when rolling out the setup  |  |
 | `WEBHOOK_URL` | `https://n8n.ai.lab.example.com/` | n8n | External webhook base URL for n8n. |  |
 | `WEBUI_URL` | `` | Open WebUI | External URL for the WebUI. |  |
 | `WEB_SEARCH_CONCURRENT_REQUESTS` | `2` | Web search | Parallel search requests. |  |

@@ -1,4 +1,27 @@
 ---
+- name: Determine ROCm overlay usage
+  ansible.builtin.set_fact:
+    ollama_use_rocm_overlay: >-
+      {{
+        (
+          (ollama_enable_rocm | bool)
+          or ('rocm' in (ollama_version | string | lower))
+        )
+        | bool
+      }}
+
+- name: Determine compose file list
+  ansible.builtin.set_fact:
+    ollama_compose_files: >-
+      {{
+        ['compose.yaml']
+        + (
+          ['compose.rocm.yaml']
+          if (ollama_use_rocm_overlay | bool)
+          else []
+        )
+      }}
+
 - name: Import prerequisite tasks
   ansible.builtin.import_tasks: prereqs.yaml
 

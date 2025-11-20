@@ -56,6 +56,20 @@ ollama_keep_alive: 5m
 ollama_max_loaded_models: 3
 ollama_max_queue: 512
 
+ollama_kv_cache_type: ""
+ollama_enable_rocm: false
+ollama_use_rocm_overlay: false
+ollama_rocm_device_kfd: "/dev/kfd"
+ollama_rocm_device_dri: "/dev/dri"
+ollama_rocm_seccomp: "unconfined"
+ollama_rocm_hsa_override_gfx_version: ""
+ollama_rocm_hsa_enable_sdma: "0"
+ollama_rocm_hsa_no_scratch_reclaim: "1"
+ollama_rocm_rocr_visible_devices: "0"
+ollama_rocm_hip_visible_devices: "0"
+ollama_rocm_hsa_visible_devices: "0"
+
+
 # ---------- openwebui ----------
 openwebui_version: "v0.6.22"
 openwebui_port: "8080"
@@ -165,6 +179,7 @@ nca_s3_secret_key: "{{ minio_root_password }}"
 
 # ---------- Tailscale ----------
 ts_authkey: ""
+ts_hostname:
 docker_bridge_subnet: "172.20.0.0/16"
 
 # ---------- smtp relay ----------

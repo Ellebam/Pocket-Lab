@@ -9,7 +9,15 @@ vars:
   # Upstream location
   AUTHOR_FILES_DIR: ansible/roles/pocket_lab/files  # authoritative stack assets
   DOCKER_DIR: docker  # generated dev dir at repo root
-  STACK_COMPOSE: docker compose -f {{ .DOCKER_DIR }}/compose.yaml
+  STACK_COMPOSE_FILES: >-
+    {{- $ollamaVersion := lower (default "" .ENV.OLLAMA_VERSION) -}}
+    {{- $rocmToggle := lower (default "" .ENV.OLLAMA_ROCM_ENABLED) -}}
+    {{- if or (contains $ollamaVersion "rocm") (eq $rocmToggle "true") -}}
+    -f {{ .DOCKER_DIR }}/compose.yaml -f {{ .DOCKER_DIR }}/compose.rocm.yaml
+    {{- else -}}
+    -f {{ .DOCKER_DIR }}/compose.yaml
+    {{- end -}}
+  STACK_COMPOSE: docker compose {{ .STACK_COMPOSE_FILES }}
 
   # Python / Ansible virtual‑env
   VENV_DIR: .venv
