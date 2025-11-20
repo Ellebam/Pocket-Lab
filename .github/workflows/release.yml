@@ -21,12 +21,13 @@ jobs:
         id: extract_notes
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
-          sed -n "/^## \[$VERSION\]/,/^## \[/p" \
-          CHANGELOG.md | sed \'1d;$d' > release_body.md
-          echo "Release notes extracted for $VERSION"
+          echo "Extracting notes for $VERSION..."
+          # Extract specific version block from Changelog
+          sed -n "/^## \[$VERSION\]/,/^## \[/p" CHANGELOG.md | \
+            sed '1d;$d' > release_body.md
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body_path: release_body.md
           draft: false
