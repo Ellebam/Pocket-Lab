@@ -4,7 +4,7 @@ name: Create Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   release:
@@ -20,12 +20,33 @@ jobs:
 
       - name: Extract release notes
         id: extract_notes
+        shell: bash
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           echo "Extracting notes for $VERSION..."
-          # Extract specific version block from Changelog
-          sed -n "/^## \[$VERSION\]/,/^## \[/p" CHANGELOG.md | \
-            sed '1d;$d' > release_body.md
+
+          # Use awk for robust extraction
+          # Logic:
+          # 1. Stop if start of new header is found
+          # 2. Start printing if target version header is found
+          # 3. Print lines while flag 'p' is set
+          awk -v ver="## [$VERSION]" '
+            /^## \[/ { if (p) { exit } }
+            index($0, ver) == 1 { p=1; next }
+            p { print }
+          ' CHANGELOG.md > release_body.md
+
+          # Debug output to logs
+          echo "--- Release Body Preview ---"
+          cat release_body.md
+          echo "----------------------------"
+
+          # Fail the job if the body is empty
+          if [ ! -s release_body.md ]; then
+            echo "Error: No release notes found for $VERSION"
+            echo "Verify CHANGELOG.md header matches: ## [$VERSION]"
+            exit 1
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
