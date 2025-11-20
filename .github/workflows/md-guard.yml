@@ -1,6 +1,6 @@
 ---
 name: Markdown table guard
-on:
+'on':
   pull_request:
     paths:
       - "scripts/**"
