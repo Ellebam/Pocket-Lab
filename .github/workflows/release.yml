@@ -1,7 +1,7 @@
 ---
 name: Create Release
 
-on:
+"on":
   push:
     tags:
       - "v*"
@@ -18,35 +18,68 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract release notes
-        id: extract_notes
-        shell: bash
+      - name: debug-context
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          echo "Extracting notes for $VERSION..."
-
-          # Use awk for robust extraction
-          # Logic:
-          # 1. Stop if start of new header is found
-          # 2. Start printing if target version header is found
-          # 3. Print lines while flag 'p' is set
-          awk -v ver="## [$VERSION]" '
-            /^## \[/ { if (p) { exit } }
-            index($0, ver) == 1 { p=1; next }
-            p { print }
-          ' CHANGELOG.md > release_body.md
-
-          # Debug output to logs
-          echo "--- Release Body Preview ---"
-          cat release_body.md
+          echo "Tag: ${GITHUB_REF_NAME}"
+          echo "--- HEAD of CHANGELOG.md ---"
+          head -n 20 CHANGELOG.md
           echo "----------------------------"
 
-          # Fail the job if the body is empty
-          if [ ! -s release_body.md ]; then
-            echo "Error: No release notes found for $VERSION"
-            echo "Verify CHANGELOG.md header matches: ## [$VERSION]"
-            exit 1
-          fi
+      - name: Extract release notes
+        id: extract_notes
+        shell: python
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          import os
+          import sys
+
+          tag = os.environ["TAG_NAME"]
+          file_path = "CHANGELOG.md"
+          # The expected header format, exactly as in your file
+          target_header = f"## [{tag}]"
+
+          print(f"Looking for header: '{target_header}' in {file_path}")
+
+          found_entry = False
+          extracted_lines = []
+
+          try:
+              with open(file_path, "r") as f:
+                  for line in f:
+                      # 1. Find the start header
+                      if not found_entry:
+                          if line.strip().startswith(target_header):
+                              found_entry = True
+                              continue # Skip the header line itself
+                          continue
+
+                      # 2. Stop at the next release header (starts with ## [)
+                      if line.strip().startswith("## ["):
+                          break
+
+                      # 3. Collect lines
+                      extracted_lines.append(line)
+
+              # Check results
+              if not found_entry:
+                  print(f"Error: Could not find header '{target_header}'")
+                  sys.exit(1)
+
+              content = "".join(extracted_lines).strip()
+              if not content:
+                  print("Error: Header found, but release notes body is empty.")
+                  sys.exit(1)
+
+              # Write to file
+              with open("release_body.md", "w") as f:
+                  f.write(content)
+
+              print("Successfully extracted release notes.")
+
+          except FileNotFoundError:
+              print(f"Error: {file_path} not found in the repository.")
+              sys.exit(1)
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
